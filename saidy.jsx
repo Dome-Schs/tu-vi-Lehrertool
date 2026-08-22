@@ -1246,10 +1246,10 @@ function LegalModal({ onClose }) {
               <div>
                 <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">Gerätesicherheit</div>
                 <div className="space-y-2 text-xs text-stone-600">
-                  <p>Tu-vi speichert alle Daten lokal im Browser-Speicher. Daher gilt:</p>
+                  <p>Wer an deinem angemeldeten Gerät sitzt, sieht deine Schülerdaten. Daher gilt:</p>
                   <div className="space-y-1.5 pl-1">
                     <div className="flex items-start gap-2"><span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span><span>Nicht auf geteilten Schulcomputern oder öffentlichen Geräten nutzen</span></div>
-                    <div className="flex items-start gap-2"><span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span><span>Nicht im privaten Browser-Modus (InPrivate / Inkognito) – Daten gehen beim Schließen verloren</span></div>
+                    <div className="flex items-start gap-2"><span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span><span>Nach der Nutzung an fremden Geräten abmelden – die Anmeldung bleibt sonst bestehen</span></div>
                     <div className="flex items-start gap-2"><span className="akzent-text font-bold shrink-0 mt-0.5">✓</span><span>Nur auf dem eigenen, gesperrten und passwortgeschützten Gerät verwenden</span></div>
                     <div className="flex items-start gap-2"><span className="akzent-text font-bold shrink-0 mt-0.5">✓</span><span>Gerät sperren, wenn die App nicht aktiv genutzt wird</span></div>
                   </div>
@@ -1258,7 +1258,7 @@ function LegalModal({ onClose }) {
               <div>
                 <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">Backup & Datenverlust</div>
                 <div className="space-y-1.5 text-xs text-stone-600">
-                  <p>Da alle Daten nur lokal gespeichert sind, liegt Datensicherung in der Verantwortung der Lehrkraft.</p>
+                  <p>Deine Daten liegen in deinem Konto auf dem Server. Eine eigene Sicherung als Datei bleibt trotzdem sinnvoll – sie schützt vor versehentlichem Löschen und macht dich unabhängig vom Dienst.</p>
                   <div className="flex items-start gap-2"><span className="akzent-text font-bold shrink-0 mt-0.5">✓</span><span>Regelmäßige Backups erstellen (Einstellungen → Backup → Sichern)</span></div>
                   <div className="flex items-start gap-2"><span className="akzent-text font-bold shrink-0 mt-0.5">✓</span><span>Backup vor jedem Gerätewechsel oder Browser-Update</span></div>
                   <div className="flex items-start gap-2"><span className="akzent-text font-bold shrink-0 mt-0.5">✓</span><span>Am Ende des Schuljahres Daten löschen oder sicher archivieren</span></div>
@@ -1320,19 +1320,45 @@ function LegalModal({ onClose }) {
                 <p className="text-xs text-stone-500 mt-1">GitHub verarbeitet beim Aufruf technische Zugriffsdaten (IP-Adresse, Zeitstempel, Browsertyp) in Server-Logfiles. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Serverstandort: USA. Weitere Infos: docs.github.com/privacy</p>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">3. App-Daten (Schüler, Noten, Klassen)</div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">3. Konto und Anmeldung</div>
                 <div className="space-y-2 text-xs text-stone-600">
-                  <p>Alle in der App eingegebenen Daten werden <strong className="text-stone-800">ausschließlich lokal</strong> auf deinem Gerät gespeichert (Browser-localStorage). Es erfolgt <strong className="text-stone-800">keine Übertragung</strong> an den Entwickler oder Dritte.</p>
-                  <p>Der Entwickler hat keinen Zugriff auf eingegebene Daten.</p>
-                  <p>Die nutzende Lehrkraft ist gemäß <strong className="text-stone-800">Art. 4 Nr. 7 DSGVO</strong> selbst datenschutzrechtlich Verantwortliche:r für die eingegebenen Schüler- und Klassendaten und dafür verantwortlich, geltende schulrechtliche Datenschutzvorgaben einzuhalten (z. B. Einwilligungen bei Fotos oder Gesundheitsdaten).</p>
+                  <p>Für die Nutzung ist ein Konto nötig. Dabei werden <strong className="text-stone-800">E-Mail-Adresse und Passwort</strong> verarbeitet. Die Anmeldung läuft über Supabase (siehe Abschnitt 5). Das Passwort wird dort nur als nicht rückrechenbarer Hashwert gespeichert.</p>
+                  <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsverhältnisses). Die Kontodaten werden gespeichert, solange das Konto besteht.</p>
                 </div>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">4. Lokale Datenspeicherung</div>
-                <p className="text-xs text-stone-600">Tu-vi verwendet ausschließlich den localStorage des Browsers. Es werden keine Tracking-Cookies gesetzt. Die gespeicherten Daten verlassen das Gerät nicht automatisch.</p>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">4. App-Daten (Schüler, Noten, Klassen)</div>
+                <div className="space-y-2 text-xs text-stone-600">
+                  <p>Deine Eingaben – Klassen, Schülerdaten, Noten, Notizen, Gespräche, Fehlzeiten, Vorfälle und Fotos – werden in deinem Konto auf einem <strong className="text-stone-800">Server gespeichert</strong>, damit sie auf mehreren Geräten verfügbar sind und bei Geräteverlust nicht verloren gehen. Die Übertragung erfolgt verschlüsselt (HTTPS).</p>
+                  <p>Zugriff auf diese Daten hat nur, wer sich mit deiner E-Mail-Adresse und deinem Passwort anmeldet. Der Zugriff ist auf Datenbankebene auf das eigene Konto beschränkt.</p>
+                  <p>Als Betreiber der Datenbank hat der Entwickler technisch Zugriff auf die gespeicherten Daten. Er verarbeitet sie ausschließlich zum Betrieb der App, wertet sie nicht aus und gibt sie nicht weiter. Damit liegt eine <strong className="text-stone-800">Auftragsverarbeitung nach Art. 28 DSGVO</strong> vor; die nutzende Lehrkraft bleibt Verantwortliche im Sinne von Art. 4 Nr. 7 DSGVO.</p>
+                  <p className="text-amber-800">Hinweis: Ein Auftragsverarbeitungsvertrag ist derzeit noch nicht bereitgestellt. Bitte kläre vor dem Einsatz mit Schulleitung oder Datenschutzbeauftragten, ob die Nutzung für dich zulässig ist.</p>
+                  <p><strong className="text-stone-800">Dokumente</strong> (abgelegte Dateien und Fotos aus der Dokumentenablage) bleiben abweichend davon nur auf deinem Gerät und werden nicht übertragen.</p>
+                  <p>Die Lehrkraft ist dafür verantwortlich, geltende schulrechtliche Datenschutzvorgaben einzuhalten – etwa Einwilligungen bei Fotos oder Gesundheitsdaten.</p>
+                </div>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">5. Haftungsausschluss</div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">5. Auftragsverarbeiter</div>
+                <div className="space-y-2 text-xs text-stone-600">
+                  <p><strong className="text-stone-800">Supabase</strong> – Anmeldung und Datenbank. Supabase Inc., 970 Toa Payoh North, Singapur. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.</p>
+                  <p><strong className="text-stone-800">GitHub Pages</strong> – Auslieferung der App (siehe Abschnitt 2).</p>
+                  <p><strong className="text-stone-800">Apple bzw. Google</strong> – nur wenn du die Spracheingabe nutzt. Dabei wird das Gesprochene kurzzeitig an den Sprachdienst deines Geräts übertragen. Ohne Nutzung der Spracheingabe erfolgt keine Übertragung.</p>
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">6. Lokale Speicherung auf dem Gerät</div>
+                <p className="text-xs text-stone-600">Zusätzlich legt Tu-vi einige Angaben lokal im Browser ab: die Anmeldesitzung, den Zeitpunkt der letzten Datensicherung, Anzeigeeinstellungen sowie – falls eingerichtet – die Kennung der App-Sperre. Bei der App-Sperre mit Face ID oder Touch ID verlassen <strong className="text-stone-800">keine biometrischen Merkmale das Gerät</strong>; die Prüfung übernimmt das Betriebssystem, Tu-vi erhält nur die Rückmeldung, ob sie erfolgreich war. Es werden keine Tracking-Cookies gesetzt und keine Analysedienste eingesetzt.</p>
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">7. Deine Rechte</div>
+                <div className="space-y-2 text-xs text-stone-600">
+                  <p>Du hast das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21). Für eine Auskunft oder Löschung deines Kontos genügt eine E-Mail an kontakt@tu-vi.de.</p>
+                  <p>Außerdem steht dir nach Art. 77 DSGVO ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu, etwa der Landesbeauftragten für Datenschutz und Informationsfreiheit Nordrhein-Westfalen.</p>
+                  <p>Gelöschte Klassen und Kinder liegen 30 Tage im Papierkorb („Klassen &amp; Schüler", ganz unten) und werden danach endgültig entfernt.</p>
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">8. Haftungsausschluss</div>
                 <p className="text-xs text-stone-600">Die App wird ohne Gewähr bereitgestellt. Der Entwickler übernimmt keine Haftung für Datenverlust, fehlerhafte Berechnungen oder Folgen aus der Nutzung. Für die DSGVO-konforme Nutzung ist die nutzende Lehrkraft selbst verantwortlich.</p>
               </div>
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-800">
@@ -1667,12 +1693,12 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, user, onExport, on
             <div className="pt-5 border-t border-stone-100">
               <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Datensicherung</div>
               <p className="text-xs text-stone-500 mb-3">
-                Deine Daten liegen auf diesem Gerät. Sichere sie regelmäßig als Datei, damit bei Geräteverlust oder App-Neuinstallation nichts verloren geht.
+                Deine Daten liegen in deinem Konto auf dem Server. Eine eigene Sicherung als Datei schützt zusätzlich vor versehentlichem Löschen und macht dich unabhängig vom Dienst.
               </p>
               <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 mb-3 flex items-start gap-2">
                 <AlertTriangle size={13} className="text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-stone-600 leading-relaxed">
-                  <strong>Geteilte Schulcomputer:</strong> Tu-vi speichert Daten im Browser. Wenn mehrere Lehrkräfte dasselbe Browser-Profil nutzen, können alle auf diese Daten zugreifen. Nutze Tu-vi nur in deinem <strong>eigenen, privaten Browser-Profil</strong>.
+                  <strong>Geteilte Schulcomputer:</strong> Wer an deinem angemeldeten Browser sitzt, sieht deine Daten. Melde dich dort nach der Nutzung ab. Nutze Tu-vi nur in deinem <strong>eigenen, privaten Browser-Profil</strong>.
                 </p>
               </div>
               <div className="flex gap-2 mb-2">
@@ -1731,7 +1757,7 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, user, onExport, on
                 <div className="text-xs font-medium text-stone-600 mb-1">Am einfachsten: auf dem Gerät ablegen</div>
                 <p className="text-[11px] text-stone-500 leading-relaxed">
                   „Teilen" → <strong>In Dateien sichern</strong> → <strong>Auf meinem iPhone</strong>. Ein Schritt, kein Tippen,
-                  und die Daten verlassen dein Gerät nicht. Verschicke Backups nicht per E-Mail oder Messenger –
+                  und die Datei bleibt auf deinem Gerät. Verschicke Backups nicht per E-Mail oder Messenger –
                   sie enthalten alle Schülerdaten im Klartext.
                 </p>
               </div>
@@ -2841,13 +2867,13 @@ const HELP_DATA = [
       { q: "Wie erstelle ich ein Backup?", a: `Gehe zu „Mehr" → „Einstellungen" → „Daten & Sicherung". Dort erscheint zuerst ein kurzer Datenschutz-Hinweis, den du bestätigst. Danach: „Sichern" legt die Datei im Download-Ordner ab, „Teilen" öffnet die Teilen-Ansicht (z. B. für „In Dateien sichern" oder AirDrop). Wichtig: abgelegte Dokumente sind darin nicht enthalten – die brauchen eine eigene Sicherung, direkt darunter unter „Dokumente sichern".` },
       { q: "Wie lege ich ein Dokument bei einem Kind ab?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → Kind antippen → im Profil auf den Reiter „Mehr". Ganz unten steht „Dokumente" mit zwei Knöpfen: „Foto" öffnet direkt die Kamera – ideal, um eine Entschuldigung abzufotografieren. „Datei" öffnet die Dateien-App, dort wählst du ein PDF oder ein vorhandenes Bild. Fotos werden automatisch verkleinert, damit sie wenig Platz brauchen. Ein Tipp auf einen Eintrag öffnet ihn, das Papierkorb-Symbol löscht ihn.` },
       { q: "Kann ich Dokumente auch bei einer Klasse, einem Fach oder ganz allgemein ablegen?", a: `Ja. Im Klassen-Dashboard (Klasse antippen → „Überblick" → „Klassen-Dashboard") liegt ganz unten die Ablage für die ganze Klasse – etwa Sitzplan oder Elternbrief. In der Notenübersicht eines Fachs (Noten → Klasse → Fach) findest du dieselbe Ablage für Arbeitsblätter oder Lösungen. Für alles ohne festen Bezug – Konferenzprotokolle, Formulare, Schulordnung – gibt es unter „Mehr" → „Dokumente" einen eigenen allgemeinen Bereich. Dort steht auch eine durchsuchbare Liste aller abgelegten Dokumente, egal wo sie hängen.` },
-      { q: "Wo werden meine Dokumente gespeichert?", a: `Auf deinem Gerät, genau wie alles andere in Tu-vi – nichts wird ins Internet übertragen. Dokumente liegen allerdings in einem eigenen Speicherbereich, weil sie für die normale Ablage zu groß wären. Deshalb sind sie auch nicht in der normalen Datensicherung enthalten, sondern brauchen unter „Einstellungen" → „Daten & Sicherung" den eigenen Knopf „Dokumente sichern".` },
+      { q: "Wo werden meine Dokumente gespeichert?", a: `Auf deinem Gerät – und anders als der Rest deiner Daten werden Dokumente nicht auf den Server übertragen. Sie liegen in einem eigenen Speicherbereich, weil sie für die normale Ablage zu groß wären. Deshalb sind sie auch nicht in der normalen Datensicherung enthalten, sondern brauchen unter „Einstellungen" → „Daten & Sicherung" den eigenen Knopf „Dokumente sichern".` },
       { q: "Warum sind meine Dokumente nach dem Wiederherstellen weg?", a: `Die normale Datensicherung enthält nur die Liste der Dokumente (Name, Datum, zu welchem Kind), nicht die Dateien selbst. Nach dem Wiederherstellen siehst du deshalb die Einträge, aber beim Öffnen kommt der Hinweis, dass die Datei fehlt. Spiel dann zusätzlich deine Dokument-Sicherung ein: „Einstellungen" → „Daten & Sicherung" → „Einspielen" im Abschnitt „Dokumente sichern".` },
-      { q: "Kann ich mir Dokumente direkt an Tu-vi schicken lassen?", a: `Nein. Tu-vi hat bewusst keinen Server und kann deshalb weder E-Mails abrufen noch Nachrichten empfangen. Auf dem iPhone lässt Apple Web-Apps auch nicht als Ziel im Teilen-Menü zu. Der Weg ist deshalb: Datei zuerst in „Dateien" sichern (bei einer E-Mail: Anhang antippen → Teilen → „In Dateien sichern"), danach in Tu-vi beim Kind auf „Datei" tippen und sie dort auswählen. Für Papier-Entschuldigungen ist „Foto" der schnellere Weg.` },
-      { q: "Wie sichere ich am einfachsten auf dem iPhone oder iPad?", a: `„Mehr" → „Einstellungen" → „Daten & Sicherung" → im Abschnitt „Datensicherung" auf „Teilen" tippen. In der Teilen-Ansicht dann „In Dateien sichern" wählen und „Auf meinem iPhone" (oder iPad) als Ort. Ein Schritt, kein Tippen – und die Daten verlassen dein Gerät nicht. Verschicke Backups nicht per E-Mail oder Messenger: Die Datei enthält alle Schülerdaten im Klartext, und der Versand über einen privaten Mailanbieter ist für Schülerdaten in der Regel nicht zulässig.` },
+      { q: "Kann ich mir Dokumente direkt an Tu-vi schicken lassen?", a: `Nein. Tu-vi kann weder E-Mails abrufen noch Nachrichten empfangen – der Server speichert nur deine Daten, er nimmt nichts von außen entgegen. Auf dem iPhone lässt Apple Web-Apps auch nicht als Ziel im Teilen-Menü zu. Der Weg ist deshalb: Datei zuerst in „Dateien" sichern (bei einer E-Mail: Anhang antippen → Teilen → „In Dateien sichern"), danach in Tu-vi beim Kind auf „Datei" tippen und sie dort auswählen. Für Papier-Entschuldigungen ist „Foto" der schnellere Weg.` },
+      { q: "Wie sichere ich am einfachsten auf dem iPhone oder iPad?", a: `„Mehr" → „Einstellungen" → „Daten & Sicherung" → im Abschnitt „Datensicherung" auf „Teilen" tippen. In der Teilen-Ansicht dann „In Dateien sichern" wählen und „Auf meinem iPhone" (oder iPad) als Ort. Ein Schritt, kein Tippen – und die Datei bleibt dabei auf deinem Gerät. Verschicke Backups nicht per E-Mail oder Messenger: Die Datei enthält alle Schülerdaten im Klartext, und der Versand über einen privaten Mailanbieter ist für Schülerdaten in der Regel nicht zulässig.` },
       { q: "Wie aktiviere ich die Freitags-Erinnerung?", a: `In den Einstellungen unter „Daten & Sicherung" → „Freitags-Erinnerung" den Schalter aktivieren. Beim ersten Mal fragt der Browser nach der Erlaubnis für Benachrichtigungen. Wichtig zu wissen: Die Erinnerung erscheint, wenn du Tu-vi an einem Freitag öffnest und dein letztes Backup mindestens 3 Tage her ist. Tu-vi läuft nicht im Hintergrund – öffnest du die App freitags nicht, kommt auch keine Erinnerung. Verlass dich also nicht allein darauf.` },
       { q: "Wie stelle ich ein Backup wieder her?", a: `Gehe zu „Mehr" → „Einstellungen" → „Daten & Sicherung" → „Gesichertes wiederherstellen" und wähle deine Backup-Datei. Achtung: Die aktuell gespeicherten Daten werden dabei ersetzt – am besten vorher einmal „Sichern". Sollten sich die Daten beim Start einmal nicht lesen lassen, zeigt Tu-vi direkt einen Wiederherstellen-Knopf und überschreibt nichts.` },
-      { q: "Wo werden meine Daten gespeichert?", a: `Alle Daten bleiben ausschließlich auf deinem Gerät (lokaler Browser-Speicher). Es werden keine Daten an Server übertragen.` },
+      { q: "Wo werden meine Daten gespeichert?", a: `In deinem Konto auf einem Server – dadurch sind sie auf mehreren Geräten verfügbar und bei Geräteverlust nicht weg. Die Übertragung ist verschlüsselt, und der Zugriff ist auf dein Konto beschränkt: Wer dein Passwort nicht hat, kommt nicht an deine Daten. Eine Ausnahme sind abgelegte Dokumente – die bleiben auf dem Gerät. Details stehen unter „Einstellungen" → „Über Tu-vi" → „Impressum & Datenschutz".` },
       { q: "Warum bekomme ich eine Backup-Erinnerung?", a: `Tu-vi erinnert automatisch wenn seit 7 Tagen kein Backup erstellt wurde oder wenn seit dem letzten Backup 10 oder mehr neue Einträge (Noten, Notizen, Fehlzeiten) hinzugekommen sind. Das Morgen-Briefing zeigt ebenfalls einen Hinweis, wenn Backup fällig ist.` },
     ],
   },
@@ -2860,7 +2886,7 @@ const HELP_DATA = [
   {
     category: "Datenschutz & Rechtliches",
     items: [
-      { q: "Wer ist verantwortlich für die Schülerdaten?", a: `Du als Lehrkraft bist gemäß Art. 4 Nr. 7 DSGVO selbst datenschutzrechtlich Verantwortliche:r für die eingegebenen Daten. Der Entwickler von Tu-vi hat keinen Zugriff auf deine Daten.` },
+      { q: "Wer ist verantwortlich für die Schülerdaten?", a: `Du als Lehrkraft bist gemäß Art. 4 Nr. 7 DSGVO datenschutzrechtlich Verantwortliche:r für die eingegebenen Daten. Da die Daten auf einem Server liegen, den der Entwickler betreibt, liegt zusätzlich eine Auftragsverarbeitung nach Art. 28 DSGVO vor – er verarbeitet sie ausschließlich zum Betrieb der App. Ein Auftragsverarbeitungsvertrag ist noch nicht bereitgestellt; kläre die Nutzung deshalb vorab mit Schulleitung oder Datenschutzbeauftragten.` },
       { q: "Wo finde ich das Impressum und die Datenschutzerklärung?", a: `Tippe auf „Mehr" → „Einstellungen" → „Über Tu-vi". Dort findest du „Impressum & Datenschutz".` },
       { q: "Werden meine Daten irgendwohin übertragen?", a: `Nein. Alle Daten bleiben ausschließlich auf deinem Gerät (Browser-localStorage). Es werden keine Daten an den Entwickler oder Dritte übermittelt. Beim Aufrufen der App werden lediglich technische Zugriffsdaten (IP-Adresse, Zeitstempel) durch den Hosting-Anbieter GitHub Pages verarbeitet.` },
     ],
@@ -3809,6 +3835,7 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [zeigeRecht, setZeigeRecht] = useState(false);
   const [success, setSuccess] = useState(null);
 
   const handle = async () => {
@@ -3908,7 +3935,18 @@ function LoginScreen() {
             {mode === "login" ? "Noch kein Konto? Jetzt erstellen" : mode === "signup" ? "Bereits ein Konto? Anmelden" : "Zurück zur Anmeldung"}
           </button>
         </div>
+
+        {/* Pflichtangaben muessen vor der Anmeldung erreichbar sein: beim
+            Konto-Anlegen werden hier bereits E-Mail und Passwort uebertragen.
+            § 5 DDG verlangt ausserdem "staendig verfuegbar". */}
+        <button
+          onClick={() => setZeigeRecht(true)}
+          className="w-full mt-4 text-[11px] text-stone-400 hover:text-stone-600 py-2 transition-colors"
+        >
+          Impressum &amp; Datenschutz
+        </button>
       </div>
+      {zeigeRecht && <LegalModal onClose={() => setZeigeRecht(false)} />}
     </div>
   );
 }
