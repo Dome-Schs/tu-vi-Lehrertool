@@ -209,10 +209,27 @@ html, body {
   .text-violet-600                              { color: #C4B5FD !important; }
 }
 
-/* Lesespalte: begrenzt Vollbild-Ansichten auf eine ruhige Breite. Auf dem
-   Handy voll, ab Tablet zentriert - sonst laufen Zeilen auf einem 27-Zoll-
-   Monitor ueber die gesamte Breite und werden unlesbar. */
-.lese-spalte { width: 100%; max-width: 52rem; margin-inline: auto; }
+/* Inhaltsbreite: EINE Breite fuer alle Ansichten - Tabs, Vollbildseiten,
+   Klassenkarte. Vorher hatte jede Ebene ihre eigene (Tabs 64rem linksbuendig,
+   Vollbildseiten randlos, Klassenkarte 52rem zentriert), weshalb der Inhalt
+   beim Wechsel sichtbar sprang.
+
+   Auf iPhone und iPad liegt die Bildschirmbreite unter dem Deckel, dort wird
+   also die volle Flaeche genutzt. Erst am grossen Monitor greift die Grenze
+   und haelt Textzeilen und Schuelerlisten lesbar.
+
+   Die Klasse setzt Breite UND seitlichen Abstand. Beides gehoert zusammen:
+   solange der Abstand woanders steht (frueher px-4 an den Vollbildseiten,
+   md:px-8 am main), laufen die Ansichten wieder auseinander. */
+.inhalt-breite {
+  width: 100%;
+  max-width: 70rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+@media (min-width: 768px) {
+  .inhalt-breite { padding-inline: 2rem; }
+}
 
 /* Vollflächige Overlays: ein Eltern-Container mit space-y-*
    vererbt margin-top auf JEDES Folgekind - auch auf fixed

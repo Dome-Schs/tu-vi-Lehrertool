@@ -4969,7 +4969,12 @@ export default function App() {
         </aside>
 
         {/* Inhalt */}
-        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-8 md:px-8 md:pt-8 max-w-5xl">
+        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-8 md:pt-8">
+          {/* Der Deckel sitzt bewusst hier innen und nicht am <main>: aussen
+              waere er linksbuendig an der Seitenleiste geklebt, innen laesst
+              er sich zentrieren. Die Modals darunter sind position:fixed und
+              ignorieren diesen Container ohnehin. */}
+          <div className="inhalt-breite">
           {saveState === "error" && (
             <div className="mb-5 flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
               <span className="text-red-600 shrink-0">⚠</span>
@@ -5111,6 +5116,7 @@ export default function App() {
               }}
             />
           )}
+          </div>
         </main>
       </div>
 
@@ -9366,9 +9372,9 @@ function GeburtstageUebersicht({ data, onOpenStudent, onClose }) {
   const ohneDatum = data.students.filter((s) => !s.deletedAt && !s.birthday).length;
 
   return (
-    <div className="fixed inset-0 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
+    <div className="fixed inset-0 md:left-56 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
       <div className="bg-white border-b border-stone-100 shrink-0">
-        <div className="flex items-center gap-3 px-4 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="inhalt-breite flex items-center gap-3 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0 press-scale">
             <ChevronLeft size={18} className="text-stone-600" />
           </button>
@@ -9378,7 +9384,7 @@ function GeburtstageUebersicht({ data, onOpenStudent, onClose }) {
           </div>
         </div>
         {data.students.length > 8 && (
-          <div className="px-4 pb-3">
+          <div className="inhalt-breite pb-3">
             <input
               className="w-full bg-stone-100 rounded-xl px-3 py-2 text-sm placeholder-stone-400 outline-none"
               placeholder="Suchen nach Name oder Klasse …"
@@ -9389,7 +9395,7 @@ function GeburtstageUebersicht({ data, onOpenStudent, onClose }) {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="inhalt-breite flex-1 overflow-y-auto py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {alle.length ? (
           <div className="card divide-y divide-stone-100 overflow-hidden">
             {alle.map(({ s, info: i, cls }) => (
@@ -9443,9 +9449,9 @@ function FoerderzieleUebersicht({ data, onOpenStudent, onClose }) {
     .sort((a, b) => a.student.name.localeCompare(b.student.name, "de"));
 
   return (
-    <div className="fixed inset-0 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
+    <div className="fixed inset-0 md:left-56 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
       <div className="bg-white border-b border-stone-100 shrink-0">
-        <div className="flex items-center gap-3 px-4 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="inhalt-breite flex items-center gap-3 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0 press-scale">
             <ChevronLeft size={18} className="text-stone-600" />
           </button>
@@ -9455,7 +9461,7 @@ function FoerderzieleUebersicht({ data, onOpenStudent, onClose }) {
           </div>
         </div>
         {(data.students || []).length > 8 && (
-          <div className="px-4 pb-3">
+          <div className="inhalt-breite pb-3">
             <input
               className="w-full bg-stone-100 rounded-xl px-3 py-2 text-sm placeholder-stone-400 outline-none"
               placeholder="Nach Namen suchen …"
@@ -9465,7 +9471,7 @@ function FoerderzieleUebersicht({ data, onOpenStudent, onClose }) {
           </div>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="inhalt-breite flex-1 overflow-y-auto py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {kinder.length ? (
           <div className="card divide-y divide-stone-100 overflow-hidden">
             {kinder.map(({ student, ziele }) => {
@@ -9511,9 +9517,9 @@ function OffeneEntschuldigungenUebersicht({ data, onOpenStudent, onClose }) {
     .filter((x) => !q || x.student.name.toLowerCase().includes(q));
 
   return (
-    <div className="fixed inset-0 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
+    <div className="fixed inset-0 md:left-56 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
       <div className="bg-white border-b border-stone-100 shrink-0">
-        <div className="flex items-center gap-3 px-4 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="inhalt-breite flex items-center gap-3 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0 press-scale">
             <ChevronLeft size={18} className="text-stone-600" />
           </button>
@@ -9523,7 +9529,7 @@ function OffeneEntschuldigungenUebersicht({ data, onOpenStudent, onClose }) {
           </div>
         </div>
         {offene.length > 6 && (
-          <div className="px-4 pb-3">
+          <div className="inhalt-breite pb-3">
             <input
               className="w-full bg-stone-100 rounded-xl px-3 py-2 text-sm placeholder-stone-400 outline-none"
               placeholder="Nach Namen suchen …"
@@ -9533,7 +9539,7 @@ function OffeneEntschuldigungenUebersicht({ data, onOpenStudent, onClose }) {
           </div>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="inhalt-breite flex-1 overflow-y-auto py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {treffer.length ? (
           <div className="card divide-y divide-stone-100 overflow-hidden">
             {treffer.map(({ a, student }) => {
@@ -9662,9 +9668,9 @@ function DokumenteAllgemein({ data, update, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
+    <div className="fixed inset-0 md:left-56 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
       <div className="bg-white border-b border-stone-100 shrink-0">
-        <div className="flex items-center gap-3 px-4 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="inhalt-breite flex items-center gap-3 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0 press-scale">
             <ChevronLeft size={18} className="text-stone-600" />
           </button>
@@ -9675,7 +9681,7 @@ function DokumenteAllgemein({ data, update, onClose }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="inhalt-breite flex-1 overflow-y-auto py-4 space-y-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {/* Allgemeine Ablage - ohne Kind-, Klassen- oder Fachbezug */}
         <div className="card card-p">
           <DokumenteBlock
@@ -10193,7 +10199,7 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
       const signals = computeSignals();
 
       return (
-      <div className="fixed inset-0 z-[55] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
+      <div className="fixed inset-0 md:left-56 z-[55] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
           {/* Minimaler Kopf: Navigation + Tabs */}
           <div className="bg-white border-b border-stone-100 shrink-0">
             <div className="flex items-center gap-2 px-4 pb-2" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
@@ -12316,9 +12322,9 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
     .map((n) => ({ ...n, student: students.find((s) => s.id === n.studentId) }));
 
   return (
-    <div className="fixed inset-0 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
+    <div className="fixed inset-0 md:left-56 z-[56] app-bg flex flex-col anim-slide-right" style={{ maxHeight: "100dvh" }}>
       <div className="bg-white border-b border-stone-100 shrink-0">
-        <div className="flex items-center gap-3 px-4 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="inhalt-breite flex items-center gap-3 pb-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0 press-scale">
             <ChevronLeft size={18} className="text-stone-600" />
           </button>
@@ -12329,7 +12335,7 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="inhalt-breite flex-1 overflow-y-auto py-4 space-y-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
 
         {/* KPI-Kacheln */}
         <div className="grid grid-cols-3 gap-2">
@@ -12735,10 +12741,10 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   }
 
   return (
-    <div className="fixed inset-0 app-bg z-[55] flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 md:left-56 app-bg z-[55] flex flex-col" onClick={(e) => e.stopPropagation()}>
       {/* Header */}
       <div className="shrink-0 bg-white/95 backdrop-blur-xl border-b border-stone-100">
-        <div className="lese-spalte px-3 pt-[max(env(safe-area-inset-top),0.75rem)] pb-2 flex items-center gap-2">
+        <div className="inhalt-breite pt-[max(env(safe-area-inset-top),0.75rem)] pb-2 flex items-center gap-2">
           <button onClick={onClose} className="w-11 h-11 -ml-2 flex items-center justify-center text-stone-600 shrink-0" aria-label="Zurück">
             <ChevronLeft size={22} />
           </button>
@@ -12747,7 +12753,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
             <div className="text-[11px] text-stone-500">{students.length} Schüler:innen · {faecher.length} {faecher.length === 1 ? "Fach" : "Fächer"}</div>
           </div>
         </div>
-        <div className="lese-spalte flex border-t border-stone-100" role="tablist">
+        <div className="inhalt-breite flex border-t border-stone-100" role="tablist">
           {[
             { key: "ueberblick", label: "Überblick" },
             { key: "unterricht", label: "Unterricht" },
@@ -12771,7 +12777,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="lese-spalte px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <div className="inhalt-breite py-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
         {/* Ueberblick buendelt, was frueher hinter dem Aufklappen der
             Klassenkarte lag. Damit hat die Karte nur noch eine Geste:
             antippen oeffnet die Klasse, alles Weitere steht hier. */}
