@@ -1,0 +1,20 @@
+# Tu-vi · Server-Einstellungen für Hetzner (Apache)
+#
+# Ohne diese Zeilen liefert der Apache das Manifest ohne Zeichensatz-Angabe
+# aus. Der Browser raet dann Latin-1, und aus "Tu-vi – Lehrertool" wird
+# "Tu-vi â€“ Lehrertool". Unter dem App-Symbol auf dem Home-Bildschirm
+# stuende dann Buchstabensalat.
+AddType application/manifest+json .webmanifest
+AddCharset UTF-8 .webmanifest
+AddCharset UTF-8 .json
+
+# Die App ist eine einzige HTML-Datei mit eingebettetem JavaScript. Der
+# Zeichensatz steht zwar im <meta>-Tag, eine Kopfzeile vom Server ist aber
+# verbindlicher und greift schon vor dem Parsen.
+AddCharset UTF-8 .html
+
+# Der Service Worker darf nicht aus dem Browser-Cache kommen, sonst
+# bemerkt die App eine neu hochgeladene Version tagelang nicht.
+<FilesMatch "(sw\.js|registerSW\.js|manifest\.webmanifest)$">
+  Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>

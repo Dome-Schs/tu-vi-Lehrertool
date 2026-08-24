@@ -1732,6 +1732,7 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
               Dein Passwort ist der eigentliche Schutz deines Kontos. Die App-Sperre darunter kommt zusätzlich dazu – sie ersetzt es nicht.
             </p>
             <AppSperreEinstellung user={user} />
+            <AutoSperreEinstellung />
             <div className="pt-5 border-t border-stone-100">
               <Button variant="ghost" onClick={() => supabase.auth.signOut()} className="w-full justify-center">
                 <LogOut size={15} /> Abmelden
@@ -2841,6 +2842,8 @@ const HELP_DATA = [
       { q: "Wie bekomme ich Tu-vi als App auf den Home-Bildschirm?", a: `Das hängt vom Gerät ab. Auf Android und am Computer (Chrome, Edge) genügt ein Tipp: Der Knopf „Auf dem Home-Bildschirm ablegen" steht auf dem Anmeldebildschirm und später im Menü. Auf iPhone und iPad geht es nur über zwei Schritte, weil Apple keinen anderen Weg zulässt: unten in der Mitte (am iPad oben rechts) auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm" wählen. Tu-vi zeigt dir diese zwei Schritte automatisch an, solange sie noch nicht als App läuft. Wichtig auf iPhone und iPad: Mach das möglichst VOR der ersten Anmeldung. Die App auf dem Home-Bildschirm bekommt bei iOS einen eigenen Speicher – meldest du dich erst in Safari an und legst sie danach ab, musst du dich dort noch einmal anmelden, und auch die Face-ID-Sperre wäre dort zunächst wieder aus. Deine Daten sind dabei nicht weg, sie liegen auf dem Server und sind nach der Anmeldung sofort wieder da.` },
       { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast auf „Später" getippt; im Menü unter „Mehr" ist der Weg weiterhin zu finden. Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
       { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – beim Öffnen der App und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
+      { q: "Sperrt sich Tu-vi, wenn ich es liegen lasse?", a: `Ja. Unter „Mehr" → „Einstellungen" → „Sicherheit & Konto" → „Automatisch sperren" wählst du zwischen Aus, 5, 15 und 30 Minuten; voreingestellt sind 15 Minuten. Passiert in dieser Zeit nichts – kein Tippen, kein Scrollen –, greift die Sperre. Was dann geschieht, hängt davon ab, was auf dem Gerät eingerichtet ist: Mit Face ID oder Touch ID wird nur gesperrt, und du bist mit einem Blick wieder da, genau an der Stelle, an der du warst. Ohne eingerichtete Sperre wirst du abgemeldet, weil eine wegwischbare Sperre kein Schutz wäre – zurück brauchst du dann E-Mail und Passwort. Gedacht ist das für den Fall, dass das iPad aufgeklappt auf dem Pult liegen bleibt. Die Einstellung gilt nur auf dem Gerät, an dem du sie triffst, und deine Daten gehen dabei nie verloren.` },
+      { q: "Kann ich die Sport-Vorlagen verschicken statt drucken?", a: `Ja. Im Fenster der Vorlage steht neben „Drucken" jetzt „Teilen". Damit entsteht aus derselben Vorlage ein PDF, das an das Teilen-Menü deines Geräts übergeben wird – auf iPhone und iPad landest du damit direkt bei AirDrop, Mail oder Nachrichten. Am Computer, wo Browser das Teilen von Dateien meist nicht unterstützen, wird das PDF stattdessen heruntergeladen und liegt im Download-Ordner. Der Dateiname enthält Vorlage, Kindname und Datum, damit du sie später wiederfindest. Denk daran: Das PDF enthält den Namen des Kindes – teile es nur über schulisch genehmigte Wege, nicht über private Messenger.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
       { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu fünf Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und ganz am Ende das Löschen aller Daten) sowie „Über Tu-vi" (Impressum und Datenschutz). Ein Pfeil oben links führt aus jedem Bereich zurück.` },
@@ -3685,6 +3688,33 @@ function GlobalSearchModal({ data, onSelectStudent, onClose }) {
    sie gilt pro Geraet - ein zweites Geraet derselben Lehrkraft hat einen
    eigenen Fingerabdruck oder gar keinen. */
 const APPLOCK_KEY = "tuvi_applock";
+
+/* Automatische Sperre bei Untaetigkeit. Die App-Sperre oben greift nur,
+   wenn Tu-vi in den Hintergrund geht - das iPad, das aufgeklappt auf dem
+   Pult liegen bleibt, war damit nicht abgedeckt.
+
+   Wie gesperrt wird, haengt davon ab, was eingerichtet ist: Mit Face ID
+   reicht das Sperren, weil der Weg zurueck zwei Sekunden dauert. Ohne
+   Face ID hilft nur das Abmelden - eine Sperre, die sich mit einem Tipp
+   wegwischen laesst, waere keine.
+
+   Wert in Minuten, 0 heisst aus. Geraetebezogen wie die App-Sperre
+   selbst: das Dienst-iPad braucht eine kuerzere Frist als der Rechner
+   zu Hause. */
+const AUTOSPERRE_KEY = "tuvi_autosperre";
+const AUTOSPERRE_STANDARD = 15;
+const AUTOSPERRE_WAHL = [0, 5, 15, 30];
+
+function leseAutoSperre() {
+  try {
+    const w = localStorage.getItem(AUTOSPERRE_KEY);
+    if (w === null) return AUTOSPERRE_STANDARD;
+    const z = Number(w);
+    return AUTOSPERRE_WAHL.includes(z) ? z : AUTOSPERRE_STANDARD;
+  } catch {
+    return AUTOSPERRE_STANDARD;
+  }
+}
 /* Kurz weggewischt und zurueck soll nicht jedes Mal nach Face ID fragen -
    erst nach dieser Pause wird wieder gesperrt. */
 const APPLOCK_PAUSE_MS = 2 * 60 * 1000;
@@ -3826,6 +3856,48 @@ function LockScreen({ onEntsperrt, onAbmelden }) {
 /* Einstellungs-Abschnitt zum Ein- und Ausschalten der App-Sperre.
    Haelt seinen Zustand selbst aus localStorage, nicht aus data.settings -
    die Sperre gilt pro Geraet, nicht pro Konto. */
+/* Wie lange darf Tu-vi unbenutzt offen liegen? */
+function AutoSperreEinstellung() {
+  const [minuten, setMinuten] = useState(leseAutoSperre);
+  const mitFaceId = appLockAktiv();
+
+  function waehle(m) {
+    setMinuten(m);
+    try { localStorage.setItem(AUTOSPERRE_KEY, String(m)); } catch { /* Privatmodus */ }
+  }
+
+  return (
+    <div className="pt-5 border-t border-stone-100">
+      <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Automatisch sperren</div>
+      <div className="grid grid-cols-4 gap-1.5 mb-2">
+        {AUTOSPERRE_WAHL.map((m) => {
+          const aktiv = minuten === m;
+          return (
+            <button
+              key={m}
+              onClick={() => waehle(m)}
+              aria-pressed={aktiv}
+              className={`py-2 rounded-xl border text-sm font-medium ${
+                aktiv ? "akzent-flaeche akzent-rand" : "border-stone-200 text-stone-600 hover:bg-stone-50"
+              }`}
+            >
+              {m === 0 ? "Aus" : `${m} Min.`}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-stone-500 leading-relaxed">
+        {minuten === 0
+          ? "Tu-vi bleibt offen, solange das Gerät an ist. Für ein iPad, das im Unterricht auf dem Pult liegt, ist das riskant."
+          : mitFaceId
+            ? `Liegt Tu-vi ${minuten} Minuten unberührt, sperrt sich die App. Zurück geht es mit Face ID oder Touch ID – deine Arbeit bleibt genau da, wo du warst.`
+            : `Liegt Tu-vi ${minuten} Minuten unberührt, wirst du abgemeldet. Weil auf diesem Gerät keine Face-ID-Sperre eingerichtet ist, ist das der einzige wirksame Schutz – zurück brauchst du dann E-Mail und Passwort. Richte oben die Sperre ein, dann genügt künftig dein Gesicht.`}
+      </p>
+      <p className="text-[11px] text-stone-400 mt-1.5">Gilt nur auf diesem Gerät. Gespeicherte Daten gehen dabei nie verloren.</p>
+    </div>
+  );
+}
+
 function AppSperreEinstellung({ user }) {
   const [moeglich, setMoeglich] = useState(null);   // null = wird noch geprueft
   const [an, setAn] = useState(appLockAktiv);
@@ -4324,6 +4396,34 @@ export default function App() {
   /* Wieder sperren, wenn die App laenger als APPLOCK_PAUSE_MS im
      Hintergrund war. Kurzes Wegwischen (Nachricht lesen, Stundenplan
      im anderen Tab) soll nicht jedes Mal Face ID ausloesen. */
+  /* Untaetigkeit: alle 20 Sekunden pruefen, ob seit der letzten Beruehrung
+     zu viel Zeit vergangen ist. Ein Timer, der bei jedem Fingertipp neu
+     gesetzt wird, waere teurer - hier reicht ein Zeitstempel. */
+  const letzteAktivitaet = useRef(Date.now());
+  useEffect(() => {
+    if (!user || gesperrt) return;
+    const minuten = leseAutoSperre();
+    if (!minuten) return;
+
+    const merken = () => { letzteAktivitaet.current = Date.now(); };
+    const ereignisse = ["pointerdown", "keydown", "wheel", "touchstart", "focus"];
+    ereignisse.forEach((e) => window.addEventListener(e, merken, { passive: true }));
+
+    const uhr = setInterval(() => {
+      if (Date.now() - letzteAktivitaet.current < minuten * 60 * 1000) return;
+      if (appLockAktiv()) {
+        setGesperrt(true);
+      } else {
+        supabase.auth.signOut();
+      }
+    }, 20 * 1000);
+
+    return () => {
+      ereignisse.forEach((e) => window.removeEventListener(e, merken));
+      clearInterval(uhr);
+    };
+  }, [user, gesperrt]);
+
   useEffect(() => {
     const onSichtbarkeit = () => {
       if (!appLockAktiv()) return;
@@ -5761,6 +5861,287 @@ function nextFerienCountdown(events, schooldaysOnly) {
   return { inFerien: false, title: next.title, date: next.date, days };
 }
 
+/* ═══════════════════════════════════════════════════
+   Kleiner PDF-Erzeuger
+   ─────────────────────────────────────────────────
+   Zum Teilen per AirDrop braucht es eine echte Datei - eine gedruckte
+   Seite laesst sich nicht weitergeben. Bewusst von Hand geschrieben
+   statt einer Bibliothek: Tu-vi wird als einzelne HTML-Datei
+   ausgeliefert, und ein PDF-Paket wuerde sie um ein Vielfaches
+   aufblaehen. Gebraucht werden ohnehin nur Text, Linien und Rahmen.
+
+   Schrift ist Helvetica in WinAnsi-Kodierung - die steckt in jedem
+   PDF-Betrachter, es muss nichts eingebettet werden. Zeichen jenseits
+   von Latin-1 (Gedankenstrich, typografische Anfuehrungszeichen)
+   werden vorher ersetzt, sonst erscheinen sie als Kaestchen.
+   ═══════════════════════════════════════════════════ */
+
+const PDF_BREITE = 595.28;   // A4 in Punkt
+const PDF_HOEHE = 841.89;
+const PDF_RAND = 52;
+const PDF_INNEN = PDF_BREITE - 2 * PDF_RAND;
+
+function nachLatin1(t) {
+  return String(t ?? "")
+    .replace(/[–—]/g, "-")
+    .replace(/[‘’‚]/g, "'")
+    .replace(/[“”„]/g, '"')
+    .replace(/…/g, "...")
+    .replace(/ /g, " ")
+    .replace(/[^\x00-\xFF]/g, "?");
+}
+
+function pdfText(t) {
+  return nachLatin1(t).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+/* Helvetica ist proportional. Fuer den Zeilenumbruch reicht eine
+   Schaetzung - etwas zu breit gerechnet, damit nichts ueber den Rand
+   laeuft. */
+function pdfBreite(t, groesse, fett) {
+  return nachLatin1(t).length * groesse * (fett ? 0.56 : 0.52);
+}
+
+function pdfBauer() {
+  const seiten = [];
+  let strom = "";
+  let y = PDF_HOEHE - PDF_RAND;
+
+  function seitenwechsel() {
+    seiten.push(strom);
+    strom = "";
+    y = PDF_HOEHE - PDF_RAND;
+  }
+  function platzFuer(hoehe) {
+    if (y - hoehe < PDF_RAND) seitenwechsel();
+  }
+
+  return {
+    get y() { return y; },
+    luft(h) { y -= h; },
+
+    text(t, { x = PDF_RAND, groesse = 10, fett = false, grau = 0, abstand = 1.35 } = {}) {
+      platzFuer(groesse * abstand);
+      strom += `BT /${fett ? "F2" : "F1"} ${groesse} Tf ${grau} g 1 0 0 1 ${x.toFixed(2)} ${(y - groesse).toFixed(2)} Tm (${pdfText(t)}) Tj ET\n`;
+      y -= groesse * abstand;
+    },
+
+    /* Fliesstext mit Umbruch an Wortgrenzen. */
+    absatz(t, { groesse = 9, grau = 0.35, breite = PDF_INNEN, x = PDF_RAND } = {}) {
+      const woerter = nachLatin1(t).split(/\s+/).filter(Boolean);
+      let zeile = "";
+      for (const w of woerter) {
+        const test = zeile ? `${zeile} ${w}` : w;
+        if (pdfBreite(test, groesse, false) > breite && zeile) {
+          this.text(zeile, { x, groesse, grau, abstand: 1.45 });
+          zeile = w;
+        } else {
+          zeile = test;
+        }
+      }
+      if (zeile) this.text(zeile, { x, groesse, grau, abstand: 1.45 });
+    },
+
+    linie(x1, x2, { dicke = 0.6, grau = 0.55, versatz = 0 } = {}) {
+      const yy = y + versatz;
+      strom += `${grau} G ${dicke} w ${x1.toFixed(2)} ${yy.toFixed(2)} m ${x2.toFixed(2)} ${yy.toFixed(2)} l S\n`;
+    },
+
+    /* Beschreibbare Zeilen zum Ausfuellen mit der Hand. */
+    schreibzeilen(anzahl, { hoehe = 21, x = PDF_RAND, breite = PDF_INNEN } = {}) {
+      for (let i = 0; i < anzahl; i++) {
+        platzFuer(hoehe);
+        y -= hoehe;
+        this.linie(x, x + breite, { dicke: 0.5, grau: 0.7 });
+      }
+    },
+
+    /* Mehrere beschriftete Felder nebeneinander - auf gleicher Hoehe.
+       Vorher habe ich die zweite Spalte ueber einen negativen Abstand
+       zurueckgeholt; das verrutschte um wenige Punkte und sah schief aus. */
+    feldZeile(felder, { hoehe = 36 } = {}) {
+      platzFuer(hoehe);
+      const oben = y;
+      for (const f of felder) {
+        strom += `BT /F1 7 Tf 0.5 g 1 0 0 1 ${f.x.toFixed(2)} ${(oben - 8).toFixed(2)} Tm (${pdfText(f.label)}) Tj ET\n`;
+        if (f.wert) {
+          strom += `BT /F1 11 Tf 0 g 1 0 0 1 ${f.x.toFixed(2)} ${(oben - 24).toFixed(2)} Tm (${pdfText(f.wert)}) Tj ET\n`;
+        }
+        strom += `0.55 G 0.6 w ${f.x.toFixed(2)} ${(oben - 28).toFixed(2)} m ${(f.x + f.breite).toFixed(2)} ${(oben - 28).toFixed(2)} l S\n`;
+      }
+      y = oben - hoehe;
+    },
+
+    kasten(hoehe, { x = PDF_RAND, breite = PDF_INNEN, grau = 0.6 } = {}) {
+      platzFuer(hoehe);
+      y -= hoehe;
+      strom += `${grau} G 0.6 w ${x.toFixed(2)} ${y.toFixed(2)} ${breite.toFixed(2)} ${hoehe.toFixed(2)} re S\n`;
+    },
+
+    fertig() {
+      seiten.push(strom);
+      return seiten;
+    },
+  };
+}
+
+function pdfDatei(seiten) {
+  const teile = [];
+  const versatz = [];
+  let laenge = 0;
+  const schreibe = (s) => { teile.push(s); laenge += s.length; };
+  const objekt = (nr, inhalt) => { versatz[nr] = laenge; schreibe(`${nr} 0 obj\n${inhalt}\nendobj\n`); };
+
+  schreibe("%PDF-1.4\n");
+
+  const anzahl = seiten.length;
+  const seitenIds = seiten.map((_, i) => 4 + i * 2);
+  const stromIds = seiten.map((_, i) => 5 + i * 2);
+
+  objekt(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  objekt(2, `<< /Type /Pages /Kids [${seitenIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${anzahl} >>`);
+  objekt(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+  const fettId = 4 + anzahl * 2;
+
+  seiten.forEach((inhalt, i) => {
+    objekt(seitenIds[i],
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_BREITE} ${PDF_HOEHE}] ` +
+      `/Resources << /Font << /F1 3 0 R /F2 ${fettId} 0 R >> >> /Contents ${stromIds[i]} 0 R >>`);
+    objekt(stromIds[i], `<< /Length ${inhalt.length} >>\nstream\n${inhalt}endstream`);
+  });
+  objekt(fettId, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+
+  const xrefStart = laenge;
+  const gesamt = fettId + 1;
+  let xref = `xref\n0 ${gesamt}\n0000000000 65535 f \n`;
+  for (let i = 1; i < gesamt; i++) {
+    xref += `${String(versatz[i] ?? 0).padStart(10, "0")} 00000 n \n`;
+  }
+  schreibe(xref);
+  schreibe(`trailer\n<< /Size ${gesamt} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
+
+  const roh = teile.join("");
+  const bytes = new Uint8Array(roh.length);
+  for (let i = 0; i < roh.length; i++) bytes[i] = roh.charCodeAt(i) & 0xff;
+  return new Blob([bytes], { type: "application/pdf" });
+}
+
+/* Baut aus denselben Angaben wie die Bildschirmvorlage ein PDF. */
+function sportVorlagePdf({ vorlage, name, klasse, datum, thema, anwesend, titel }) {
+  const d = pdfBauer();
+
+  d.text(titel, { groesse: 16, fett: true });
+  d.linie(PDF_RAND, PDF_BREITE - PDF_RAND, { dicke: 0.8, grau: 0.4, versatz: 6 });
+  d.luft(14);
+
+  const spalte = PDF_INNEN / 2 - 12;
+  const rechtsX = PDF_RAND + spalte + 24;
+  d.feldZeile([
+    { x: PDF_RAND, breite: spalte, label: "NAME", wert: name },
+    { x: rechtsX, breite: spalte, label: "KLASSE", wert: klasse },
+  ]);
+  d.text(`Datum: ${datum}`, { groesse: 9, grau: 0.4 });
+  d.luft(8);
+
+  if (vorlage === "protokoll") {
+    d.feldZeile([
+      { x: PDF_RAND, breite: spalte, label: "THEMA DER STUNDE", wert: thema },
+      { x: rechtsX, breite: spalte, label: "ANWESEND", wert: anwesend },
+    ]);
+    d.absatz("Schreibe die Stunde in ganzen Sätzen mit. Gib das Protokoll am Ende ab.", { groesse: 9, grau: 0.4 });
+    d.luft(8);
+
+    for (const [label, zeilen] of [
+      ["Materialien / Geräte", 2],
+      ["Erwärmung", 4],
+      ["Hauptteil", 8],
+      ["Abschluss", 3],
+      ["Was hat dir gefallen? Was nicht?", 3],
+    ]) {
+      d.text(label, { groesse: 10.5, fett: true });
+      d.luft(1);
+      d.schreibzeilen(zeilen, { hoehe: 17 });
+      d.luft(6);
+    }
+
+    d.luft(2);
+    d.text("Formulierungshilfen", { groesse: 9, fett: true, grau: 0.3 });
+    d.absatz("Zu Beginn der Stunde … Zuerst … Danach … Als Nächstes … Außerdem … Anschließend … Zuletzt …",
+      { groesse: 8.5, grau: 0.45 });
+    d.luft(10);
+    /* Der Skizzenkasten nimmt, was auf der Seite uebrig ist. Fest auf 170
+       Punkt gesetzt rutschte er auf eine zweite Seite und liess unten
+       Weissraum stehen - das Protokoll soll auf ein Blatt passen. Bleibt
+       zu wenig Platz, entfaellt er lieber ganz, statt eine fast leere
+       zweite Seite zu erzeugen. */
+    const restPlatz = d.y - PDF_RAND - 16;
+    if (restPlatz >= 70) {
+      d.text("Platz für Skizze", { groesse: 10.5, fett: true });
+      d.luft(3);
+      d.kasten(d.y - PDF_RAND);
+    }
+  } else {
+    for (const [nr, text] of [
+      ["Aufgabe 1", "Schreibe alle Regeln ab und umkreise die, die du gebrochen hast."],
+      ["Aufgabe 2", "Begründe, wieso das störende Verhalten dir und der Klasse schadet."],
+      ["Aufgabe 3", "Beschreibe, wie du dich in Zukunft im Sportunterricht verhalten willst."],
+    ]) {
+      d.text(`${nr}:`, { groesse: 10, fett: true, abstand: 1.15 });
+      d.absatz(text, { groesse: 10, grau: 0.15 });
+      d.luft(6);
+    }
+    d.luft(8);
+
+    d.text("Regeln", { groesse: 11, fett: true });
+    d.luft(4);
+    [
+      "1. In Gesprächsrunden redet immer nur eine Person – die Lehrkraft oder ein Kind.",
+      "2. Wenn ich etwas sagen möchte, melde ich mich.",
+      "3. Ich höre auf zu reden, wenn um Ruhe gebeten wird.",
+      "4. In Gruppenphasen lenke ich andere nicht ab, sondern übe konzentriert und helfe mit.",
+      "5. Ich verlasse nicht unerlaubt die Sporthalle.",
+      "6. Die Regeln einzelner Spiele werden eingehalten.",
+    ].forEach((r) => d.absatz(r, { groesse: 9.5, grau: 0.15 }));
+    d.luft(12);
+
+    [
+      "In Gesprächsrunden werden Übungen und Stationen erklärt. Wer dabei redet, hört die Erklärung nicht und lenkt andere ab.",
+      "In Gruppenphasen hilfst du, die Aufgabe zu lösen. Toben, schubsen, quatschen oder herumsitzen schadet der Gruppe.",
+      "Werden Spielregeln nicht eingehalten, entstehen Konflikte – Ärger für die ganze Klasse. Und deine Sportnote kann sich verschlechtern.",
+    ].forEach((p) => { d.absatz(p, { groesse: 8.5, grau: 0.45 }); d.luft(5); });
+    d.luft(8);
+
+    d.text("Zu Aufgabe 2 (Begründung)", { groesse: 10.5, fett: true });
+    d.luft(2);
+    d.schreibzeilen(4);
+    d.luft(14);
+    d.text("Zu Aufgabe 3 (Verhaltensplan)", { groesse: 10.5, fett: true });
+    d.luft(2);
+    d.schreibzeilen(4);
+    d.luft(20);
+
+    d.linie(PDF_RAND, PDF_BREITE - PDF_RAND, { dicke: 0.8, grau: 0.5 });
+    d.luft(14);
+    d.text("Information für die Eltern", { groesse: 10.5, fett: true });
+    d.luft(2);
+    d.absatz(
+      "Ihr Kind hat im Sportunterricht mehrfach gestört. Als Konsequenz muss es die oben aufgelisteten Aufgaben erledigen. " +
+      "Mit Ihrer Unterschrift bestätigen Sie, dass Sie über das Verhalten informiert wurden, es mit Ihrem Kind besprochen haben " +
+      "und mit dem Verhaltensplan (Aufgabe 3) einverstanden sind.",
+      { groesse: 8.5, grau: 0.4 }
+    );
+    d.luft(34);
+    d.linie(PDF_RAND, PDF_RAND + halb, { dicke: 0.7, grau: 0.4 });
+    d.linie(PDF_RAND + halb + 24, PDF_BREITE - PDF_RAND, { dicke: 0.7, grau: 0.4 });
+    d.luft(4);
+    d.text("Ort, Datum", { groesse: 7.5, grau: 0.5, abstand: 1.1 });
+    d.luft(-8.25);
+    d.text("Unterschrift", { x: PDF_RAND + halb + 24, groesse: 7.5, grau: 0.5, abstand: 1.1 });
+  }
+
+  return pdfDatei(d.fertig());
+}
+
 /* Druckbare Sport-Vorlagen. Zwei Typen:
    - "protokoll": Stundenprotokoll fuer Kinder ohne Sportzeug (schreiben mit,
      statt teilzunehmen).
@@ -5779,8 +6160,50 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
   const [anwesend, setAnwesend] = useState("");
   const titel = vorlage === "regelbruch" ? "Störungen im Sportunterricht" : "Sport-Stundenprotokoll";
 
+  const [teilStatus, setTeilStatus] = useState(null);   // null | "laeuft" | "geladen"
+
   function drucken() {
     setTimeout(() => window.print(), 50);
+  }
+
+  /* Teilen statt Drucken: erzeugt dieselbe Vorlage als PDF und uebergibt
+     sie dem Teilen-Menue des Geraets - auf dem iPhone landet sie damit in
+     AirDrop, Mail oder Nachrichten. Kann der Browser keine Dateien teilen
+     (jeder Desktop-Browser ausser Safari), wird sie stattdessen
+     heruntergeladen; dann ist der Weg immerhin genauso kurz wie vorher. */
+  async function teilen() {
+    setTeilStatus("laeuft");
+    try {
+      const blob = sportVorlagePdf({
+        vorlage, titel, name, klasse: klassenName, datum: datumAnzeige,
+        thema: themaEingabe, anwesend,
+      });
+      const sauber = (t) => (t || "")
+        .replace(/[äÄöÖüÜß]/g, (z) => ({ "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue", "ß": "ss" }[z]))
+        .replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const teile = [vorlage === "regelbruch" ? "Stoerungen-Sport" : "Sport-Stundenprotokoll", sauber(name), heutigesDatum];
+      const dateiname = `${teile.filter(Boolean).join("_")}.pdf`;
+      const datei = new File([blob], dateiname, { type: "application/pdf" });
+
+      if (navigator.canShare?.({ files: [datei] })) {
+        await navigator.share({ files: [datei], title: titel });
+        setTeilStatus(null);
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = dateiname;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      setTeilStatus("geladen");
+      setTimeout(() => setTeilStatus(null), 2500);
+    } catch (e) {
+      /* AbortError heisst nur: die Lehrkraft hat das Teilen-Menue
+         weggewischt. Das ist kein Fehler. */
+      if (e?.name !== "AbortError") console.warn("[Tu-vi] Teilen fehlgeschlagen:", e);
+      setTeilStatus(null);
+    }
   }
 
   return (
@@ -5803,7 +6226,10 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
             <div className="font-semibold text-stone-800">{titel}</div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={drucken}><Printer size={14} /> Drucken</Button>
+            <Button onClick={teilen} disabled={teilStatus === "laeuft"}>
+              <Upload size={14} /> {teilStatus === "geladen" ? "Gespeichert" : "Teilen"}
+            </Button>
+            <Button variant="ghost" onClick={drucken}><Printer size={14} /> Drucken</Button>
             <button onClick={onClose} className="w-11 h-11 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center"><X size={16} /></button>
           </div>
         </div>
