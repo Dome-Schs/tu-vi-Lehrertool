@@ -1272,7 +1272,7 @@ function LegalModal({ onClose }) {
                     <div className="flex items-start gap-2"><span className="text-stone-400 shrink-0">·</span><span>Datenverlust durch Browser-Updates, Gerätewechsel oder Cache-Leerung</span></div>
                     <div className="flex items-start gap-2"><span className="text-stone-400 shrink-0">·</span><span>Fehlerhafte Notenberechnungen oder Anzeigefehler</span></div>
                     <div className="flex items-start gap-2"><span className="text-stone-400 shrink-0">·</span><span>Datenschutzverstöße durch unsachgemäße Nutzung (z. B. auf geteilten Geräten)</span></div>
-                    <div className="flex items-start gap-2"><span className="text-stone-400 shrink-0">·</span><span>Ausfälle oder Datenverlust durch Drittdienste (Apple/Google Spracherkennung, GitHub Pages)</span></div>
+                    <div className="flex items-start gap-2"><span className="text-stone-400 shrink-0">·</span><span>Ausfälle oder Datenverlust durch Drittdienste (Supabase, Hetzner, Apple/Google Spracherkennung)</span></div>
                     <div className="flex items-start gap-2"><span className="text-stone-400 shrink-0">·</span><span>Rechtliche Konsequenzen aus der Nutzung (z. B. Schuldatenschutz-Verletzungen)</span></div>
                   </div>
                   <p>Die datenschutzrechtliche Verantwortung für eingegebene Schüler- und Klassendaten liegt gemäß <strong className="text-stone-800">Art. 4 Nr. 7 DSGVO</strong> ausschließlich bei der nutzenden Lehrkraft.</p>
@@ -1314,10 +1314,10 @@ function LegalModal({ onClose }) {
                 <p className="text-xs text-stone-600">E-Mail: kontakt@tu-vi.de</p>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">2. Hosting (GitHub Pages)</div>
-                <p className="text-xs text-stone-600">Diese App wird über GitHub Pages gehostet:</p>
-                <p className="text-xs font-medium text-stone-800 mt-1">GitHub, Inc., 88 Colin P Kelly Jr St, San Francisco, CA 94107, USA</p>
-                <p className="text-xs text-stone-500 mt-1">GitHub verarbeitet beim Aufruf technische Zugriffsdaten (IP-Adresse, Zeitstempel, Browsertyp) in Server-Logfiles. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Serverstandort: USA. Weitere Infos: docs.github.com/privacy</p>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">2. Hosting der App</div>
+                <p className="text-xs text-stone-600">Diese App wird unter tu-vi.de ausgeliefert von:</p>
+                <p className="text-xs font-medium text-stone-800 mt-1">Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, Deutschland</p>
+                <p className="text-xs text-stone-500 mt-1">Beim Aufruf verarbeitet der Webserver technische Zugriffsdaten (IP-Adresse, Zeitstempel, Browsertyp) in Logfiles. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Serverstandort: Deutschland. Hier wird nur die App selbst ausgeliefert – Schülerdaten werden an dieser Stelle nicht verarbeitet.</p>
               </div>
               <div>
                 <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">3. Konto und Anmeldung</div>
@@ -1340,9 +1340,10 @@ function LegalModal({ onClose }) {
               <div>
                 <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">5. Auftragsverarbeiter</div>
                 <div className="space-y-2 text-xs text-stone-600">
-                  <p><strong className="text-stone-800">Supabase</strong> – Anmeldung und Datenbank. Supabase Inc., 970 Toa Payoh North, Singapur. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.</p>
-                  <p><strong className="text-stone-800">GitHub Pages</strong> – Auslieferung der App (siehe Abschnitt 2).</p>
-                  <p><strong className="text-stone-800">Apple bzw. Google</strong> – nur wenn du die Spracheingabe nutzt. Dabei wird das Gesprochene kurzzeitig an den Sprachdienst deines Geräts übertragen. Ohne Nutzung der Spracheingabe erfolgt keine Übertragung.</p>
+                  <p><strong className="text-stone-800">Supabase</strong> – Anmeldung und Datenbank. Supabase Inc., 970 Toa Payoh North, Singapur. <strong className="text-stone-800">Serverstandort: Frankfurt am Main, Deutschland</strong> (Region eu-central-1). Die Daten verlassen die EU nicht; eine Übermittlung in ein Drittland findet nicht statt.</p>
+                  <p><strong className="text-stone-800">Hetzner Online GmbH</strong> – Auslieferung der App (siehe Abschnitt 2).</p>
+                  <p className="text-stone-500">Auftragsverarbeiter handeln weisungsgebunden und benötigen keine eigene Rechtsgrundlage; maßgeblich ist der Vertrag nach Art. 28 DSGVO.</p>
+                  <p className="pt-1"><strong className="text-stone-800">Keine Auftragsverarbeiter, aber erwähnenswert:</strong> Nutzt du die Spracheingabe, überträgt dein Gerät das Gesprochene kurzzeitig an den Sprachdienst von Apple bzw. Google. Das geschieht durch das Betriebssystem deines Geräts in dessen eigener Verantwortung, nicht durch Tu-vi. Ohne Nutzung der Spracheingabe erfolgt keine solche Übertragung.</p>
                 </div>
               </div>
               <div>
@@ -2829,6 +2830,9 @@ const HELP_DATA = [
   {
     category: "Noten & Berichte",
     items: [
+      { q: "Wie sehe ich, wie eine Klassenarbeit ausgefallen ist?", a: `Öffne die Klasse → Reiter „Noten" → das Fach. Unter den Wissensgebieten steht „Notentermine": jeder Tag, an dem du in diesem Fach benotet hast, mit Bezeichnung, Anzahl der Noten und Durchschnitt. Tippe einen Termin an, und du siehst alle Kinder mit ihrer Note nebeneinander – statt sie einzeln aufrufen zu müssen. Die Liste entsteht automatisch aus den vorhandenen Noten, du musst dafür nichts zusätzlich erfassen.` },
+      { q: "Kann ich eine Note nachträglich ändern oder nachtragen?", a: `Ja. Öffne den Termin unter „Notentermine" (Klasse → „Noten" → Fach). Dort änderst du jede Note direkt über das Auswahlfeld daneben. Kinder, die an dem Tag gefehlt haben, stehen unten unter „Ohne Note an diesem Termin" – ein Tipp auf „Note ergänzen" trägt sie nach und übernimmt dabei Datum, Bezeichnung, Gewichtung und Thema der Arbeit. So bleibt es ein einziger Termin und zerfällt nicht in zwei.` },
+      { q: "Wie benenne ich eine Klassenarbeit um oder korrigiere das Datum?", a: `Im geöffneten Termin stehen unten die Felder für Bezeichnung und Datum unter dem Hinweis „Gilt für alle Noten dieses Termins". Eine Änderung dort wirkt auf alle Noten des Termins gleichzeitig – wichtig, weil Tu-vi Noten anhand von Fach, Datum und Bezeichnung zusammenfasst. Änderst du das nur bei einem Kind, rutscht dessen Note in einen eigenen Termin. Über „Ganzen Termin löschen" verschwinden alle Noten dieses Tages auf einmal.` },
       { q: `Wie trage ich eine Note im Bereich „Noten & Berichte" ein?`, a: `Gehe zu „Noten & Berichte", wähle Klasse und Fach. Tippe auf eine:n Schüler:in – in der Karte „Neue Note" Kategorie und Note wählen und auf „+" tippen. Oder tippe direkt in der Notenübersicht auf die Mündl.-Spalte eines Kindes – ein Popover öffnet sich mit den fünf Schnellbewertungen ++, +, o, –, – –. Ein Tipp, fertig.` },
       { q: "Wie berechnet sich die Zeugnisnote?", a: `Tu-vi bildet den gewichteten Durchschnitt aus mündlichen und schriftlichen Noten. Voreingestellt ist 50 zu 50 Prozent – änderbar über Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung". Einzelne Noten lassen sich zusätzlich stärker gewichten (Faktor beim Bearbeiten der Note). Die berechnete Note erscheint in der Notenübersicht.` },
       { q: "Wie sehe ich alle Noten eines Kindes auf einen Blick?", a: `Kind-Profil öffnen und oben rechts auf das Balken-Symbol „Notenübersicht" tippen. Dort siehst du den aktuellen Schnitt in jedem Fach sowie die Zeugnisnote, falls schon eingetragen.` },
@@ -16036,6 +16040,215 @@ function NotenUebersicht({ students, data, update, fach, halbjahr, selectedStude
   );
 }
 
+/* Ein Notentermin ist alles, was im selben Fach am selben Tag unter derselben
+   Bezeichnung und Art benotet wurde - also "die Klassenarbeit vom 14.03." oder
+   "die Mitarbeit vom Dienstag". Diese Buendelung steckt schon in den Daten,
+   sie war nur nirgends sichtbar: Wer nachsehen wollte, wie eine Arbeit
+   ausgefallen ist, musste sie aus 26 Einzelprofilen zusammensuchen. */
+function terminSchluessel(g) {
+  return `${g.date}|${g.category}|${g.title || ""}`;
+}
+
+function notenTermineFuerFach(grades, fachId, halbjahr, students) {
+  const imKurs = new Set(students.map((s) => s.id));
+  const map = new Map();
+  (grades || []).forEach((g) => {
+    if (g.fachId !== fachId || g.halbjahr !== halbjahr) return;
+    if (!imKurs.has(g.studentId)) return;
+    const key = terminSchluessel(g);
+    if (!map.has(key)) map.set(key, { key, date: g.date, category: g.category, title: g.title || "", noten: [] });
+    map.get(key).noten.push(g);
+  });
+  return [...map.values()]
+    .map((t) => ({
+      ...t,
+      schnitt: t.noten.length ? t.noten.reduce((s, g) => s + g.value, 0) / t.noten.length : null,
+    }))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+function terminName(t) {
+  if (t.title) return t.title;
+  return t.category === "schriftlich" ? "Schriftliche Note" : "Mündliche Note";
+}
+
+/* Detailansicht eines Termins: alle Kinder nebeneinander, Note direkt
+   aenderbar. Bewusst eine eigene Komponente statt eines Blocks im NotenTab -
+   Bezeichnung und Datum brauchen einen Entwurfszustand, damit beim Tippen
+   nicht nach jedem Buchstaben alle Noten umgeschrieben werden. */
+function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, onClose, onSchluesselWechsel, onOpenStudent }) {
+  const [titel, setTitel] = useState(termin.title);
+  const [datum, setDatum] = useState(termin.date);
+  const [loeschen, setLoeschen] = useState(false);
+
+  const notenNachKind = Object.fromEntries(termin.noten.map((g) => [g.studentId, g]));
+  const mitNote = students.filter((s) => notenNachKind[s.id]);
+  const ohneNote = students.filter((s) => !notenNachKind[s.id]);
+
+  /* Aendert Bezeichnung oder Datum fuer ALLE Noten des Termins auf einmal -
+     sonst zerfaellt der Termin in zwei. Der Schluessel aendert sich dabei,
+     deshalb muss die Elternansicht mitgezogen werden. */
+  function aendereTermin(changes) {
+    const ids = new Set(termin.noten.map((g) => g.id));
+    update((d) => {
+      (d.grades || []).forEach((g) => { if (ids.has(g.id)) Object.assign(g, changes); });
+      return d;
+    });
+    onSchluesselWechsel(terminSchluessel({
+      date: changes.date ?? termin.date,
+      category: termin.category,
+      title: changes.title ?? termin.title,
+    }));
+  }
+
+  function setzeNote(gradeId, value) {
+    update((d) => {
+      const g = (d.grades || []).find((x) => x.id === gradeId);
+      if (g) g.value = value;
+      return d;
+    });
+  }
+
+  function entferneNote(gradeId) {
+    update((d) => { d.grades = (d.grades || []).filter((g) => g.id !== gradeId); return d; });
+  }
+
+  /* Nachtraegen: uebernimmt Datum, Bezeichnung, Art, Gewicht und Thema vom
+     Termin - ein Kind, das bei der Arbeit gefehlt hat, gehoert zur selben
+     Arbeit und nicht zu einer neuen. */
+  function ergaenzeNote(studentId) {
+    const vorlage = termin.noten[0];
+    update((d) => {
+      d.grades.push({
+        id: uid(), studentId, classId: fach.classId, fachId: fach.id,
+        category: termin.category, value: 2, factor: vorlage?.factor ?? 1,
+        title: termin.title, date: termin.date, halbjahr,
+        ...(vorlage?.topic ? { topic: vorlage.topic } : {}),
+      });
+      return d;
+    });
+  }
+
+  function loescheTermin() {
+    const ids = new Set(termin.noten.map((g) => g.id));
+    update((d) => { d.grades = (d.grades || []).filter((g) => !ids.has(g.id)); return d; });
+    onClose();
+  }
+
+  const wochentag = localDate(termin.date).toLocaleDateString("de-DE", { weekday: "long" });
+  const langesDatum = localDate(termin.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  return (
+    <div className="fixed inset-0 bg-stone-900/40 flex items-end md:items-center md:justify-center md:p-4 z-[60]" onClick={onClose}>
+      <div className="bg-white w-full md:max-w-lg rounded-t-3xl md:rounded-2xl shadow-xl overflow-y-auto sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-stone-100 px-4 py-3 flex items-center gap-2 z-10">
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-stone-800 truncate">{terminName(termin)}</div>
+            <div className="t-caption">{wochentag}, {langesDatum} · {fach.subject}</div>
+          </div>
+          <button onClick={onClose} className="w-11 h-11 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><X size={16} /></button>
+        </div>
+
+        <div className="p-4 pb-[max(2rem,env(safe-area-inset-bottom))] space-y-4">
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3 py-2.5">
+            <div className="t-caption">
+              {mitNote.length} von {students.length} Kindern benotet
+            </div>
+            {termin.schnitt !== null && (
+              <div className={`text-base font-bold tabular-nums shrink-0 ${gradeColor(termin.schnitt, colored)}`}>
+                Ø {gradeLabel(termin.schnitt)}
+              </div>
+            )}
+          </div>
+
+          <ul className="divide-y divide-stone-100">
+            {mitNote.map((s) => {
+              const g = notenNachKind[s.id];
+              return (
+                <li key={s.id} className="flex items-center gap-2 py-2">
+                  <button onClick={() => onOpenStudent(s.id)} className="flex-1 min-w-0 text-left text-sm text-stone-800 truncate min-h-[44px] flex items-center">
+                    {s.name}
+                  </button>
+                  <select
+                    className={`w-20 shrink-0 rounded-lg border border-stone-300 px-2 py-2 text-sm font-semibold text-center ${gradeColor(g.value, colored)}`}
+                    value={g.value}
+                    onChange={(e) => setzeNote(g.id, Number(e.target.value))}
+                    aria-label={`Note von ${s.name}`}
+                  >
+                    {GRADE_OPTIONS.map((o) => <option key={o.label} value={o.value}>{o.label}</option>)}
+                  </select>
+                  <button
+                    onClick={() => entferneNote(g.id)}
+                    className="w-11 h-11 rounded-full text-stone-400 hover:text-red-600 flex items-center justify-center shrink-0"
+                    aria-label={`Note von ${s.name} löschen`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {ohneNote.length > 0 && (
+            <div>
+              <div className="t-caption mb-1.5">Ohne Note an diesem Termin</div>
+              <ul className="divide-y divide-stone-100">
+                {ohneNote.map((s) => (
+                  <li key={s.id} className="flex items-center gap-2 py-2">
+                    <span className="flex-1 min-w-0 text-sm text-stone-500 truncate">{s.name}</span>
+                    <button
+                      onClick={() => ergaenzeNote(s.id)}
+                      className="shrink-0 min-h-[44px] px-3 text-sm font-medium akzent-text flex items-center gap-1.5"
+                    >
+                      <Plus size={14} /> Note ergänzen
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="border-t border-stone-100 pt-4 space-y-2">
+            <div className="t-caption">Gilt für alle Noten dieses Termins</div>
+            <input
+              className={inputCls}
+              placeholder="Bezeichnung, z. B. Klassenarbeit Nr. 2"
+              value={titel}
+              onChange={(e) => setTitel(e.target.value)}
+              onBlur={() => { if (titel !== termin.title) aendereTermin({ title: titel }); }}
+            />
+            <input
+              type="date"
+              className={inputCls}
+              value={datum}
+              onChange={(e) => {
+                const neu = e.target.value;
+                setDatum(neu);
+                if (neu && neu !== termin.date) aendereTermin({ date: neu });
+              }}
+            />
+            {loeschen ? (
+              <div className="rounded-xl bg-red-50 border border-red-200 p-3 space-y-2">
+                <p className="text-sm text-red-800">
+                  {termin.noten.length} Note{termin.noten.length === 1 ? "" : "n"} dieses Termins endgültig löschen?
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="ghost" onClick={() => setLoeschen(false)} className="flex-1 justify-center">Abbrechen</Button>
+                  <Button onClick={loescheTermin} className="flex-1 justify-center">Löschen</Button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setLoeschen(true)} className="text-sm text-stone-500 hover:text-red-600 min-h-[44px]">
+                Ganzen Termin löschen
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* lockedClassId: eingebettet in die Klassenansicht. Dann faellt Schritt 1
    (Klasse waehlen) weg - die Klasse steht ja schon fest - und die
    Ueberschrift entfaellt, weil das Fenster bereits einen Kopf hat. */
@@ -16080,6 +16293,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
   const [showIncidents, setShowIncidents] = useState(false);
   const [showGradesList, setShowGradesList] = useState(false);
   const [editingGrade, setEditingGrade] = useState(null);
+  const [offenerTermin, setOffenerTermin] = useState(null); // Schluessel aus terminSchluessel()
   const [gesprNDraft, setGesprNDraft] = useState({ text: "", mood: "ok", typ: "schueler" });
   const [showSprechtagPicker, setShowSprechtagPicker] = useState(false);
   const [openTopic, setOpenTopic] = useState(null); // aufgeklapptes Wissensgebiet (Kind-Aufschlüsselung)
@@ -16534,6 +16748,77 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                   Ø aller Kinder · dieses Halbjahr · langer Balken = sicher beherrscht. Thema antippen zeigt die einzelnen Kinder.
                 </p>
               </Card>
+            );
+          })()}
+
+          {/* Notentermine: dieselbe Note-Sammlung, nur nach Datum gebuendelt
+              statt nach Kind. Beantwortet die Frage "wie ist die Arbeit vom
+              14.03. ausgefallen" ohne 26 Profile durchzuklicken. */}
+          {(() => {
+            if (student) return null;
+            const termine = notenTermineFuerFach(data.grades, fach.id, halbjahr, students);
+            if (!termine.length) return null;
+            return (
+              <Card className="p-4">
+                <div className="flex items-baseline justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-stone-800">Notentermine</h3>
+                  <span className="t-caption shrink-0">{termine.length} in diesem Halbjahr</span>
+                </div>
+                <ul className="divide-y divide-stone-100">
+                  {termine.map((t) => (
+                    <li key={t.key}>
+                      <button
+                        onClick={() => setOffenerTermin(t.key)}
+                        className="w-full flex items-center gap-3 py-2 text-left min-h-[44px]"
+                      >
+                        <div className="w-11 shrink-0 text-center">
+                          <div className="text-[10px] uppercase tracking-wide text-stone-400 leading-none">
+                            {localDate(t.date).toLocaleDateString("de-DE", { weekday: "short" })}
+                          </div>
+                          <div className="text-sm font-semibold text-stone-800 tabular-nums leading-tight">
+                            {localDate(t.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-stone-800 truncate">{terminName(t)}</div>
+                          <div className="t-caption">
+                            {t.noten.length} von {students.length} Kindern
+                            {t.category === "schriftlich" ? " · Schriftlich" : " · Mündlich"}
+                          </div>
+                        </div>
+                        <span className={`text-sm font-bold tabular-nums shrink-0 ${gradeColor(t.schnitt, colored)}`}>
+                          Ø {gradeLabel(t.schnitt)}
+                        </span>
+                        <ChevronRight size={15} className="text-stone-400 shrink-0" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[11px] text-stone-500 mt-2.5">
+                  Termin antippen zeigt alle Noten dieses Tages nebeneinander – dort lassen sie sich auch ändern oder nachtragen.
+                </p>
+              </Card>
+            );
+          })()}
+
+          {offenerTermin && (() => {
+            const t = notenTermineFuerFach(data.grades, fach.id, halbjahr, students)
+              .find((x) => x.key === offenerTermin);
+            /* Nach dem Loeschen der letzten Note gibt es den Termin nicht
+               mehr - dann schliesst sich das Fenster von selbst. */
+            if (!t) return null;
+            return (
+              <NotenTerminSheet
+                termin={t}
+                students={students}
+                fach={fach}
+                halbjahr={halbjahr}
+                colored={colored}
+                update={update}
+                onClose={() => setOffenerTermin(null)}
+                onSchluesselWechsel={setOffenerTermin}
+                onOpenStudent={(id) => { setOffenerTermin(null); setSelectedStudent(id); }}
+              />
             );
           })()}
 
