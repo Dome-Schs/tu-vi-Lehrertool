@@ -1416,6 +1416,10 @@ const SEITEN = [
   { key: "sicherheit",  icon: Lock,         titel: "Sicherheit & Konto",  sub: "App-Sperre, Abmelden" },
   { key: "daten",       icon: Download,     titel: "Daten & Sicherung",   sub: "Sichern, iCloud, Import, Löschen" },
   { key: "ueber",       icon: FileText,     titel: "Über Tu-vi",          sub: "Impressum, Datenschutz" },
+  /* Bewusst eine eigene Zeile statt eines Hinweises, der ueberall
+     mitlaeuft: Ablegen macht man einmal. Danach soll es auffindbar
+     sein, aber nicht staendig Platz kosten. */
+  { key: "homescreen",  icon: Download,     titel: "Als App ablegen",     sub: "Symbol auf dem Home-Bildschirm" },
 ];
 
 function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onClose, onOpenUntisImport }) {
@@ -1724,6 +1728,16 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
         )}
 
         {/* ── Sicherheit & Konto ── */}
+        {seite === "homescreen" && (
+          <div>
+            <p className="text-sm text-stone-600 leading-relaxed mb-1">
+              Tu-vi lässt sich wie eine App auf dem Home-Bildschirm ablegen: eigenes Symbol,
+              kein Browser-Rahmen, Start mit einem Tipp.
+            </p>
+            <AufHomescreen variante="einstellungen" />
+          </div>
+        )}
+
         {seite === "sicherheit" && (
           <div>
             <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Angemeldet als</div>
@@ -2840,7 +2854,8 @@ const HELP_DATA = [
       { q: "Was passiert beim ersten Start?", a: `Tu-vi führt dich in zwei Schritten durch die Einrichtung: zuerst Bundesland und Schulferien, dann kannst du direkt deine erste Klasse anlegen. Beides lässt sich auch später in den Einstellungen anpassen.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
       { q: "Wie bekomme ich Tu-vi als App auf den Home-Bildschirm?", a: `Das hängt vom Gerät ab. Auf Android und am Computer (Chrome, Edge) genügt ein Tipp: Der Knopf „Auf dem Home-Bildschirm ablegen" steht auf dem Anmeldebildschirm und später im Menü. Auf iPhone und iPad geht es nur über zwei Schritte, weil Apple keinen anderen Weg zulässt: unten in der Mitte (am iPad oben rechts) auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm" wählen. Tu-vi zeigt dir diese zwei Schritte automatisch an, solange sie noch nicht als App läuft. Wichtig auf iPhone und iPad: Mach das möglichst VOR der ersten Anmeldung. Die App auf dem Home-Bildschirm bekommt bei iOS einen eigenen Speicher – meldest du dich erst in Safari an und legst sie danach ab, musst du dich dort noch einmal anmelden, und auch die Face-ID-Sperre wäre dort zunächst wieder aus. Deine Daten sind dabei nicht weg, sie liegen auf dem Server und sind nach der Anmeldung sofort wieder da.` },
-      { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast auf „Später" getippt; im Menü unter „Mehr" ist der Weg weiterhin zu finden. Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
+      { q: "Wo finde ich das Ablegen auf dem Home-Bildschirm später wieder?", a: `Unter „Mehr" → „Einstellungen" → „Als App ablegen". Auf dem Anmeldebildschirm erscheint der Hinweis nur beim ersten Mal – danach würde er im Alltag nur Platz kosten, deshalb wandert er in die Einstellungen. Läuft Tu-vi auf dem Gerät bereits als App, sagt die Seite dir das; kann dein Browser es gar nicht, steht dort, was stattdessen geht.` },
+      { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast dich auf diesem Gerät schon einmal angemeldet oder auf „Später" getippt – dann steht der Weg unter „Einstellungen" → „Als App ablegen". Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
       { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – beim Öffnen der App und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
       { q: "Sperrt sich Tu-vi, wenn ich es liegen lasse?", a: `Ja. Unter „Mehr" → „Einstellungen" → „Sicherheit & Konto" → „Automatisch sperren" wählst du zwischen Aus, 5, 15 und 30 Minuten; voreingestellt sind 15 Minuten. Passiert in dieser Zeit nichts – kein Tippen, kein Scrollen –, greift die Sperre. Was dann geschieht, hängt davon ab, was auf dem Gerät eingerichtet ist: Mit Face ID oder Touch ID wird nur gesperrt, und du bist mit einem Blick wieder da, genau an der Stelle, an der du warst. Ohne eingerichtete Sperre wirst du abgemeldet, weil eine wegwischbare Sperre kein Schutz wäre – zurück brauchst du dann E-Mail und Passwort. Gedacht ist das für den Fall, dass das iPad aufgeklappt auf dem Pult liegen bleibt. Die Einstellung gilt nur auf dem Gerät, an dem du sie triffst, und deine Daten gehen dabei nie verloren.` },
       { q: "Kann ich die Sport-Vorlagen verschicken statt drucken?", a: `Ja. Im Fenster der Vorlage steht neben „Drucken" jetzt „Teilen". Damit entsteht aus derselben Vorlage ein PDF, das an das Teilen-Menü deines Geräts übergeben wird – auf iPhone und iPad landest du damit direkt bei AirDrop, Mail oder Nachrichten. Am Computer, wo Browser das Teilen von Dateien meist nicht unterstützen, wird das PDF stattdessen heruntergeladen und liegt im Download-Ordner. Der Dateiname enthält Vorlage, Kindname und Datum, damit du sie später wiederfindest. Denk daran: Das PDF enthält den Namen des Kindes – teile es nur über schulisch genehmigte Wege, nicht über private Messenger.` },
@@ -4073,10 +4088,34 @@ function AufHomescreen({ variante = "karte", onFertig }) {
     onFertig?.();
   }
 
-  if (lage === "installiert") return null;
-  /* Auf dem Rechner ohne Chromium-Ereignis gibt es nichts anzubieten -
-     dort waere ein Hinweis ohne Handlung nur Rauschen. */
-  if (lage === "sonst" && !prompt) return null;
+  const inEinstellungen = variante === "einstellungen";
+
+  /* Auf der eigenen Einstellungsseite darf nicht einfach nichts stehen -
+     wer dort hingeht, hat eine Frage und braucht eine Antwort. */
+  if (lage === "installiert") {
+    if (!inEinstellungen) return null;
+    return (
+      <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3">
+        <div className="text-sm font-semibold text-stone-800 mb-0.5">Läuft bereits als App</div>
+        <p className="text-xs text-stone-600 leading-relaxed">
+          Du hast Tu-vi auf diesem Gerät schon abgelegt – hier ist nichts mehr zu tun.
+        </p>
+      </div>
+    );
+  }
+  if (lage === "sonst" && !prompt) {
+    if (!inEinstellungen) return null;
+    return (
+      <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3">
+        <div className="text-sm font-semibold text-stone-800 mb-0.5">Auf diesem Gerät nicht möglich</div>
+        <p className="text-xs text-stone-600 leading-relaxed">
+          Dein Browser bietet das Ablegen nicht an. Am iPhone und iPad geht es über Safari,
+          auf Android und am Computer über Chrome oder Edge. In Safari am Mac heißt es
+          „Zum Dock hinzufügen" im Menü „Ablage".
+        </p>
+      </div>
+    );
+  }
 
   const zeile = variante === "zeile";
 
@@ -4173,9 +4212,9 @@ function AufHomescreen({ variante = "karte", onFertig }) {
         </li>
       </ol>
       <p className="text-[11px] text-stone-500 leading-relaxed mt-2.5">
-        Mach das am besten <strong className="text-stone-700">vor</strong> dem Anmelden: Die App auf dem
-        Home-Bildschirm hat bei iOS einen eigenen Speicher. Meldest du dich erst hier und legst sie danach
-        ab, musst du dich dort noch einmal anmelden.
+        {inEinstellungen
+          ? "Die App auf dem Home-Bildschirm hat bei iOS einen eigenen Speicher. Du musst dich dort einmal neu anmelden – deine Daten sind danach sofort wieder da, sie liegen auf dem Server."
+          : "Mach das am besten vor dem Anmelden: Die App auf dem Home-Bildschirm hat bei iOS einen eigenen Speicher. Meldest du dich erst hier an und legst sie danach ab, musst du dich dort noch einmal anmelden."}
       </p>
     </div>
   );
@@ -4495,6 +4534,15 @@ export default function App() {
   const [saveState, setSaveState] = useState("idle"); // idle | saving | saved
   const [halbjahr, setHalbjahr] = useState(currentHalbjahr());
 
+  /* Der Hinweis auf den Home-Bildschirm gehoert an den Anfang, nicht in den
+     Alltag. Nach der ersten erfolgreichen Anmeldung auf diesem Geraet ist er
+     erledigt - danach steht der Weg in den Einstellungen. Wichtig, seit sich
+     Tu-vi bei Untaetigkeit abmeldet: sonst kaeme die Karte staendig wieder. */
+  useEffect(() => {
+    if (!user) return;
+    try { localStorage.setItem(HOMESCREEN_KEY, "1"); } catch { /* Privatmodus */ }
+  }, [user]);
+
   const [theme, setThemeState] = useState(leseTheme);
   const setTheme = useCallback((wahl) => {
     setThemeState(wahl);
@@ -4585,17 +4633,38 @@ export default function App() {
   }, []);
 
   // Wechselt den Bereich und optional den Unterreiter (z. B. direkt zu den Diensten)
+  /* Vollbildseiten liegen ueber der Seitenleiste (z-56 gegen z-50 der
+     Einstellungen). Wer in den Dokumenten stand und auf "Einstellungen"
+     tippte, sah deshalb scheinbar nichts passieren - die Einstellungen
+     oeffneten sich hinter der Dokumentenseite. Beim Wechsel raeumen wir
+     deshalb alle Vollbildseiten weg.
+
+     Unbedenklich, weil Tu-vi laufend speichert: Notizen, Noten und
+     Aenderungen an Terminen gehen beim Schliessen nicht verloren. Nur
+     Fenster mit ausdruecklichem Speichern-Knopf (Import, Sammelbewertung,
+     Stundenabschluss) bleiben absichtlich stehen. */
+  const verlasseVollbild = useCallback(() => {
+    setShowDokumente(false);
+    setShowGeburtstage(false);
+    setShowFoerderziele(false);
+    setShowEntschuldigungen(false);
+    setShowNachtragen(false);
+    setShowMore(false);
+  }, []);
+
   const goTo = useCallback((ziel, unterreiter) => {
+    verlasseVollbild();
     setTab(ziel);
     setNavCollapsed(false);
     if (unterreiter) setKlassenSubTab(unterreiter);
-  }, []);
+  }, [verlasseVollbild]);
   // Direkt in die Notenübersicht eines bestimmten Fachs springen
   const goToFach = useCallback((fachId) => {
+    verlasseVollbild();
     setNotenFachId(fachId);
     setTab("noten");
     setNavCollapsed(false);
-  }, []);
+  }, [verlasseVollbild]);
   const navigateToStudent = useCallback((studentId) => {
     setShowSearch(false);
     setFocusStudentId(studentId);
@@ -5344,19 +5413,19 @@ export default function App() {
           {/* Suche + Einstellungen unten */}
           <div className="px-2 py-3 border-t border-stone-100 space-y-0.5">
             <button
-              onClick={() => setShowSearch(true)}
+              onClick={() => { verlasseVollbild(); setShowSearch(true); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
             >
               <Search size={17} strokeWidth={2} /> Suchen
             </button>
             <button
-              onClick={() => setShowDokumente(true)}
+              onClick={() => { verlasseVollbild(); setShowDokumente(true); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
             >
               <Paperclip size={17} strokeWidth={2} /> Dokumente
             </button>
             <button
-              onClick={() => setShowSettings(true)}
+              onClick={() => { verlasseVollbild(); setShowSettings(true); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
             >
               <Settings2 size={17} strokeWidth={2} /> Einstellungen
@@ -5365,13 +5434,11 @@ export default function App() {
                 Bildschirm gab es keinen Weg dorthin, obwohl die langen
                 Erklaertexte genau dort am besten lesbar sind. */}
             <button
-              onClick={() => setShowHelp(true)}
+              onClick={() => { verlasseVollbild(); setShowHelp(true); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
             >
               <MessageSquare size={17} strokeWidth={2} /> Hilfe
             </button>
-            {/* Nur sichtbar, solange Tu-vi nicht schon als App laeuft. */}
-            <AufHomescreen variante="zeile" />
             <button
               onClick={() => supabase.auth.signOut()}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-400 hover:bg-stone-50 hover:text-stone-600 transition-colors"
@@ -5392,7 +5459,7 @@ export default function App() {
             <div className="mb-5 flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
               <span className="text-red-600 shrink-0">⚠</span>
               <span className="flex-1 text-red-800">Kein Speicherplatz mehr – Daten konnten nicht gespeichert werden. Bitte ein Backup erstellen und Browser-Speicher freigeben.</span>
-              <button onClick={() => setShowSettings(true)} className="text-xs font-medium text-red-700 hover:text-red-900 underline underline-offset-2 shrink-0">Backup erstellen</button>
+              <button onClick={() => { verlasseVollbild(); setShowSettings(true); }} className="text-xs font-medium text-red-700 hover:text-red-900 underline underline-offset-2 shrink-0">Backup erstellen</button>
             </div>
           )}
           {backupReminderDays !== null && (
@@ -5662,8 +5729,8 @@ export default function App() {
             <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest px-1 mb-2">Werkzeuge</div>
             <div className="rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
               {[
-                { icon: Search, label: "Suchen", onClick: () => setShowSearch(true) },
-                { icon: Paperclip, label: "Dokumente", onClick: () => setShowDokumente(true) },
+                { icon: Search, label: "Suchen", onClick: () => { verlasseVollbild(); setShowSearch(true); } },
+                { icon: Paperclip, label: "Dokumente", onClick: () => { verlasseVollbild(); setShowDokumente(true); } },
                 { icon: Settings2, label: "Einstellungen", onClick: () => setShowSettings(true) },
                 { icon: MessageSquare, label: "Hilfe", onClick: () => setShowHelp(true) },
               ].map((w) => {
@@ -5680,12 +5747,6 @@ export default function App() {
                   </button>
                 );
               })}
-            </div>
-
-            {/* Der Weg auf den Home-Bildschirm - blendet sich selbst aus,
-                sobald Tu-vi als App laeuft. */}
-            <div className="mt-2">
-              <AufHomescreen variante="zeile" />
             </div>
 
             {/* Abmelden abgesetzt: es beendet die Sitzung und gehoert nicht
