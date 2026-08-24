@@ -4034,6 +4034,10 @@ function AufHomescreen({ variante = "karte", onFertig }) {
   const [lage, setLage] = useState(homescreenLage);
   const [prompt, setPrompt] = useState(null);   // Chromium: gespeichertes Ereignis
   const [laeuft, setLaeuft] = useState(false);
+  /* In Menue und Seitenleiste bleibt die Anleitung zugeklappt. Ausgeklappt
+     ist sie dort so hoch, dass sie die Navigation verdraengt - auf dem iPad
+     blieb von "Unterricht" nur noch eine Zeile uebrig. */
+  const [offen, setOffen] = useState(false);
 
   useEffect(() => {
     function beiPrompt(e) {
@@ -4097,6 +4101,16 @@ function AufHomescreen({ variante = "karte", onFertig }) {
   }
 
   if (lage === "ios-fremd") {
+    if (zeile && !offen) {
+      return (
+        <button
+          onClick={() => setOffen(true)}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
+        >
+          <Download size={17} strokeWidth={2} /> Auf dem Home-Bildschirm ablegen
+        </button>
+      );
+    }
     return (
       <div className={`${zeile ? "" : "mt-5"} rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3`}>
         <div className="text-sm font-semibold text-stone-800 mb-1">Tu-vi als App</div>
@@ -4111,6 +4125,19 @@ function AufHomescreen({ variante = "karte", onFertig }) {
 
   // ios-safari: der Weg lässt sich nicht abkürzen, nur genau zeigen
   const iPad = /iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
+  /* Im Menue nur eine Zeile - die Anleitung kommt erst auf Tippen. */
+  if (zeile && !offen) {
+    return (
+      <button
+        onClick={() => setOffen(true)}
+        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
+      >
+        <Download size={17} strokeWidth={2} /> Auf dem Home-Bildschirm ablegen
+      </button>
+    );
+  }
+
   return (
     <div className={`${zeile ? "" : "mt-5"} rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3`}>
       <div className="flex items-start gap-2 mb-2">
@@ -4120,9 +4147,12 @@ function AufHomescreen({ variante = "karte", onFertig }) {
             Zwei Schritte – mehr erlaubt Apple leider nicht.
           </p>
         </div>
-        {onFertig && (
-          <button onClick={merken} className="text-[11px] text-stone-400 hover:text-stone-600 shrink-0 py-0.5">
-            Später
+        {(onFertig || zeile) && (
+          <button
+            onClick={() => (zeile ? setOffen(false) : merken())}
+            className="text-[11px] text-stone-400 hover:text-stone-600 shrink-0 py-0.5 px-1"
+          >
+            {zeile ? "Zuklappen" : "Später"}
           </button>
         )}
       </div>
@@ -5210,8 +5240,10 @@ export default function App() {
       <div className="flex flex-1 min-h-0">
         {/* Seitenleiste (Desktop) */}
         <aside className="hidden md:w-56 md:fixed md:inset-y-0 md:flex md:flex-col border-r border-stone-200 bg-white">
-          {/* App-Kopf */}
-          <div className="px-4 py-4 border-b border-stone-100">
+          {/* App-Kopf. Der obere Abstand beruecksichtigt die Statusleiste:
+              als installierte App zeichnet Tu-vi darunter durch, sonst
+              saesse die Wortmarke in Apples Uhrzeit. */}
+          <div className="px-4 pb-4 border-b border-stone-100" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
             <div className="flex items-center gap-2.5">
               <SaidyLogoMark size={34} className="shrink-0" />
               <div>
@@ -5350,7 +5382,7 @@ export default function App() {
         </aside>
 
         {/* Inhalt */}
-        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-8 md:pt-8">
+        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-8 md:pt-[max(env(safe-area-inset-top),2rem)]">
           {/* Der Deckel sitzt bewusst hier innen und nicht am <main>: aussen
               waere er linksbuendig an der Seitenleiste geklebt, innen laesst
               er sich zentrieren. Die Modals darunter sind position:fixed und
