@@ -2855,7 +2855,7 @@ const HELP_DATA = [
       { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Namensliste als Datei einlesen.` },
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi führt dich in zwei Schritten durch die Einrichtung: zuerst Bundesland und Schulferien, dann kannst du direkt deine erste Klasse anlegen. Beides lässt sich auch später in den Einstellungen anpassen.` },
-      { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein: Auf der Startseite bekommt die laufende Stunde einen Rahmen in der Farbe ihres Fachs, das Fach-Kürzel wird ausgefüllt statt nur blass getönt, die nächste Stunde erhält eine farbige Kante und die Aufgaben-Kreise die Farbe ihrer Aufgabe. Im Stundenplan färben sich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum ruhigen Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
+      { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Auf der Startseite bekommt jeder Bereich einen eigenen Ton: der Wochentag im Kopf, die Überschriften „Aufmerksamkeit", „Nicht vergessen" und „Unterrichtstipp des Tages", dazu jeweils eine farbige Kartenkante. Die laufende Stunde trägt durchgehend die Farbe ihres Fachs – Rahmen, „JETZT"-Kennzeichnung, ausgefülltes Fach-Kürzel und der Knopf „Stunde öffnen". Auch „Schnell erfassen" wechselt die Farbe. Im Stundenplan färben sich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Gefärbt werden nur Schrift und Linien, die Flächen bleiben ruhig – sonst würde die Startseite unübersichtlich. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
       { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – beim Öffnen der App und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
@@ -4947,6 +4947,9 @@ export default function App() {
             <button
               onClick={() => setFabOpen((o) => !o)}
               className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl akzent-flaeche text-white text-sm font-semibold press-scale"
+              /* Im Farbmodus hebt sich der Erfassen-Knopf vom Marken-Oliv ab,
+                 damit er als eigene Aktion und nicht als Teil der Navigation liest. */
+              style={data.settings?.colorMode === true ? { backgroundColor: "var(--f-erfassen)", color: "#FFFFFF" } : undefined}
               aria-expanded={fabOpen}
             >
               <Plus size={16} strokeWidth={2.4} />
@@ -5264,7 +5267,10 @@ export default function App() {
             <button
               onClick={() => { setFabOpen((o) => !o); setShowMore(false); }}
               className="w-14 h-14 -mt-5 rounded-full akzent-flaeche flex items-center justify-center press-scale shrink-0"
-              style={{ boxShadow: "0 6px 20px rgba(79,88,68,0.45)" }}
+              style={{
+                boxShadow: "0 6px 20px rgba(79,88,68,0.45)",
+                ...(data.settings?.colorMode === true ? { backgroundColor: "var(--f-erfassen)", color: "#FFFFFF" } : {}),
+              }}
               aria-label="Neu erfassen"
               aria-expanded={fabOpen}
             >
@@ -7588,7 +7594,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               return h < 11 ? "Guten Morgen," : h < 17 ? "Hallo," : "Guten Abend,";
             })()}
           </p>
-          <h1 className="text-2xl font-bold tracking-tight leading-none" style={{ color: "var(--ink)" }}>
+          <h1 className={`text-2xl font-bold tracking-tight leading-none ${isColor ? "f-kopf" : ""}`} style={isColor ? undefined : { color: "var(--ink)" }}>
             {selectedDate.toLocaleDateString("de-DE", { weekday: "long" })}
             <span className="text-stone-300 font-semibold text-lg ml-2">
               {selectedDate.toLocaleDateString("de-DE", { day: "numeric", month: "long" })}
@@ -7860,6 +7866,9 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             <button
               onClick={() => setCaptureLesson?.({ fach, cls, date: selStr })}
               className="w-full py-2.5 rounded-xl akzent-flaeche text-white text-sm font-medium press-scale flex items-center justify-center gap-2"
+              /* Sonst steht ein oliver Knopf mitten in einer fachfarbenen
+                 Karte - der Block liest sich dann als zwei Dinge. */
+              style={isColor && fach?.color ? { backgroundColor: fach.color, color: schriftAuf(fach.color) } : undefined}
             >
               <BookOpen size={15} /> Stunde öffnen
             </button>
@@ -7991,10 +8000,11 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
           onClick={() => setShowAttentionSheet(true)}
           disabled={!attentionItems.length}
           className="karte-luft text-left px-4 py-3 press-scale disabled:opacity-60 disabled:cursor-default"
+          style={isColor ? { border: "1px solid color-mix(in srgb, var(--f-signal) 45%, transparent)" } : undefined}
         >
           <div className="flex items-center gap-2 mb-1.5">
-            <Star size={14} className={attentionItems.length ? "text-violet-600" : "text-stone-300"} />
-            <span className="text-sm font-semibold text-stone-800">
+            <Star size={14} className={`${attentionItems.length ? "text-violet-600" : "text-stone-300"} ${isColor && attentionItems.length ? "f-signal" : ""}`} />
+            <span className={`text-sm font-semibold text-stone-800 ${isColor && attentionItems.length ? "f-signal" : ""}`}>
               {attentionItems.length
                 ? `${attentionItems.length} ${attentionItems.length === 1 ? "Ding braucht" : "Dinge brauchen"} deine Aufmerksamkeit`
                 : "Nichts Dringendes"}
@@ -8026,14 +8036,14 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             einem Tipp. Vorher stand die volle Liste da und die Kachel war
             der schwerste Block der Seite. Das Eingabefeld bleibt: es ist
             der schnellste Weg, etwas zwischen zwei Stunden festzuhalten. */}
-        <Card className="px-4 py-3">
+        <Card className="px-4 py-3" style={isColor ? { border: "1px solid color-mix(in srgb, var(--f-aufgaben) 45%, transparent)" } : undefined}>
           <button
             onClick={() => offeneAufgaben.length && setShowNichtVergessen(true)}
             disabled={!offeneAufgaben.length}
             className="w-full flex items-center gap-2 mb-2 text-left disabled:cursor-default"
           >
-            <Check size={14} className={aufgabenDringend ? "text-amber-600" : "text-stone-500"} />
-            <span className="text-sm font-semibold text-stone-800">Nicht vergessen</span>
+            <Check size={14} className={`${aufgabenDringend ? "text-amber-600" : "text-stone-500"} ${isColor && !aufgabenDringend ? "f-aufgaben" : ""}`} />
+            <span className={`text-sm font-semibold text-stone-800 ${isColor ? "f-aufgaben" : ""}`}>Nicht vergessen</span>
             {!!offeneAufgaben.length && (
               <span className="t-caption tnum ml-auto">
                 {aufgabenUeberfaellig
@@ -8379,13 +8389,13 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         <button
           onClick={() => setTippSheetKarte(tippDesTages)}
           className="karte-luft w-full text-left flex items-center gap-3 px-3 py-2.5 press-scale"
-          style={{ order: orderOf("tipp") }}
+          style={{ order: orderOf("tipp"), ...(isColor ? { border: "1px solid color-mix(in srgb, var(--f-tipp) 45%, transparent)" } : {}) }}
         >
           <span className="w-9 h-9 rounded-lg akzent-ton flex items-center justify-center shrink-0">
-            <Lightbulb size={16} className="akzent-text" />
+            <Lightbulb size={16} className={`akzent-text ${isColor ? "f-tipp" : ""}`} />
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none">Unterrichtstipp des Tages</div>
+            <div className={`text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none ${isColor ? "f-tipp" : ""}`}>Unterrichtstipp des Tages</div>
             <div className="text-sm font-medium text-stone-800 mt-1 leading-snug line-clamp-1">{tippDesTages.titel}</div>
             <div className="text-[11px] text-stone-500 italic mt-0.5 line-clamp-1">„{tippDesTages.merksatz}"</div>
           </div>

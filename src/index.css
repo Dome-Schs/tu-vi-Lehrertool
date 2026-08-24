@@ -240,6 +240,42 @@ html, body {
   margin-inline: auto;
   padding-inline: 1rem;
 }
+
+/* ═══════════════════════════════════════════════════
+   Bereichsfarben — nur im Farbmodus (Sternchen-Knopf)
+   ─────────────────────────────────────────────────
+   Jeder Bereich der Uebersicht bekommt einen eigenen Ton, damit man
+   Ueberschriften und Kartenkanten unterscheiden kann, ohne zu lesen.
+   Bewusst nur fuer Schrift und Linien - Flaechen bleiben neutral,
+   sonst wird die Startseite zum Flickenteppich.
+
+   Zwei Saetze, weil ein Ton nicht auf beiden Gruenden lesbar ist: die
+   hellen Werte liegen bei 5,9-7,3:1 auf weisser Karte, die dunklen bei
+   7,4-9,7:1 auf #1C1C1E. Beide erfuellen WCAG AA. */
+:root {
+  --f-kopf:     #6B5B7B;
+  --f-signal:   #A3402F;
+  --f-aufgaben: #3F5A6B;
+  --f-tipp:     #46662B;
+  --f-erfassen: #41697E;
+  --f-woche:    #7A4E63;
+}
+:root[data-theme="dark"] {
+  --f-kopf:     #C6B4DE;
+  --f-signal:   #F0918A;
+  --f-aufgaben: #9EC2D8;
+  --f-tipp:     #AFCE86;
+  --f-erfassen: #93BCD4;
+  --f-woche:    #DDA6BC;
+}
+
+/* Als Klassen mit !important, nicht als Inline-Farbe: die Tailwind-Bruecke
+   weiter oben setzt .text-stone-* selbst mit !important, und das schlaegt
+   jede normale style-Angabe. Ueberschriften blieben dadurch grau. */
+.f-kopf     { color: var(--f-kopf)     !important; }
+.f-signal   { color: var(--f-signal)   !important; }
+.f-aufgaben { color: var(--f-aufgaben) !important; }
+.f-tipp     { color: var(--f-tipp)     !important; }
 @media (min-width: 768px) {
   .inhalt-breite { padding-inline: 2rem; }
 }
