@@ -1422,7 +1422,7 @@ const SEITEN = [
   { key: "homescreen",  icon: Download,     titel: "Als App ablegen",     sub: "Symbol auf dem Home-Bildschirm" },
 ];
 
-function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onClose, onOpenUntisImport }) {
+function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onBeispieldaten, onClose, onOpenUntisImport }) {
   const gespeicherteReihenfolge = data.settings?.dashboardOrder || Object.keys(DASHBOARD_SECTIONS);
   const order = [
     ...gespeicherteReihenfolge.filter((k) => DASHBOARD_SECTIONS[k]),
@@ -1950,6 +1950,19 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
               </button>
               {showAdvanced && (
                 <div className="mt-3 space-y-2">
+                  {/* Nur sichtbar, solange keine Klasse existiert: so kann der
+                      Knopf nichts ueberschreiben, was jemand eingetragen hat. */}
+                  {!(data.classes || []).length && (
+                    <div className="pb-3 mb-1 border-b border-stone-100">
+                      <p className="text-xs text-stone-500 mb-2">
+                        Zum Ausprobieren: zwei Beispielklassen mit erfundenen Kindern, Noten und Terminen.
+                        Erscheint nur, solange du noch keine eigene Klasse angelegt hast.
+                      </p>
+                      <Button variant="ghost" onClick={onBeispieldaten} className="w-full justify-center">
+                        Beispieldaten laden
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-xs text-stone-500">
                     Alle Klassen, Schüler, Noten und Notizen werden gelöscht. Die Daten landen für 30 Tage im Papierkorb („Klassen & Schüler", ganz unten) und können dort wiederhergestellt werden.
                   </p>
@@ -2851,7 +2864,7 @@ const HELP_DATA = [
       { q: "Wie lege ich eine neue Klasse an?", a: `Tippe unten auf „Klassen" → Reiter „Klassen". Ganz unten unter der Klassenliste steht der Knopf „Neue Klasse" – Namen eingeben, speichern, fertig.` },
       { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Namensliste als Datei einlesen.` },
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
-      { q: "Was passiert beim ersten Start?", a: `Tu-vi führt dich in zwei Schritten durch die Einrichtung: zuerst Bundesland und Schulferien, dann kannst du direkt deine erste Klasse anlegen. Beides lässt sich auch später in den Einstellungen anpassen.` },
+      { q: "Was passiert beim ersten Start?", a: `Tu-vi beginnt leer – keine Klassen, keine Kinder, keine Termine. Zuerst fragt die App nach deinem Bundesland und trägt die Schulferien ein; das lässt sich mit „Später einrichten" überspringen und in den Einstellungen nachholen. Danach steht auf der Übersicht eine Willkommenskarte mit dem einzigen sinnvollen ersten Schritt: eine Klasse anlegen. Sind Klasse und Kinder da, kommen Fächer und Stundenplan dazu – alles Weitere entsteht im Alltag. Wenn du dich lieber erst umsehen möchtest, kannst du unter „Einstellungen" → „Daten & Sicherung" → „Erweiterte Einstellungen" Beispieldaten laden: zwei erfundene Klassen mit Noten und Terminen. Der Knopf erscheint nur, solange du noch keine eigene Klasse angelegt hast – so kann er nichts überschreiben.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
       { q: "Wie bekomme ich Tu-vi als App auf den Home-Bildschirm?", a: `Das hängt vom Gerät ab. Auf Android und am Computer (Chrome, Edge) genügt ein Tipp: Der Knopf „Auf dem Home-Bildschirm ablegen" steht auf dem Anmeldebildschirm und später im Menü. Auf iPhone und iPad geht es nur über zwei Schritte, weil Apple keinen anderen Weg zulässt: unten in der Mitte (am iPad oben rechts) auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm" wählen. Tu-vi zeigt dir diese zwei Schritte automatisch an, solange sie noch nicht als App läuft. Wichtig auf iPhone und iPad: Mach das möglichst VOR der ersten Anmeldung. Die App auf dem Home-Bildschirm bekommt bei iOS einen eigenen Speicher – meldest du dich erst in Safari an und legst sie danach ab, musst du dich dort noch einmal anmelden, und auch die Face-ID-Sperre wäre dort zunächst wieder aus. Deine Daten sind dabei nicht weg, sie liegen auf dem Server und sind nach der Anmeldung sofort wieder da.` },
       { q: "Wo finde ich das Ablegen auf dem Home-Bildschirm später wieder?", a: `Unter „Mehr" → „Einstellungen" → „Als App ablegen". Auf dem Anmeldebildschirm erscheint der Hinweis nur beim ersten Mal – danach würde er im Alltag nur Platz kosten, deshalb wandert er in die Einstellungen. Läuft Tu-vi auf dem Gerät bereits als App, sagt die Seite dir das; kann dein Browser es gar nicht, steht dort, was stattdessen geht.` },
@@ -4806,7 +4819,12 @@ export default function App() {
             }
           } catch { /* Erinnerung ist unkritisch – Daten sind bereits geladen */ }
         } else {
-          setData(demoData());
+          /* Neue Konten starten leer. Frueher landeten hier Beispielklassen
+             mit erfundenen Kindern, Noten und Terminen - fuer eine Lehrkraft,
+             die ihre echte Klasse anlegen will, ist das kein Startpunkt,
+             sondern Aufraeumarbeit. Wer die Beispiele sehen moechte, laedt
+             sie unter Einstellungen -> Daten & Sicherung. */
+          setData(structuredClone(EMPTY_DATA));
           setShowOnboarding(true);
         }
       } catch (e) {
@@ -5518,6 +5536,7 @@ export default function App() {
               onExportDocuments={exportDocuments}
               onImportDocuments={importDocuments}
               onReset={resetAllData}
+              onBeispieldaten={() => { setData(demoData()); setShowSettings(false); setToast("Beispieldaten geladen."); }}
               onClose={() => setShowSettings(false)}
               onOpenUntisImport={() => { setShowSettings(false); setShowUntisImport(true); }}
             />
@@ -9037,6 +9056,27 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             </div>
           )}
         </div>
+      )}
+
+      {/* Erster Start: ohne Klasse gibt es nichts zu zeigen. Seit neue Konten
+          leer beginnen (statt mit Beispielklassen) braucht es hier einen
+          Anfang - sonst steht eine Lehrkraft vor einer leeren Seite und
+          weiss nicht, wo sie hin soll. */}
+      {!(data.classes || []).length && (
+        <Card className="px-4 py-4" style={{ order: -1 }}>
+          <div className="text-base font-semibold text-stone-800 mb-1">Willkommen bei Tu-vi</div>
+          <p className="text-sm text-stone-600 leading-relaxed mb-3">
+            Noch ist alles leer. Der erste Schritt ist eine Klasse – danach kommen Kinder,
+            Fächer und der Stundenplan dazu. Alles Weitere entsteht im Alltag.
+          </p>
+          <Button onClick={() => onNavigate?.("klassen")} className="w-full justify-center">
+            <Users size={15} /> Erste Klasse anlegen
+          </Button>
+          <p className="text-[11px] text-stone-500 mt-2.5 leading-relaxed">
+            Lieber erst umsehen? Unter „Einstellungen" → „Daten & Sicherung" → „Erweiterte
+            Einstellungen" lassen sich Beispieldaten laden.
+          </p>
+        </Card>
       )}
 
       {/* Feiertagsfall Heute: kein Unterricht mehr UND morgen auch nichts geplant –
