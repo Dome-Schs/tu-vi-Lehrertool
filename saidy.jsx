@@ -2816,6 +2816,7 @@ const HELP_DATA = [
       { q: "Wie bearbeite ich eine:n Schüler:in?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → auf den Namen tippen. Im Profil kannst du Name, Foto und weitere Angaben bearbeiten. Schneller geht es über das Suchfeld „Kind suchen …" oben im Reiter „Klassen".` },
       { q: "Wie lösche ich eine Klasse?", a: `Klasse antippen → Reiter „Überblick" → „Klasse verwalten". Ganz unten im Fenster steht „Diese Klasse löschen". Die Klasse landet mit allen Kindern, Noten und Notizen für 30 Tage im Papierkorb – den findest du im Reiter „Klassen" ganz unten.` },
       { q: "Was sind Dienste?", a: `Dienste sind Aufgaben, die Tu-vi Schüler:innen der Reihe nach zuweist (z. B. Tafeldienst). Anlegen unter „Klassen & Schüler" → Reiter „Dienste", mit einem Tippen weiter zum nächsten Kind.` },
+      { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
       { q: "Wie kommen Fehlzeiten in Tu-vi?", a: `Fehlzeiten tippst du nicht von Hand ein – sie kommen aus dem Klassenbuch. Öffne „Klassen & Schüler" und tippe oben rechts auf „Fehlzeiten" (oder „Mehr" → „Einstellungen" → „Daten & Sicherung" → „WebUntis / Fehlzeiten"). Tu-vi ordnet die eingelesenen Tage den Kindern zu; die noch offenen Entschuldigungen siehst du danach im Reiter „Listen" → „Entschuldigungen".` },
       { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. Ein Kind entfernen: Token nach unten über den Rand der Fläche in die rote Toolbar ziehen und loslassen. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen.` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
@@ -11597,16 +11598,23 @@ function DutyModal({ onSave, onClose }) {
             <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="z. B. Tafeldienst" autoFocus maxLength={50} />
           </Field>
 
-          <div className="flex flex-wrap gap-1.5">
-            {DUTY_PRESETS.map((p) => (
-              <button
-                key={p}
-                onClick={() => setName(p)}
-                className={`text-xs px-2.5 py-1.5 rounded-lg border ${name === p ? "akzent-rand akzent-ton" : "border-stone-200 text-stone-600"}`}
-              >
-                {p}
-              </button>
-            ))}
+          {/* Die Vorschlaege sahen wie eine Auswahlliste aus - Lehrkraefte haben
+              deshalb nicht gemerkt, dass jede eigene Bezeichnung geht. */}
+          <div className="space-y-1.5">
+            <div className="t-caption">
+              Häufige Dienste zum Übernehmen – oben lässt sich aber jede eigene Bezeichnung eintippen, etwa „Start in den Tag“ oder „Klassenrat“.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {DUTY_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setName(p)}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border ${name === p ? "akzent-rand akzent-ton" : "border-stone-200 text-stone-600"}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
 
           <Field label="Farbe">
