@@ -2838,6 +2838,8 @@ const HELP_DATA = [
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi führt dich in zwei Schritten durch die Einrichtung: zuerst Bundesland und Schulferien, dann kannst du direkt deine erste Klasse anlegen. Beides lässt sich auch später in den Einstellungen anpassen.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
+      { q: "Wie bekomme ich Tu-vi als App auf den Home-Bildschirm?", a: `Das hängt vom Gerät ab. Auf Android und am Computer (Chrome, Edge) genügt ein Tipp: Der Knopf „Auf dem Home-Bildschirm ablegen" steht auf dem Anmeldebildschirm und später im Menü. Auf iPhone und iPad geht es nur über zwei Schritte, weil Apple keinen anderen Weg zulässt: unten in der Mitte (am iPad oben rechts) auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm" wählen. Tu-vi zeigt dir diese zwei Schritte automatisch an, solange sie noch nicht als App läuft. Wichtig auf iPhone und iPad: Mach das möglichst VOR der ersten Anmeldung. Die App auf dem Home-Bildschirm bekommt bei iOS einen eigenen Speicher – meldest du dich erst in Safari an und legst sie danach ab, musst du dich dort noch einmal anmelden, und auch die Face-ID-Sperre wäre dort zunächst wieder aus. Deine Daten sind dabei nicht weg, sie liegen auf dem Server und sind nach der Anmeldung sofort wieder da.` },
+      { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast auf „Später" getippt; im Menü unter „Mehr" ist der Weg weiterhin zu finden. Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
       { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – beim Öffnen der App und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
@@ -3888,6 +3890,195 @@ function AppSperreEinstellung({ user }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════
+   Auf den Home-Bildschirm legen
+   ─────────────────────────────────────────────────
+   Apple laesst kein "ein Klick, fertig" zu: Auf iPhone und iPad gibt es
+   keine Schnittstelle, mit der eine Webseite das Teilen-Menue oeffnen
+   koennte. Dort bleibt nur, den Weg so kurz und eindeutig wie moeglich
+   zu zeigen. Chrome und Edge melden dagegen von sich aus, dass sie
+   installieren koennten - da geht echte Ein-Klick-Installation.
+
+   Wichtig fuer die Platzierung: Eine Web-App auf dem iOS-Homebildschirm
+   bekommt einen eigenen Speicher, getrennt von Safari. Wer sich erst
+   anmeldet und dann installiert, steht in der App-Version vor einem
+   leeren Anmeldebildschirm. Deshalb sitzt der Hinweis VOR der Anmeldung.
+   ═══════════════════════════════════════════════════ */
+
+const HOMESCREEN_KEY = "tuvi_homescreen_weg";
+
+function istInstalliert() {
+  try {
+    if (window.navigator.standalone === true) return true;             // iOS
+    return window.matchMedia("(display-mode: standalone)").matches;    // alle anderen
+  } catch {
+    return false;
+  }
+}
+
+/* Unterscheidet die vier Faelle, die verschiedene Texte brauchen:
+   "installiert" | "chromium" (echter Knopf) | "ios-safari" (Anleitung)
+   | "ios-fremd" (In-App-Browser: geht gar nicht) | "sonst" */
+function homescreenLage() {
+  if (typeof window === "undefined") return "sonst";
+  if (istInstalliert()) return "installiert";
+
+  const ua = navigator.userAgent || "";
+  /* iPadOS meldet sich seit Version 13 als Macintosh. Der Touch-Test ist
+     das einzige verlaessliche Merkmal, um ein iPad zu erkennen. */
+  const istApple =
+    /iPhone|iPod/.test(ua) ||
+    /iPad/.test(ua) ||
+    (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+  if (!istApple) return "sonst";
+
+  /* In-App-Browser (Mail, WhatsApp, Instagram) koennen nicht zum
+     Home-Bildschirm hinzufuegen - dort fehlt der Menuepunkt komplett.
+     Safari erkennt man daran, dass KEINE fremde Kennung im UA steht. */
+  const fremd = /FBAN|FBAV|Instagram|Line\/|Twitter|WhatsApp|LinkedIn|Snapchat/i.test(ua);
+  if (fremd) return "ios-fremd";
+
+  return "ios-safari";
+}
+
+/* Symbol fuer "Teilen" auf iOS: Kaestchen mit Pfeil nach oben. Bewusst
+   nachgezeichnet statt aus lucide genommen - die Lehrkraft soll genau
+   das wiedererkennen, was unten in ihrer Safari-Leiste sitzt. */
+function TeilenSymbol({ size = 17 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
+         stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v11" />
+      <path d="M8.5 6.5 12 3l3.5 3.5" />
+      <path d="M7 11H5.5A1.5 1.5 0 0 0 4 12.5v6A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 18.5 11H17" />
+    </svg>
+  );
+}
+
+/* variante="karte"  - grosser Block, z. B. auf dem Anmeldebildschirm
+   variante="zeile"  - schmale Zeile fuers Menue */
+function AufHomescreen({ variante = "karte", onFertig }) {
+  const [lage, setLage] = useState(homescreenLage);
+  const [prompt, setPrompt] = useState(null);   // Chromium: gespeichertes Ereignis
+  const [laeuft, setLaeuft] = useState(false);
+
+  useEffect(() => {
+    function beiPrompt(e) {
+      e.preventDefault();       // sonst zeigt Chrome seinen eigenen Balken
+      setPrompt(e);
+      setLage("chromium");
+    }
+    function beiInstalliert() {
+      setLage("installiert");
+      setPrompt(null);
+    }
+    window.addEventListener("beforeinstallprompt", beiPrompt);
+    window.addEventListener("appinstalled", beiInstalliert);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", beiPrompt);
+      window.removeEventListener("appinstalled", beiInstalliert);
+    };
+  }, []);
+
+  async function installieren() {
+    if (!prompt) return;
+    setLaeuft(true);
+    try {
+      prompt.prompt();
+      await prompt.userChoice;   // egal wie sie ausfaellt: das Ereignis ist verbraucht
+    } catch { /* Nutzer hat abgebrochen */ }
+    setPrompt(null);
+    setLaeuft(false);
+  }
+
+  function merken() {
+    try { localStorage.setItem(HOMESCREEN_KEY, "1"); } catch { /* Privatmodus */ }
+    onFertig?.();
+  }
+
+  if (lage === "installiert") return null;
+  /* Auf dem Rechner ohne Chromium-Ereignis gibt es nichts anzubieten -
+     dort waere ein Hinweis ohne Handlung nur Rauschen. */
+  if (lage === "sonst" && !prompt) return null;
+
+  const zeile = variante === "zeile";
+
+  if (lage === "chromium" || prompt) {
+    return (
+      <div className={zeile ? "" : "mt-5"}>
+        <button
+          onClick={installieren}
+          disabled={laeuft}
+          className={zeile
+            ? "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
+            : "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl akzent-flaeche text-white text-sm font-semibold press-scale disabled:opacity-60"}
+        >
+          <Download size={zeile ? 17 : 16} strokeWidth={2} />
+          {laeuft ? "Wird hinzugefügt …" : "Auf dem Home-Bildschirm ablegen"}
+        </button>
+        {!zeile && (
+          <p className="t-caption text-center mt-1.5">Ein Tipp – danach startest du Tu-vi wie jede andere App.</p>
+        )}
+      </div>
+    );
+  }
+
+  if (lage === "ios-fremd") {
+    return (
+      <div className={`${zeile ? "" : "mt-5"} rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3`}>
+        <div className="text-sm font-semibold text-stone-800 mb-1">Tu-vi als App</div>
+        <p className="text-xs text-stone-600 leading-relaxed">
+          Du hast Tu-vi gerade aus einer anderen App heraus geöffnet – hier lässt sich nichts zum
+          Home-Bildschirm hinzufügen. Öffne <strong className="text-stone-800">tu-vi.de in Safari</strong>,
+          dann steht der Weg wieder offen.
+        </p>
+      </div>
+    );
+  }
+
+  // ios-safari: der Weg lässt sich nicht abkürzen, nur genau zeigen
+  const iPad = /iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  return (
+    <div className={`${zeile ? "" : "mt-5"} rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3`}>
+      <div className="flex items-start gap-2 mb-2">
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-stone-800">Tu-vi als App ablegen</div>
+          <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+            Zwei Schritte – mehr erlaubt Apple leider nicht.
+          </p>
+        </div>
+        {onFertig && (
+          <button onClick={merken} className="text-[11px] text-stone-400 hover:text-stone-600 shrink-0 py-0.5">
+            Später
+          </button>
+        )}
+      </div>
+      <ol className="space-y-2">
+        <li className="flex items-center gap-2.5 text-xs text-stone-700">
+          <span className="w-5 h-5 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold text-stone-500 shrink-0">1</span>
+          <span className="flex-1">
+            {iPad ? "Oben rechts" : "Unten in der Mitte"} auf{" "}
+            <span className="inline-flex items-center gap-1 align-middle px-1.5 py-0.5 rounded-md bg-white border border-stone-200 akzent-text">
+              <TeilenSymbol size={13} /> Teilen
+            </span>{" "}
+            tippen
+          </span>
+        </li>
+        <li className="flex items-center gap-2.5 text-xs text-stone-700">
+          <span className="w-5 h-5 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold text-stone-500 shrink-0">2</span>
+          <span className="flex-1">„<strong className="text-stone-800">Zum Home-Bildschirm</strong>" wählen</span>
+        </li>
+      </ol>
+      <p className="text-[11px] text-stone-500 leading-relaxed mt-2.5">
+        Mach das am besten <strong className="text-stone-700">vor</strong> dem Anmelden: Die App auf dem
+        Home-Bildschirm hat bei iOS einen eigenen Speicher. Meldest du dich erst hier und legst sie danach
+        ab, musst du dich dort noch einmal anmelden.
+      </p>
+    </div>
+  );
+}
+
 function LoginScreen() {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -3895,6 +4086,9 @@ function LoginScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [zeigeRecht, setZeigeRecht] = useState(false);
+  const [homescreenWeg, setHomescreenWeg] = useState(() => {
+    try { return localStorage.getItem(HOMESCREEN_KEY) === "1"; } catch { return false; }
+  });
   const [success, setSuccess] = useState(null);
 
   const handle = async () => {
@@ -3994,6 +4188,13 @@ function LoginScreen() {
             {mode === "login" ? "Noch kein Konto? Jetzt erstellen" : mode === "signup" ? "Bereits ein Konto? Anmelden" : "Zurück zur Anmeldung"}
           </button>
         </div>
+
+        {/* Bewusst VOR der Anmeldung: auf iOS bekommt die abgelegte App einen
+            eigenen Speicher. Wer sich erst hier anmeldet, muss es dort noch
+            einmal tun - und denkt im schlimmsten Fall, die Daten seien weg. */}
+        {!homescreenWeg && (
+          <AufHomescreen onFertig={() => setHomescreenWeg(true)} />
+        )}
 
         {/* Pflichtangaben muessen vor der Anmeldung erreichbar sein: beim
             Konto-Anlegen werden hier bereits E-Mail und Passwort uebertragen.
@@ -5037,6 +5238,8 @@ export default function App() {
             >
               <MessageSquare size={17} strokeWidth={2} /> Hilfe
             </button>
+            {/* Nur sichtbar, solange Tu-vi nicht schon als App laeuft. */}
+            <AufHomescreen variante="zeile" />
             <button
               onClick={() => supabase.auth.signOut()}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-400 hover:bg-stone-50 hover:text-stone-600 transition-colors"
@@ -5345,6 +5548,12 @@ export default function App() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Der Weg auf den Home-Bildschirm - blendet sich selbst aus,
+                sobald Tu-vi als App laeuft. */}
+            <div className="mt-2">
+              <AufHomescreen variante="zeile" />
             </div>
 
             {/* Abmelden abgesetzt: es beendet die Sitzung und gehoert nicht

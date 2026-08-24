@@ -37,6 +37,9 @@ export default defineConfig({
         orientation: "portrait-primary",
         icons: [
           { src: "icon-180.png", sizes: "180x180", type: "image/png", purpose: "any" },
+          // 192 muss dabei sein, sonst bietet Chrome die Installation nicht an
+          // und der Ein-Klick-Knopf auf Android bliebe stumm.
+          { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
           { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
