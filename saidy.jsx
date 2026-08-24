@@ -15,9 +15,40 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
+  Sun, Moon, SunMoon,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
+
+/* Erscheinungsbild. Bewusst in localStorage und nicht in den Cloud-Daten:
+   Es haengt am Bildschirm, nicht an der Lehrkraft - abends am Handy dunkel,
+   tagsueber am Beamer hell zu wollen ist ein normaler Wunsch. Ausserdem
+   liest das Startskript in index.html denselben Schluessel, bevor React
+   laeuft, damit die App nicht kurz im falschen Modus aufblitzt. */
+const THEME_KEY = "tuvi_theme";
+const THEME_WAHL = [
+  { key: "hell",   label: "Hell",         icon: Sun },
+  { key: "dunkel", label: "Dunkel",       icon: Moon },
+  { key: "auto",   label: "Automatisch",  icon: SunMoon },
+];
+
+function leseTheme() {
+  try {
+    const w = localStorage.getItem(THEME_KEY);
+    return THEME_WAHL.some((t) => t.key === w) ? w : "auto";
+  } catch {
+    return "auto"; // Privatmodus oder gesperrter Speicher
+  }
+}
+
+function wendeThemeAn(wahl) {
+  const dunkel =
+    wahl === "dunkel" ||
+    (wahl === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.setAttribute("data-theme", dunkel ? "dark" : "light");
+  const meta = document.getElementById("theme-color");
+  if (meta) meta.setAttribute("content", dunkel ? "#000000" : "#F2F2F6");
+}
 
 const DAYS = ["Mo", "Di", "Mi", "Do", "Fr"];
 const DAY_LABELS = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag" };
@@ -1387,7 +1418,7 @@ const SEITEN = [
   { key: "ueber",       icon: FileText,     titel: "Über Tu-vi",          sub: "Impressum, Datenschutz" },
 ];
 
-function SettingsModal({ data, update, halbjahr, setHalbjahr, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onClose, onOpenUntisImport }) {
+function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onClose, onOpenUntisImport }) {
   const gespeicherteReihenfolge = data.settings?.dashboardOrder || Object.keys(DASHBOARD_SECTIONS);
   const order = [
     ...gespeicherteReihenfolge.filter((k) => DASHBOARD_SECTIONS[k]),
@@ -1576,6 +1607,29 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, user, onExport, on
         {/* ── Darstellung ── */}
         {seite === "darstellung" && (
           <div>
+            <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Erscheinungsbild</div>
+            <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+              {THEME_WAHL.map((t) => {
+                const aktiv = theme === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTheme(t.key)}
+                    aria-pressed={aktiv}
+                    className={`flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-medium ${
+                      aktiv ? "akzent-flaeche akzent-rand" : "border-stone-200 text-stone-600 hover:bg-stone-50"
+                    }`}
+                  >
+                    <t.icon size={17} strokeWidth={2} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-stone-500 mb-5">
+              „Automatisch" folgt der Einstellung deines Geräts und wechselt mit, wenn dieses abends auf dunkel umschaltet. Hell und Dunkel gelten unabhängig davon. Die Wahl gilt nur auf diesem Gerät.
+            </p>
+
             <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Übersicht (Startseite)</div>
 
             <div className="flex items-center justify-between gap-2 py-2">
@@ -2792,7 +2846,7 @@ const HELP_DATA = [
       { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten". „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
       { q: `Was steht im Reiter „Listen" bei den Klassen?`, a: `Drei Übersichten über alle Klassen hinweg: Entschuldigungen, Förderziele und Geburtstage. Der Unterschied zu den Kacheln auf der Startseite: Die Listen lassen sich auch dann öffnen, wenn gerade nichts offen ist – etwa um im Elterngespräch nachzusehen, wann ein Kind zuletzt eine Entschuldigung abgegeben hat.` },
-      { q: "Kann Tu-vi dunkel dargestellt werden?", a: `Ja, automatisch. Tu-vi übernimmt die Darstellung deines Geräts: Steht dein iPhone, iPad oder Computer auf „Dunkel", zeigt sich Tu-vi dunkel, bei „Hell" hell. Auf dem iPhone stellst du das unter Einstellungen → Anzeige & Helligkeit ein, auf dem Mac unter Systemeinstellungen → Erscheinungsbild. In der App selbst gibt es dafür bewusst keinen eigenen Schalter – so passt Tu-vi immer zu deinen übrigen Apps. Ausdrucke (Schülerakte, Berichte, Notenlisten) sind immer hell, damit sie auf Papier lesbar bleiben.` },
+      { q: "Kann Tu-vi dunkel oder hell dargestellt werden?", a: `Ja, du entscheidest das selbst: „Mehr" → „Einstellungen" → „Darstellung" → ganz oben unter „Erscheinungsbild" stehen drei Knöpfe. „Hell" und „Dunkel" gelten fest, unabhängig davon, wie dein Gerät eingestellt ist – du kannst Tu-vi also hell nutzen, obwohl dein iPhone im Dunkelmodus läuft. „Automatisch" übernimmt die Einstellung des Geräts und wechselt abends mit, wenn dieses auf dunkel umschaltet. Voreingestellt ist „Automatisch". Die Wahl gilt jeweils nur auf dem Gerät, an dem du sie triffst – am Mac hell und am iPhone dunkel ist also möglich. Ausdrucke (Schülerakte, Berichte, Notenlisten) sind immer hell, damit sie auf Papier lesbar bleiben.` },
       { q: "Wie ist die Heute-Seite aufgebaut?", a: `Von oben nach unten priorisiert – die App zeigt nicht alles auf einmal, sondern das was gerade zählt: (1) Kopf mit der Wortmarke „Tu-vi", Begrüßung, Datum und rechts dem Sternchen für den Farb-Modus. (2) „JETZT" – die große Karte für die laufende Stunde, mit Restzeit, Fach & Klasse, Thema, den zu dieser Stunde gehörenden offenen Punkten (Entschuldigungen, „heute Klassenarbeit"-Warnung) und dem Material aus dem Fach. Ein „Stunde öffnen"-Knopf springt in die Schnellerfassung. (3) „ALS NÄCHSTES" – die nächste Stunde, mit „in X Min." oder „in X Std." und – das ist der eigentliche Trick – den Material-Chips unter „Vorher mitnehmen", damit du in der aktuellen Stunde schon weißt, was du gleich einsammeln musst (z. B. „12 Volleybälle · 6 Hütchen · Leibchen"). (4) Zweispaltig „X Dinge brauchen deine Aufmerksamkeit" (Sheet mit allen Signalen) und „Nicht vergessen" (persönliche Aufgabenliste mit +-Feld zum sofort Ergänzen). (5) „Danach heute" – die restlichen Stunden als kompakte Zeilenliste. (6) Kleine Wochentagsleiste zum Vor- und Zurückblättern. (7) Wochenrückblick von Freitag 12 Uhr bis Sonntag Nacht, falls aktiv. (8) Unterrichtstipp des Tages, falls in den Einstellungen aktiv.` },
       { q: "Was zeigen die Karten JETZT und ALS NÄCHSTES?", a: `Beide Karten führen dich durch den aktuellen Moment. JETZT ist die dominante Karte für die laufende Stunde: Fach·Klasse·Thema groß, darunter die konkret zu dieser Stunde relevanten Punkte – Zahl der offenen Entschuldigungen dieser Klasse, „Heute: [Klassenarbeit-Titel]" wenn eine Prüfung ansteht, verknüpfte Aufgaben, und ganz wichtig: das Material, das du für dieses Fach eingetragen hast (Feld „Immer mitnehmen" im Fach-Editor). Rechts oben läuft die Restzeit. „Stunde öffnen" springt in die Schnellerfassung. Die ALS-NÄCHSTES-Karte ist etwas kleiner: Anfangszeit + „in X Std. Y Min.", Fach·Klasse·Raum, Thema falls hinterlegt, und die Material-Chips als „Vorher mitnehmen". Der Sinn: du bist noch in Mathe, siehst aber schon dass du gleich zwölf Volleybälle brauchst, und kannst sie auf dem Weg mitnehmen.` },
       { q: `Was steht in der Kachel „X Dinge brauchen deine Aufmerksamkeit"?`, a: `Automatisch erkannte Signale für heute – nur solche die tatsächlich anstehen, sonst verschwindet die Kachel. Sie sammelt: (1) noch nachzutragende Stunden, (2) auffällige Klassen aus dem Klassenradar (kritisch/warnend), (3) dringliche Erinnerungen (Kinder mit vielen Fehltagen, Kinder ohne Eintrag seit 14+ Tagen, wiederholte Vorfälle, offene Zeugnisnoten). Ein Tipp öffnet ein Sheet mit der vollständigen Liste; ein Tipp auf einen Eintrag springt direkt in den passenden Bereich (Klassen-Dashboard, Entschuldigungen usw.). Alles lokal berechnet – keine externen Datenübertragungen. „Nicht vergessen" daneben ist bewusst getrennt: dort stehen nur deine manuell erfassten Aufgaben.` },
@@ -4109,6 +4163,22 @@ export default function App() {
   const [tab, setTab] = useState("dashboard");
   const [saveState, setSaveState] = useState("idle"); // idle | saving | saved
   const [halbjahr, setHalbjahr] = useState(currentHalbjahr());
+
+  const [theme, setThemeState] = useState(leseTheme);
+  const setTheme = useCallback((wahl) => {
+    setThemeState(wahl);
+    try { localStorage.setItem(THEME_KEY, wahl); } catch { /* Privatmodus: gilt nur fuer diese Sitzung */ }
+  }, []);
+  useEffect(() => {
+    wendeThemeAn(theme);
+    /* Nur bei "automatisch" mitziehen, wenn das Geraet abends umschaltet.
+       Bei fester Wahl waere das Mitziehen genau der Fehler, den wir beheben. */
+    if (theme !== "auto") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const beiWechsel = () => wendeThemeAn("auto");
+    mq.addEventListener("change", beiWechsel);
+    return () => mq.removeEventListener("change", beiWechsel);
+  }, [theme]);
   const [showSettings, setShowSettings] = useState(false);
   const [showUntisImport, setShowUntisImport] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -5034,6 +5104,8 @@ export default function App() {
               update={update}
               halbjahr={halbjahr}
               setHalbjahr={setHalbjahr}
+              theme={theme}
+              setTheme={setTheme}
               user={user}
               onExport={exportBackup}
               onShare={shareBackup}

@@ -13,6 +13,10 @@ html, body {
 /* Formularelemente und Scrollbars vom Browser im passenden Schema rendern
    lassen - sonst bleiben Dropdowns und Datumsfelder hell im Dunkelmodus. */
 :root { color-scheme: light dark; }
+/* Sobald die Lehrkraft sich festgelegt hat, darf auch der Browser nicht mehr
+   raten - sonst bleibt das Datumsfeld dunkel in einer hellen App. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
 
 /* ═══════════════════════════════════════════════════
    TP-01 · Design-Fundament
@@ -68,50 +72,54 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════
-   Dunkelmodus — folgt der Systemeinstellung des Geräts
+   Dunkelmodus — gesteuert von data-theme am <html>
    ─────────────────────────────────────────────────
+   Frueher hing er direkt an prefers-color-scheme und war
+   damit nicht abwaehlbar: Wer sein Geraet dunkel gestellt
+   hatte, bekam Tu-vi zwangsweise dunkel. Jetzt entscheidet
+   die App, welches Attribut gesetzt ist - bei der
+   Einstellung "automatisch" spiegelt sie das System.
+
    Nur Tokens werden getauscht; alle Komponenten unten
    lesen ausschliesslich Tokens und ziehen automatisch mit.
    ═══════════════════════════════════════════════════ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Akzent wird aufgehellt — #4F5844 hat auf Schwarz zu wenig Kontrast */
-    --oliv: #A6B392;
-    --oliv-dunkel: #BCC7AA;
-    --oliv-hell: rgba(166,179,146,0.18);
-    --auf-akzent: #1C1C1E;
-    --creme: #000000;
-    --karte: #1C1C1E;
-    --karte-warm: #1C1C1E;
-    --linie: #38383A;
-    --linie-fein: rgba(255,255,255,0.12);
-    --ink: #F2F2F7;
+:root[data-theme="dark"] {
+  /* Akzent wird aufgehellt — #4F5844 hat auf Schwarz zu wenig Kontrast */
+  --oliv: #A6B392;
+  --oliv-dunkel: #BCC7AA;
+  --oliv-hell: rgba(166,179,146,0.18);
+  --auf-akzent: #1C1C1E;
+  --creme: #000000;
+  --karte: #1C1C1E;
+  --karte-warm: #1C1C1E;
+  --linie: #38383A;
+  --linie-fein: rgba(255,255,255,0.12);
+  --ink: #F2F2F7;
 
-    --n-0:  #1C1C1E;
-    --n-50: #242426;   /* eine Stufe ueber --n-0 - sonst zeigt kein Hover Wirkung */
-    --n-100:#2C2C2E;
-    --n-200:#38383A;
-    --n-300:#48484A;
-    --n-400:#98989F;
-    --n-500:#AEAEB4;
-    --n-600:#C7C7CC;
-    --n-700:#DEDEE3;
-    --n-800:#F2F2F7;
-    --n-900:#FFFFFF;
-    --schleier: rgba(0,0,0,0.65);
+  --n-0:  #1C1C1E;
+  --n-50: #242426;   /* eine Stufe ueber --n-0 - sonst zeigt kein Hover Wirkung */
+  --n-100:#2C2C2E;
+  --n-200:#38383A;
+  --n-300:#48484A;
+  --n-400:#98989F;
+  --n-500:#AEAEB4;
+  --n-600:#C7C7CC;
+  --n-700:#DEDEE3;
+  --n-800:#F2F2F7;
+  --n-900:#FFFFFF;
+  --schleier: rgba(0,0,0,0.65);
 
-    /* Status: kräftige Schrift, gedämpfte Fläche — Pastelltöne
-       blenden auf dunklem Grund. */
-    --s-gut:  #6EE7A0; --s-gut-bg:  rgba(34,197,94,0.18);  --s-gut-rand:  rgba(110,231,160,0.32);
-    --s-warn: #FBBF24; --s-warn-bg: rgba(245,158,11,0.18); --s-warn-rand: rgba(251,191,36,0.32);
-    --s-krit: #FCA5A5; --s-krit-bg: rgba(239,68,68,0.20);  --s-krit-rand: rgba(252,165,165,0.32);
-    --s-info: #93C5FD; --s-info-bg: rgba(59,130,246,0.20); --s-info-rand: rgba(147,197,253,0.32);
-    --s-neu:  #A6B392; --s-neu-bg:  rgba(166,179,146,0.18);--s-neu-rand:  rgba(166,179,146,0.32);
+  /* Status: kräftige Schrift, gedämpfte Fläche — Pastelltöne
+     blenden auf dunklem Grund. */
+  --s-gut:  #6EE7A0; --s-gut-bg:  rgba(34,197,94,0.18);  --s-gut-rand:  rgba(110,231,160,0.32);
+  --s-warn: #FBBF24; --s-warn-bg: rgba(245,158,11,0.18); --s-warn-rand: rgba(251,191,36,0.32);
+  --s-krit: #FCA5A5; --s-krit-bg: rgba(239,68,68,0.20);  --s-krit-rand: rgba(252,165,165,0.32);
+  --s-info: #93C5FD; --s-info-bg: rgba(59,130,246,0.20); --s-info-rand: rgba(147,197,253,0.32);
+  --s-neu:  #A6B392; --s-neu-bg:  rgba(166,179,146,0.18);--s-neu-rand:  rgba(166,179,146,0.32);
 
-    --shadow-card: 0 1px 2px rgba(0,0,0,0.5);
-    --shadow-md:   0 4px 16px rgba(0,0,0,0.55);
-    --shadow-xl:   0 8px 32px rgba(0,0,0,0.65);
-  }
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.55);
+  --shadow-xl:   0 8px 32px rgba(0,0,0,0.65);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -187,26 +195,31 @@ html, body {
    Pastellflaechen fuer hellen Grund und blenden auf Schwarz. Ersetzt durch
    getoente Transparenz plus aufgehellte Schrift. Der Hellmodus bleibt
    unveraendert bei den Tailwind-Standardwerten. */
-@media (prefers-color-scheme: dark) {
-  .bg-amber-50,   .bg-amber-100                 { background-color: rgba(245,158,11,0.16) !important; }
-  .bg-red-50,     .bg-red-100                   { background-color: rgba(239,68,68,0.18) !important; }
-  .bg-green-50,   .bg-emerald-50,
-  .bg-emerald-100                               { background-color: rgba(34,197,94,0.16) !important; }
-  .bg-emerald-200                               { background-color: rgba(34,197,94,0.28) !important; }
+/* Nur am Bildschirm: beim Drucken sollen die Pastellflaechen der
+   Tailwind-Standardwerte gelten, sonst landen getoente Transparenzen
+   auf weissem Papier. */
+@media screen {
+  :root[data-theme="dark"] :is(.bg-amber-50, .bg-amber-100)   { background-color: rgba(245,158,11,0.16) !important; }
+  :root[data-theme="dark"] :is(.bg-red-50, .bg-red-100)       { background-color: rgba(239,68,68,0.18) !important; }
+  :root[data-theme="dark"] :is(.bg-green-50, .bg-emerald-50,
+                               .bg-emerald-100)               { background-color: rgba(34,197,94,0.16) !important; }
+  :root[data-theme="dark"] .bg-emerald-200                    { background-color: rgba(34,197,94,0.28) !important; }
 
-  .border-amber-100, .border-amber-200          { border-color: rgba(251,191,36,0.30) !important; }
-  .border-red-200,   .border-red-500            { border-color: rgba(252,165,165,0.32) !important; }
-  .border-emerald-200, .border-green-500        { border-color: rgba(110,231,160,0.32) !important; }
+  :root[data-theme="dark"] :is(.border-amber-100,
+                               .border-amber-200)             { border-color: rgba(251,191,36,0.30) !important; }
+  :root[data-theme="dark"] :is(.border-red-200, .border-red-500) { border-color: rgba(252,165,165,0.32) !important; }
+  :root[data-theme="dark"] :is(.border-emerald-200,
+                               .border-green-500)             { border-color: rgba(110,231,160,0.32) !important; }
 
-  .text-amber-500, .text-amber-600,
-  .text-amber-700, .text-amber-800, .text-amber-900 { color: #FBBF24 !important; }
-  .text-red-400,   .text-red-500                { color: #F87171 !important; }
-  .text-red-600,   .text-red-700,
-  .text-red-800,   .text-red-900                { color: #FCA5A5 !important; }
-  .text-green-700, .text-emerald-500, .text-emerald-600,
-  .text-emerald-700, .text-emerald-800, .text-emerald-900 { color: #6EE7A0 !important; }
-  .text-blue-500                                { color: #93C5FD !important; }
-  .text-violet-600                              { color: #C4B5FD !important; }
+  :root[data-theme="dark"] :is(.text-amber-500, .text-amber-600,
+    .text-amber-700, .text-amber-800, .text-amber-900)        { color: #FBBF24 !important; }
+  :root[data-theme="dark"] :is(.text-red-400, .text-red-500)  { color: #F87171 !important; }
+  :root[data-theme="dark"] :is(.text-red-600, .text-red-700,
+    .text-red-800, .text-red-900)                             { color: #FCA5A5 !important; }
+  :root[data-theme="dark"] :is(.text-green-700, .text-emerald-500, .text-emerald-600,
+    .text-emerald-700, .text-emerald-800, .text-emerald-900)  { color: #6EE7A0 !important; }
+  :root[data-theme="dark"] .text-blue-500                     { color: #93C5FD !important; }
+  :root[data-theme="dark"] .text-violet-600                   { color: #C4B5FD !important; }
 }
 
 /* Inhaltsbreite: EINE Breite fuer alle Ansichten - Tabs, Vollbildseiten,
@@ -437,7 +450,10 @@ svg[stroke-width="2"] { stroke-width: 1.75; }
    Hellwerte zurueck.
    ═══════════════════════════════════════════════════ */
 @media print {
-  :root {
+  /* Auch :root[data-theme] treffen - der Dunkelmodus-Block hat durch das
+     Attribut eine hoehere Spezifitaet und wuerde diesen hier sonst schlagen. */
+  :root,
+  :root[data-theme] {
     color-scheme: light;
     --oliv: #4F5844;
     --oliv-dunkel: #3E4636;
