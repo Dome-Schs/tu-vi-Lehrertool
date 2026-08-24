@@ -496,24 +496,6 @@ function gradeWord(n) {
   return "ungenügend";
 }
 
-/* Welche Schriftfarbe liegt lesbar auf einer Fachfarbe? Die Palette reicht von
-   #4F5844 bis #B07D2B - auf den helleren Toenen faellt weisse Schrift unter
-   4,5:1 und waere nicht mehr barrierefrei. Deshalb pro Farbe entscheiden
-   statt pauschal Weiss zu nehmen. */
-function schriftAuf(hex) {
-  const treffer = /^#?([0-9a-f]{6})$/i.exec(hex || "");
-  if (!treffer) return "#FFFFFF";
-  const zahl = parseInt(treffer[1], 16);
-  const linear = [(zahl >> 16) & 255, (zahl >> 8) & 255, zahl & 255].map((v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
-  const L = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
-  const gegenWeiss = 1.05 / (L + 0.05);
-  const gegenDunkel = (L + 0.05) / 0.0617; // 0.0617 = Leuchtdichte von #1C1C1E + 0.05
-  return gegenWeiss >= gegenDunkel ? "#FFFFFF" : "#1C1C1E";
-}
-
 function gradeColor(n, colored = true) {
   if (!colored) return "text-stone-700";
   if (n <= 2.5) return "text-emerald-600";
@@ -2855,7 +2837,7 @@ const HELP_DATA = [
       { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Namensliste als Datei einlesen.` },
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi führt dich in zwei Schritten durch die Einrichtung: zuerst Bundesland und Schulferien, dann kannst du direkt deine erste Klasse anlegen. Beides lässt sich auch später in den Einstellungen anpassen.` },
-      { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Auf der Startseite bekommt jeder Bereich einen eigenen Ton: der Wochentag im Kopf, die Überschriften „Aufmerksamkeit", „Nicht vergessen" und „Unterrichtstipp des Tages", dazu jeweils eine farbige Kartenkante. Die laufende Stunde trägt durchgehend die Farbe ihres Fachs – Rahmen, „JETZT"-Kennzeichnung, ausgefülltes Fach-Kürzel und der Knopf „Stunde öffnen". Auch „Schnell erfassen" wechselt die Farbe. Im Stundenplan färben sich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Gefärbt werden nur Schrift und Linien, die Flächen bleiben ruhig – sonst würde die Startseite unübersichtlich. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
+      { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
       { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – beim Öffnen der App und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
@@ -4949,7 +4931,7 @@ export default function App() {
               className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl akzent-flaeche text-white text-sm font-semibold press-scale"
               /* Im Farbmodus hebt sich der Erfassen-Knopf vom Marken-Oliv ab,
                  damit er als eigene Aktion und nicht als Teil der Navigation liest. */
-              style={data.settings?.colorMode === true ? { backgroundColor: "var(--f-erfassen)", color: "#FFFFFF" } : undefined}
+              style={data.settings?.colorMode === true ? { backgroundColor: "var(--f-zweit)", color: "var(--auf-zweit)" } : undefined}
               aria-expanded={fabOpen}
             >
               <Plus size={16} strokeWidth={2.4} />
@@ -5269,7 +5251,7 @@ export default function App() {
               className="w-14 h-14 -mt-5 rounded-full akzent-flaeche flex items-center justify-center press-scale shrink-0"
               style={{
                 boxShadow: "0 6px 20px rgba(79,88,68,0.45)",
-                ...(data.settings?.colorMode === true ? { backgroundColor: "var(--f-erfassen)", color: "#FFFFFF" } : {}),
+                ...(data.settings?.colorMode === true ? { backgroundColor: "var(--f-zweit)", color: "var(--auf-zweit)" } : {}),
               }}
               aria-label="Neu erfassen"
               aria-expanded={fabOpen}
@@ -7594,7 +7576,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               return h < 11 ? "Guten Morgen," : h < 17 ? "Hallo," : "Guten Abend,";
             })()}
           </p>
-          <h1 className={`text-2xl font-bold tracking-tight leading-none ${isColor ? "f-kopf" : ""}`} style={isColor ? undefined : { color: "var(--ink)" }}>
+          <h1 className={`text-2xl font-bold tracking-tight leading-none ${isColor ? "f-haupt" : ""}`} style={isColor ? undefined : { color: "var(--ink)" }}>
             {selectedDate.toLocaleDateString("de-DE", { weekday: "long" })}
             <span className="text-stone-300 font-semibold text-lg ml-2">
               {selectedDate.toLocaleDateString("de-DE", { day: "numeric", month: "long" })}
@@ -7733,7 +7715,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
              damit man ohne Lesen erkennt, worin man gerade steckt. */
           <Card
             className="px-4 py-4 space-y-3 ring-2 akzent-rand ring-offset-2 ring-offset-[color:var(--creme)]"
-            style={{ order: orderOf("jetzt"), ...(isColor && fach?.color ? { "--tw-ring-color": fach.color } : {}) }}
+            style={{ order: orderOf("jetzt"), ...(isColor ? { "--tw-ring-color": "var(--f-haupt)" } : {}) }}
           >
             {/* JETZT ist mit dem Marken-Akzent (Oliv) gekennzeichnet - eindeutig
                 das primaere Element der Heute-Seite. Kein emerald/blau/violett
@@ -7742,7 +7724,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               <div className="flex items-center gap-2 flex-wrap">
                 <span
                   className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full akzent-flaeche text-white"
-                  style={isColor && fach?.color ? { backgroundColor: fach.color, color: schriftAuf(fach.color) } : undefined}
+                  style={isColor ? { backgroundColor: "var(--f-haupt)", color: "var(--auf-haupt)" } : undefined}
                 >Jetzt</span>
                 <span className="text-xs text-stone-500 tabular-nums">
                   {startZeit}{endZeit ? ` – ${endZeit}` : ""}
@@ -7753,8 +7735,8 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             <div className="flex items-center gap-3">
               {/* Gefuellt statt nur getoent: bei 12 % Deckkraft war der
                   Farbmodus auf der Startseite praktisch unsichtbar. */}
-              <span className="w-11 h-11 rounded-2xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : undefined }}>
-                <span className="text-base font-bold akzent-text" style={{ color: isColor && fach?.color ? schriftAuf(fach.color) : undefined }}>
+              <span className="w-11 h-11 rounded-2xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor ? "var(--f-haupt)" : undefined }}>
+                <span className="text-base font-bold akzent-text" style={{ color: isColor ? "var(--auf-haupt)" : undefined }}>
                   {fach?.subject?.slice(0, 2) || "—"}
                 </span>
               </span>
@@ -7868,7 +7850,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               className="w-full py-2.5 rounded-xl akzent-flaeche text-white text-sm font-medium press-scale flex items-center justify-center gap-2"
               /* Sonst steht ein oliver Knopf mitten in einer fachfarbenen
                  Karte - der Block liest sich dann als zwei Dinge. */
-              style={isColor && fach?.color ? { backgroundColor: fach.color, color: schriftAuf(fach.color) } : undefined}
+              style={isColor ? { backgroundColor: "var(--f-haupt)", color: "var(--auf-haupt)" } : undefined}
             >
               <BookOpen size={15} /> Stunde öffnen
             </button>
@@ -7901,7 +7883,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         return (
           <Card
             className="px-4 py-3.5 space-y-2.5"
-            style={{ order: orderOf("naechstes"), ...(isColor && fach?.color ? { borderLeft: `4px solid ${fach.color}` } : {}) }}
+            style={{ order: orderOf("naechstes"), ...(isColor ? { borderLeft: "4px solid var(--f-haupt)" } : {}) }}
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -7915,8 +7897,8 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="w-9 h-9 rounded-xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : undefined }}>
-                <span className="text-sm font-bold akzent-text" style={{ color: isColor && fach?.color ? schriftAuf(fach.color) : undefined }}>
+              <span className="w-9 h-9 rounded-xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor ? "var(--f-haupt)" : undefined }}>
+                <span className="text-sm font-bold akzent-text" style={{ color: isColor ? "var(--auf-haupt)" : undefined }}>
                   {fach?.subject?.slice(0, 2) || "—"}
                 </span>
               </span>
@@ -8036,14 +8018,14 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             einem Tipp. Vorher stand die volle Liste da und die Kachel war
             der schwerste Block der Seite. Das Eingabefeld bleibt: es ist
             der schnellste Weg, etwas zwischen zwei Stunden festzuhalten. */}
-        <Card className="px-4 py-3" style={isColor ? { border: "1px solid color-mix(in srgb, var(--f-aufgaben) 45%, transparent)" } : undefined}>
+        <Card className="px-4 py-3" style={isColor ? { border: "1px solid color-mix(in srgb, var(--f-haupt) 30%, transparent)" } : undefined}>
           <button
             onClick={() => offeneAufgaben.length && setShowNichtVergessen(true)}
             disabled={!offeneAufgaben.length}
             className="w-full flex items-center gap-2 mb-2 text-left disabled:cursor-default"
           >
-            <Check size={14} className={`${aufgabenDringend ? "text-amber-600" : "text-stone-500"} ${isColor && !aufgabenDringend ? "f-aufgaben" : ""}`} />
-            <span className={`text-sm font-semibold text-stone-800 ${isColor ? "f-aufgaben" : ""}`}>Nicht vergessen</span>
+            <Check size={14} className={`${aufgabenDringend ? "text-amber-600" : "text-stone-500"} ${isColor && !aufgabenDringend ? "f-haupt" : ""}`} />
+            <span className="text-sm font-semibold text-stone-800">Nicht vergessen</span>
             {!!offeneAufgaben.length && (
               <span className="t-caption tnum ml-auto">
                 {aufgabenUeberfaellig
@@ -8069,7 +8051,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                     >
                       <span
                           className="w-4 h-4 rounded border border-stone-300 block"
-                          style={isColor && t.color ? { borderColor: t.color, backgroundColor: `${t.color}26` } : undefined}
+                          style={isColor ? { borderColor: "var(--f-haupt)" } : undefined}
                         />
                     </button>
                     <span className="text-sm text-stone-700 leading-tight flex-1 truncate">{t.title}</span>
@@ -8138,7 +8120,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                       >
                         <span
                           className="w-4 h-4 rounded border border-stone-300 block"
-                          style={isColor && t.color ? { borderColor: t.color, backgroundColor: `${t.color}26` } : undefined}
+                          style={isColor ? { borderColor: "var(--f-haupt)" } : undefined}
                         />
                       </button>
                       <span className="text-sm text-stone-700 leading-tight flex-1">{t.title}</span>
@@ -8389,13 +8371,13 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         <button
           onClick={() => setTippSheetKarte(tippDesTages)}
           className="karte-luft w-full text-left flex items-center gap-3 px-3 py-2.5 press-scale"
-          style={{ order: orderOf("tipp"), ...(isColor ? { border: "1px solid color-mix(in srgb, var(--f-tipp) 45%, transparent)" } : {}) }}
+          style={{ order: orderOf("tipp"), ...(isColor ? { border: "1px solid color-mix(in srgb, var(--f-haupt) 30%, transparent)" } : {}) }}
         >
           <span className="w-9 h-9 rounded-lg akzent-ton flex items-center justify-center shrink-0">
-            <Lightbulb size={16} className={`akzent-text ${isColor ? "f-tipp" : ""}`} />
+            <Lightbulb size={16} className={`akzent-text ${isColor ? "f-haupt" : ""}`} />
           </span>
           <div className="flex-1 min-w-0">
-            <div className={`text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none ${isColor ? "f-tipp" : ""}`}>Unterrichtstipp des Tages</div>
+            <div className={`text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none ${isColor ? "f-haupt" : ""}`}>Unterrichtstipp des Tages</div>
             <div className="text-sm font-medium text-stone-800 mt-1 leading-snug line-clamp-1">{tippDesTages.titel}</div>
             <div className="text-[11px] text-stone-500 italic mt-0.5 line-clamp-1">„{tippDesTages.merksatz}"</div>
           </div>

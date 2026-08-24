@@ -244,38 +244,43 @@ html, body {
 /* ═══════════════════════════════════════════════════
    Bereichsfarben — nur im Farbmodus (Sternchen-Knopf)
    ─────────────────────────────────────────────────
-   Jeder Bereich der Uebersicht bekommt einen eigenen Ton, damit man
-   Ueberschriften und Kartenkanten unterscheiden kann, ohne zu lesen.
-   Bewusst nur fuer Schrift und Linien - Flaechen bleiben neutral,
-   sonst wird die Startseite zum Flickenteppich.
+   Palette "Salbei & Sand". Vorher lagen hier sechs Toene aus sechs
+   verschiedenen Farbfamilien nebeneinander - Violett neben Blau neben
+   Stahlblau. Jeder fuer sich in Ordnung, zusammen zusammengewuerfelt.
 
-   Zwei Saetze, weil ein Ton nicht auf beiden Gruenden lesbar ist: die
-   hellen Werte liegen bei 5,9-7,3:1 auf weisser Karte, die dunklen bei
-   7,4-9,7:1 auf #1C1C1E. Beide erfuellen WCAG AA. */
+   Jetzt nur noch drei Rollen, nach der Regel "zwei bis drei Hauptfarben
+   plus eine dezente Akzentfarbe":
+     haupt  - Marke, Wochentag, laufende Stunde, Kaestchen
+     zweit  - ausschliesslich die Aktion (Schnell erfassen, Stunde oeffnen)
+     signal - meldet sich nur, wenn wirklich etwas ansteht
+   Alles andere bleibt warmes Neutral.
+
+   Zwei Saetze, weil ein Ton nicht auf beiden Gruenden lesbar ist: hell
+   4,8-6,5:1 auf weisser Karte, dunkel 8,4-9,3:1 auf #1C1C1E. Alle sechs
+   Werte erfuellen WCAG AA. */
 :root {
-  --f-kopf:     #6B5B7B;
-  --f-signal:   #A3402F;
-  --f-aufgaben: #3F5A6B;
-  --f-tipp:     #46662B;
-  --f-erfassen: #41697E;
-  --f-woche:    #7A4E63;
+  --f-haupt:  #4F6350;   /* Salbei  */
+  --f-zweit:  #8A6E3C;   /* Sand    */
+  --f-signal: #8A5341;   /* Ton     */
+  /* Schrift auf gefuellter Flaeche: hell 6,5:1 bzw. 4,8:1 */
+  --auf-haupt: #FFFFFF;
+  --auf-zweit: #FFFFFF;
 }
 :root[data-theme="dark"] {
-  --f-kopf:     #C6B4DE;
-  --f-signal:   #F0918A;
-  --f-aufgaben: #9EC2D8;
-  --f-tipp:     #AFCE86;
-  --f-erfassen: #93BCD4;
-  --f-woche:    #DDA6BC;
+  --f-haupt:  #A9BC9E;
+  --f-zweit:  #D9BC85;
+  --f-signal: #E7AC97;
+  /* Auf den aufgehellten Toenen traegt nur dunkle Schrift: 8,4:1 / 9,3:1 */
+  --auf-haupt: #1B1D16;
+  --auf-zweit: #1B1D16;
 }
 
 /* Als Klassen mit !important, nicht als Inline-Farbe: die Tailwind-Bruecke
    weiter oben setzt .text-stone-* selbst mit !important, und das schlaegt
    jede normale style-Angabe. Ueberschriften blieben dadurch grau. */
-.f-kopf     { color: var(--f-kopf)     !important; }
-.f-signal   { color: var(--f-signal)   !important; }
-.f-aufgaben { color: var(--f-aufgaben) !important; }
-.f-tipp     { color: var(--f-tipp)     !important; }
+.f-haupt  { color: var(--f-haupt)  !important; }
+.f-zweit  { color: var(--f-zweit)  !important; }
+.f-signal { color: var(--f-signal) !important; }
 @media (min-width: 768px) {
   .inhalt-breite { padding-inline: 2rem; }
 }
