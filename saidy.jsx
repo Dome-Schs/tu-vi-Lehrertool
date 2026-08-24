@@ -6332,10 +6332,16 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
       `}</style>
       <div className="bg-white w-full md:max-w-[720px] h-full md:h-auto md:max-h-[95vh] flex flex-col md:rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Toolbar - nur am Bildschirm sichtbar */}
-        <div className="druck-hide flex items-center justify-between px-4 py-3 border-b border-stone-200 shrink-0">
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none mb-0.5">Sport-Vorlage</div>
-            <div className="font-semibold text-stone-800">{titel}</div>
+        {/* Auf dem iPhone fuellt dieses Fenster den Bildschirm bis unter die
+            Statusleiste. Ohne den Sicherheitsabstand lag die Ueberschrift
+            unter Uhrzeit, Empfang und Akkuanzeige. */}
+        <div
+          className="druck-hide flex items-center justify-between gap-3 px-4 pb-3 border-b border-stone-200 shrink-0"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none mb-0.5 truncate">Sport-Vorlage</div>
+            <div className="font-semibold text-stone-800 truncate">{titel}</div>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={teilen} disabled={teilStatus === "laeuft"}>
@@ -16054,10 +16060,13 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
       `}</style>
 
       <div className="print-hide bg-white border-b border-stone-200 shrink-0">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none mb-0.5">Übergabe-Export</div>
-            <div className="font-semibold text-stone-800">Schülerakte {student.name}</div>
+        <div
+          className="flex items-center justify-between gap-3 px-4 pb-3"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none mb-0.5 truncate">Übergabe-Export</div>
+            <div className="font-semibold text-stone-800 truncate">Schülerakte {student.name}</div>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={drucken}><Printer size={14} /> Als PDF drucken</Button>
