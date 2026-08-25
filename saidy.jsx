@@ -4559,6 +4559,8 @@ export default function App() {
         setShowPasswordReset(true);
       }
       if (!u) {
+        justLoadedRef.current = true;
+        hadRowRef.current = false;
         setLoaded(false);
         setData(EMPTY_DATA);
       }
@@ -4570,11 +4572,14 @@ export default function App() {
   const dataRef = useRef(data);
   const loadedRef = useRef(false);
   const loadFailedRef = useRef(false);
+  const justLoadedRef = useRef(true);
+  const hadRowRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false); // gespeicherte Daten unlesbar – Autosave blockieren
+  const [loadFailed, setLoadFailed] = useState(false);
   const recoveryInputRef = useRef(null);
   const [tab, setTab] = useState("dashboard");
-  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved
+  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error
+  const [saveErrorMsg, setSaveErrorMsg] = useState(null);
   const [halbjahr, setHalbjahr] = useState(currentHalbjahr());
 
   /* Der Hinweis auf den Home-Bildschirm gehoert an den Anfang, nicht in den
@@ -4731,12 +4736,17 @@ export default function App() {
     if (gesperrt) return;
     (async () => {
       try {
-        const { data: row } = await supabase
+        const { data: row, error: loadError } = await supabase
           .from("user_data")
           .select("data")
           .eq("user_id", user.id)
           .maybeSingle();
+        if (loadError) {
+          console.error("[Tu-vi] Laden fehlgeschlagen:", loadError.message, loadError);
+          throw new Error(loadError.message);
+        }
         if (row && row.data) {
+          hadRowRef.current = true;
           const { daten: sanitized } = sanitizeImport(row.data);
           const parsed = { ...EMPTY_DATA, ...sanitized };
           // Migration: frühere dritte Kategorie "Klassenarbeit" in "schriftlich" überführen
@@ -4834,6 +4844,7 @@ export default function App() {
             parsed.events = (parsed.events || []).filter((e) => e.type !== "todo");
             parsed.taskLists = parsed.taskLists || [];
           }
+          justLoadedRef.current = true;
           setData(parsed);
           /* Alte pauschale Art-9-Bestaetigung auf die betroffenen Kinder uebertragen,
              damit sie nach dem Update nicht erneut fuer jedes Kind abgefragt wird. */
@@ -4876,6 +4887,7 @@ export default function App() {
              die ihre echte Klasse anlegen will, ist das kein Startpunkt,
              sondern Aufraeumarbeit. Wer die Beispiele sehen moechte, laedt
              sie unter Einstellungen -> Daten & Sicherung. */
+          justLoadedRef.current = true;
           setData(structuredClone(EMPTY_DATA));
           setShowOnboarding(true);
         }
@@ -4893,6 +4905,42 @@ export default function App() {
   useEffect(() => { loadFailedRef.current = loadFailed; }, [loadFailed]);
 
   const dirtyRef = useRef(false);
+  const saveRetryRef = useRef(0);
+
+  const doSave = useCallback(async (payload) => {
+    const uid = userRef.current?.id;
+    if (!uid) return;
+    const klassen = (payload.classes || []).length;
+    const schueler = (payload.students || []).length;
+    if (klassen === 0 && schueler === 0 && hadRowRef.current) {
+      console.log("[Tu-vi] Leere Daten – Speichern uebersprungen (hadRow)");
+      return;
+    }
+    console.log(`[Tu-vi] Speichere: ${klassen} Klassen, ${schueler} Schueler …`);
+    try {
+      const { error } = await supabase
+        .from("user_data")
+        .upsert(
+          { user_id: uid, data: payload, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+      if (error) throw error;
+      saveRetryRef.current = 0;
+      setSaveState("saved");
+      setSaveErrorMsg(null);
+      console.log("[Tu-vi] Gespeichert ✓");
+    } catch (e) {
+      const msg = e?.message || e?.code || String(e);
+      console.error("[Tu-vi] Speichern fehlgeschlagen:", msg, e);
+      setSaveState("error");
+      setSaveErrorMsg(msg);
+      if (saveRetryRef.current < 2) {
+        saveRetryRef.current++;
+        console.log(`[Tu-vi] Wiederholung ${saveRetryRef.current}/2 in 3s …`);
+        setTimeout(() => doSave(dataRef.current), 3000);
+      }
+    }
+  }, []);
 
   const flushSave = useCallback(async () => {
     if (!loadedRef.current || loadFailedRef.current) return;
@@ -4900,46 +4948,26 @@ export default function App() {
     if (!dirtyRef.current) return;
     dirtyRef.current = false;
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
-    try {
-      const { error } = await supabase
-        .from("user_data")
-        .upsert(
-          { user_id: userRef.current.id, data: dataRef.current, updated_at: new Date().toISOString() },
-          { onConflict: "user_id" }
-        );
-      if (error) throw error;
-      setSaveState("saved");
-    } catch (e) {
-      console.warn("[Tu-vi] Speichern fehlgeschlagen:", e);
-      setSaveState("error");
-    }
-  }, []);
+    await doSave(dataRef.current);
+  }, [doSave]);
 
   useEffect(() => {
     if (!loaded || loadFailed) return;
     if (!userRef.current) return;
+    if (justLoadedRef.current) {
+      setSaveState(hadRowRef.current ? "saved" : "idle");
+      return;
+    }
     dirtyRef.current = true;
     setSaveState("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       saveTimer.current = null;
       dirtyRef.current = false;
-      try {
-        const { error } = await supabase
-          .from("user_data")
-          .upsert(
-            { user_id: userRef.current.id, data, updated_at: new Date().toISOString() },
-            { onConflict: "user_id" }
-          );
-        if (error) throw error;
-        setSaveState("saved");
-      } catch (e) {
-        console.warn("[Tu-vi] Speichern fehlgeschlagen:", e);
-        setSaveState("error");
-      }
+      await doSave(data);
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [data, loaded]);
+  }, [data, loaded, doSave]);
 
   useEffect(() => {
     const onHide = () => {
@@ -4953,7 +4981,10 @@ export default function App() {
     };
   }, [flushSave]);
 
-  const update = useCallback((fn) => setData((prev) => fn(structuredClone(prev))), []);
+  const update = useCallback((fn) => {
+    justLoadedRef.current = false;
+    setData((prev) => fn(structuredClone(prev)));
+  }, []);
 
   // Gefilterte Sicht: gelöschte Elemente ausblenden (noch innerhalb der 30-Tage-Frist)
   const activeData = useMemo(() => ({
@@ -5246,6 +5277,7 @@ export default function App() {
                App eingefroren und wuerde die reine Formpruefung passieren. */
             nextTestDate: S_DATUM(f.nextTestDate),
           }));
+        justLoadedRef.current = false;
         setData(merged);
         recordBackup();
         /* Gekuerzte Sammlungen nicht verschweigen - sonst fehlen nach dem
@@ -5430,7 +5462,7 @@ export default function App() {
               <div>
                 <div className="text-sm font-semibold text-stone-800 leading-tight tracking-wide">Tu-vi</div>
                 <div className="text-[10px] text-stone-400 leading-none mt-0.5">
-                  {saveState === "saving" ? "Speichert …" : saveState === "error" ? "⚠ Kein Speicherplatz" : "Gespeichert"}
+                  {saveState === "saving" ? "Speichert …" : saveState === "error" ? "⚠ Nicht gespeichert" : saveState === "saved" ? "Gespeichert" : ""}
                 </div>
               </div>
             </div>
@@ -5568,10 +5600,17 @@ export default function App() {
               ignorieren diesen Container ohnehin. */}
           <div className="inhalt-breite">
           {saveState === "error" && (
-            <div className="mb-5 flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
-              <span className="text-red-600 shrink-0">⚠</span>
-              <span className="flex-1 text-red-800">Kein Speicherplatz mehr – Daten konnten nicht gespeichert werden. Bitte ein Backup erstellen und Browser-Speicher freigeben.</span>
-              <button onClick={() => { verlasseVollbild(); setShowSettings(true); }} className="text-xs font-medium text-red-700 hover:text-red-900 underline underline-offset-2 shrink-0">Backup erstellen</button>
+            <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
+              <span className="text-red-600 shrink-0 mt-0.5">⚠</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-red-800 font-medium">Daten konnten nicht gespeichert werden</p>
+                <p className="text-red-700 text-xs mt-1">Änderungen gehen beim Abmelden verloren. Bitte erstelle sicherheitshalber ein Backup.</p>
+                {saveErrorMsg && <p className="text-red-500 text-[10px] mt-1 font-mono break-all">{saveErrorMsg}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <button onClick={() => { dirtyRef.current = true; flushSave(); }} className="text-xs font-medium text-red-700 hover:text-red-900 underline underline-offset-2">Erneut versuchen</button>
+                <button onClick={() => { verlasseVollbild(); setShowSettings(true); }} className="text-xs font-medium text-red-700 hover:text-red-900 underline underline-offset-2">Backup erstellen</button>
+              </div>
             </div>
           )}
           {backupReminderDays !== null && (
@@ -5630,7 +5669,7 @@ export default function App() {
               onExportDocuments={exportDocuments}
               onImportDocuments={importDocuments}
               onReset={resetAllData}
-              onBeispieldaten={() => { setData(demoData()); setShowSettings(false); setToast("Beispieldaten geladen."); }}
+              onBeispieldaten={() => { justLoadedRef.current = false; setData(demoData()); setShowSettings(false); setToast("Beispieldaten geladen."); }}
               onClose={() => setShowSettings(false)}
               onOpenUntisImport={() => { setShowSettings(false); setShowUntisImport(true); }}
             />
