@@ -4742,15 +4742,22 @@ export default function App() {
     if (gesperrt) return;
     (async () => {
       try {
-        const { data: row, error: loadError } = await supabase
+        /* Bewusst die neueste Zeile statt maybeSingle(): fehlt in der
+           Datenbank die UNIQUE-Regel auf user_id, kann es mehr als eine
+           Zeile pro Konto geben. maybeSingle() wuerde daran scheitern und
+           die Lehrkraft saehe "Daten nicht lesbar", obwohl ihr Stand da
+           ist. Der juengste Stand ist dann die richtige Wahl. */
+        const { data: rows, error: loadError } = await supabase
           .from("user_data")
-          .select("data")
+          .select("data, updated_at")
           .eq("user_id", user.id)
-          .maybeSingle();
+          .order("updated_at", { ascending: false })
+          .limit(1);
         if (loadError) {
           console.error("[Tu-vi] Laden fehlgeschlagen:", loadError.message, loadError);
           throw new Error(loadError.message);
         }
+        const row = rows?.[0];
         if (row && row.data) {
           hadRowRef.current = true;
           const { daten: sanitized } = sanitizeImport(row.data);
@@ -4944,26 +4951,32 @@ export default function App() {
       if (aktFehler) throw aktFehler;
 
       if (!akt || akt.length === 0) {
-        /* Keine Zeile getroffen: entweder gibt es noch keine (erster
-           Schreibvorgang) oder eine RLS-Regel verbietet das UPDATE. Der
-           INSERT unterscheidet beides. */
+        /* Keine Zeile getroffen. Beim Laden war aber eine da - dann verbietet
+           eine RLS-Regel das UPDATE. Hier auf gut Glueck einzufuegen waere
+           falsch: fehlt in der Datenbank die UNIQUE-Regel auf user_id, laege
+           danach ein zweiter Datensatz desselben Kontos herum. */
+        if (hadRowRef.current) {
+          throw new Error(
+            "Der gespeicherte Datensatz wurde nicht geändert. " +
+            "In Supabase fehlt für die Tabelle user_data eine UPDATE-Regel mit auth.uid() = user_id."
+          );
+        }
         const { data: neu, error: neuFehler } = await supabase
           .from("user_data")
           .insert({ user_id: uid, data: payload, updated_at: stempel })
           .select("user_id");
         if (neuFehler) {
+          /* 23505: ein anderes Geraet war schneller. Beim naechsten Lauf
+             greift dann der UPDATE-Zweig. */
           if (neuFehler.code === "23505") {
-            throw new Error(
-              "Der Datensatz existiert, darf aber nicht geändert werden. " +
-              "In Supabase fehlt für die Tabelle user_data eine UPDATE-Regel mit auth.uid() = user_id."
-            );
+            throw new Error("Ein anderes Gerät hat zeitgleich gespeichert. Beim nächsten Versuch wird ergänzt.");
           }
           throw neuFehler;
         }
         if (!neu || neu.length === 0) {
           throw new Error(
             "Supabase hat den Datensatz stillschweigend verworfen. " +
-            "Für die Tabelle user_data fehlen die Schreibrechte (RLS-Regeln für INSERT und UPDATE)."
+            "Für die Tabelle user_data fehlt eine INSERT-Regel mit auth.uid() = user_id."
           );
         }
       }
