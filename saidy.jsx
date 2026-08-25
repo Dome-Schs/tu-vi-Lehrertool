@@ -1431,7 +1431,7 @@ const SEITEN = [
   { key: "homescreen",  icon: Download,     titel: "Als App ablegen",     sub: "Symbol auf dem Home-Bildschirm" },
 ];
 
-function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onBeispieldaten, onClose, onOpenUntisImport }) {
+function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, user, onExport, onShare, onImport, onExportDocuments, onImportDocuments, onReset, onBeispieldaten, onClose, onOpenUntisImport, onAbmelden }) {
   const gespeicherteReihenfolge = data.settings?.dashboardOrder || Object.keys(DASHBOARD_SECTIONS);
   const order = [
     ...gespeicherteReihenfolge.filter((k) => DASHBOARD_SECTIONS[k]),
@@ -1757,7 +1757,7 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
             <AppSperreEinstellung user={user} />
             <AutoSperreEinstellung />
             <div className="pt-5 border-t border-stone-100">
-              <Button variant="ghost" onClick={() => supabase.auth.signOut()} className="w-full justify-center">
+              <Button variant="ghost" onClick={() => (onAbmelden ? onAbmelden() : supabase.auth.signOut())} className="w-full justify-center">
                 <LogOut size={15} /> Abmelden
               </Button>
             </div>
@@ -2966,6 +2966,9 @@ const HELP_DATA = [
   {
     category: "Backup & Daten",
     items: [
+      { q: "Woran sehe ich, ob meine Eingaben gespeichert sind?", a: `Oben links unter dem Namen „Tu-vi" steht der Speicherstand: „Speichert …" während geschrieben wird, danach „Gespeichert". Tu-vi sichert automatisch, kurz nach jeder Änderung – einen Speichern-Knopf gibt es bewusst nicht. Erscheint stattdessen „⚠ Nicht gespeichert" und oben im Inhalt ein roter Balken, ist die Änderung NICHT auf dem Server angekommen. Tu-vi versucht es dann von selbst noch zweimal; im Balken steht zusätzlich „Erneut versuchen". Wichtig: Melde dich in diesem Fall nicht ab, bevor der Balken verschwunden ist – sichere lieber über „Backup erstellen" im selben Balken, dann ist nichts verloren.` },
+      { q: "Meine Daten sind nach dem Abmelden weg – was tun?", a: `Dann konnte Tu-vi nicht auf den Server schreiben. Beim Abmelden wird der lokale Stand geleert, weil die Daten auf dem Server liegen – kam dort nichts an, ist die Arbeit weg. Achte deshalb auf den roten Balken „Daten konnten nicht gespeichert werden": Er nennt den genauen Grund und bietet „Erneut versuchen" sowie „Backup erstellen". Tu-vi meldet inzwischen jeden fehlgeschlagenen Schreibvorgang – auch die stillen, die früher fälschlich als „Gespeichert" durchgingen –, und wartet beim Abmelden ab, bis der letzte Stand geschrieben ist. Bleibt der Fehler bestehen, sichere über „Backup erstellen" und melde dich per Mail an die Kontaktadresse unter „Über Tu-vi".` },
+      { q: "Warum sehe ich Änderungen vom iPhone nicht am Computer?", a: `Tu-vi speichert alles auf dem Server, nicht im Gerät – die Änderung sollte also nach kurzer Zeit überall auftauchen. Zwei Bedingungen müssen stimmen: Erstens muss auf dem Gerät, an dem du geändert hast, „Gespeichert" stehen (nicht „⚠ Nicht gespeichert"). Zweitens holt das zweite Gerät die Daten beim Anmelden und beim Entsperren – ein bereits offenes Fenster aktualisiert sich nicht von allein. Lade die Seite dort neu oder sperre und entsperre die App, dann ist der neue Stand da.` },
       { q: "Wie erstelle ich ein Backup?", a: `Gehe zu „Mehr" → „Einstellungen" → „Daten & Sicherung". Dort erscheint zuerst ein kurzer Datenschutz-Hinweis, den du bestätigst. Danach: „Sichern" legt die Datei im Download-Ordner ab, „Teilen" öffnet die Teilen-Ansicht (z. B. für „In Dateien sichern" oder AirDrop). Wichtig: abgelegte Dokumente sind darin nicht enthalten – die brauchen eine eigene Sicherung, direkt darunter unter „Dokumente sichern".` },
       { q: "Wie lege ich ein Dokument bei einem Kind ab?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → Kind antippen → im Profil auf den Reiter „Mehr". Ganz unten steht „Dokumente" mit zwei Knöpfen: „Foto" öffnet direkt die Kamera – ideal, um eine Entschuldigung abzufotografieren. „Datei" öffnet die Dateien-App, dort wählst du ein PDF oder ein vorhandenes Bild. Fotos werden automatisch verkleinert, damit sie wenig Platz brauchen. Ein Tipp auf einen Eintrag öffnet ihn, das Papierkorb-Symbol löscht ihn.` },
       { q: "Kann ich Dokumente auch bei einer Klasse, einem Fach oder ganz allgemein ablegen?", a: `Ja. Im Klassen-Dashboard (Klasse antippen → „Überblick" → „Klassen-Dashboard") liegt ganz unten die Ablage für die ganze Klasse – etwa Sitzplan oder Elternbrief. In der Notenübersicht eines Fachs (Noten → Klasse → Fach) findest du dieselbe Ablage für Arbeitsblätter oder Lösungen. Für alles ohne festen Bezug – Konferenzprotokolle, Formulare, Schulordnung – gibt es unter „Mehr" → „Dokumente" einen eigenen allgemeinen Bereich. Dort steht auch eine durchsuchbare Liste aller abgelegten Dokumente, egal wo sie hängen.` },
@@ -4509,6 +4512,9 @@ export default function App() {
      zu viel Zeit vergangen ist. Ein Timer, der bei jedem Fingertipp neu
      gesetzt wird, waere teurer - hier reicht ein Zeitstempel. */
   const letzteAktivitaet = useRef(Date.now());
+  /* Die Untaetigkeits-Abmeldung unten braucht abmelden(), das erst weiter
+     unten entstehen kann (es haengt am Speichern). Der Ref ueberbrueckt das. */
+  const abmeldenRef = useRef(null);
   useEffect(() => {
     if (!user || gesperrt) return;
     const minuten = leseAutoSperre();
@@ -4523,7 +4529,7 @@ export default function App() {
       if (appLockAktiv()) {
         setGesperrt(true);
       } else {
-        supabase.auth.signOut();
+        abmeldenRef.current?.();
       }
     }, 20 * 1000);
 
@@ -4907,24 +4913,62 @@ export default function App() {
   const dirtyRef = useRef(false);
   const saveRetryRef = useRef(0);
 
+  /* Schreibt den Stand nach Supabase - bewusst als UPDATE-dann-INSERT statt
+     als upsert(). Zwei Gruende, beide haben echte Daten gekostet:
+     1. upsert(onConflict:"user_id") setzt eine UNIQUE-Regel auf user_id
+        voraus. Fehlt sie, scheitert jeder Schreibvorgang.
+     2. Ein UPDATE, das eine RLS-Regel verbietet, meldet KEINEN Fehler - es
+        trifft einfach null Zeilen. Ohne .select() sieht die App Erfolg,
+        obwohl nichts geschrieben wurde. Genau so verschwanden die Daten.
+     Darum liefert jeder Schreibvorgang die geschriebene Zeile zurueck; kommt
+     nichts zurueck, ist das ein Fehler und wird auch so gemeldet. */
   const doSave = useCallback(async (payload) => {
     const uid = userRef.current?.id;
     if (!uid) return;
     const klassen = (payload.classes || []).length;
     const schueler = (payload.students || []).length;
+    /* Schutz gegen das Ueberschreiben eines echten Bestands mit Leerstand
+       (z. B. waehrend des Abmeldens, wenn data schon zurueckgesetzt ist). */
     if (klassen === 0 && schueler === 0 && hadRowRef.current) {
-      console.log("[Tu-vi] Leere Daten – Speichern uebersprungen (hadRow)");
+      console.log("[Tu-vi] Leerer Stand – Speichern uebersprungen");
       return;
     }
-    console.log(`[Tu-vi] Speichere: ${klassen} Klassen, ${schueler} Schueler …`);
+    const stempel = new Date().toISOString();
+    console.log(`[Tu-vi] Speichere ${klassen} Klassen / ${schueler} Schueler …`);
     try {
-      const { error } = await supabase
+      const { data: akt, error: aktFehler } = await supabase
         .from("user_data")
-        .upsert(
-          { user_id: uid, data: payload, updated_at: new Date().toISOString() },
-          { onConflict: "user_id" }
-        );
-      if (error) throw error;
+        .update({ data: payload, updated_at: stempel })
+        .eq("user_id", uid)
+        .select("user_id");
+      if (aktFehler) throw aktFehler;
+
+      if (!akt || akt.length === 0) {
+        /* Keine Zeile getroffen: entweder gibt es noch keine (erster
+           Schreibvorgang) oder eine RLS-Regel verbietet das UPDATE. Der
+           INSERT unterscheidet beides. */
+        const { data: neu, error: neuFehler } = await supabase
+          .from("user_data")
+          .insert({ user_id: uid, data: payload, updated_at: stempel })
+          .select("user_id");
+        if (neuFehler) {
+          if (neuFehler.code === "23505") {
+            throw new Error(
+              "Der Datensatz existiert, darf aber nicht geändert werden. " +
+              "In Supabase fehlt für die Tabelle user_data eine UPDATE-Regel mit auth.uid() = user_id."
+            );
+          }
+          throw neuFehler;
+        }
+        if (!neu || neu.length === 0) {
+          throw new Error(
+            "Supabase hat den Datensatz stillschweigend verworfen. " +
+            "Für die Tabelle user_data fehlen die Schreibrechte (RLS-Regeln für INSERT und UPDATE)."
+          );
+        }
+      }
+
+      hadRowRef.current = true;
       saveRetryRef.current = 0;
       setSaveState("saved");
       setSaveErrorMsg(null);
@@ -4936,7 +4980,7 @@ export default function App() {
       setSaveErrorMsg(msg);
       if (saveRetryRef.current < 2) {
         saveRetryRef.current++;
-        console.log(`[Tu-vi] Wiederholung ${saveRetryRef.current}/2 in 3s …`);
+        console.log(`[Tu-vi] Wiederholung ${saveRetryRef.current}/2 in 3 s …`);
         setTimeout(() => doSave(dataRef.current), 3000);
       }
     }
@@ -4950,6 +4994,14 @@ export default function App() {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     await doSave(dataRef.current);
   }, [doSave]);
+
+  /* Abmelden erst nach dem Speichern: sonst faellt eine Aenderung, die noch
+     in der 500-ms-Wartezeit haengt, beim Abmelden ersatzlos weg. */
+  const abmelden = useCallback(async () => {
+    try { await flushSave(); } catch { /* Abmelden darf daran nicht scheitern */ }
+    await supabase.auth.signOut();
+  }, [flushSave]);
+  useEffect(() => { abmeldenRef.current = abmelden; }, [abmelden]);
 
   useEffect(() => {
     if (!loaded || loadFailed) return;
@@ -5398,7 +5450,7 @@ export default function App() {
   /* Sperre liegt vor den Daten: solange sie greift, wird nichts aus der
      Schuelerakte gerendert und auch nichts nachgeladen. */
   if (gesperrt) {
-    return <LockScreen onEntsperrt={() => setGesperrt(false)} onAbmelden={() => supabase.auth.signOut()} />;
+    return <LockScreen onEntsperrt={() => setGesperrt(false)} onAbmelden={abmelden} />;
   }
 
   if (!loaded) {
@@ -5584,7 +5636,7 @@ export default function App() {
               <MessageSquare size={17} strokeWidth={2} /> Hilfe
             </button>
             <button
-              onClick={() => supabase.auth.signOut()}
+              onClick={abmelden}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-400 hover:bg-stone-50 hover:text-stone-600 transition-colors"
             >
               <LogOut size={17} strokeWidth={2} /> Abmelden
@@ -5672,6 +5724,7 @@ export default function App() {
               onBeispieldaten={() => { justLoadedRef.current = false; setData(demoData()); setShowSettings(false); setToast("Beispieldaten geladen."); }}
               onClose={() => setShowSettings(false)}
               onOpenUntisImport={() => { setShowSettings(false); setShowUntisImport(true); }}
+              onAbmelden={abmelden}
             />
           )}
 
@@ -5904,7 +5957,7 @@ export default function App() {
             {/* Abmelden abgesetzt: es beendet die Sitzung und gehoert nicht
                 neben Suchen und Dokumente. */}
             <button
-              onClick={() => { supabase.auth.signOut(); setShowMore(false); }}
+              onClick={() => { setShowMore(false); abmelden(); }}
               className="w-full flex items-center justify-center gap-2 mt-3 py-3 text-sm text-stone-500 hover:text-stone-700 transition-colors"
             >
               <LogOut size={16} /> Abmelden
@@ -9556,7 +9609,10 @@ function FachModal({ data, initial, onSave, onClose }) {
   function pickSubject(s) {
     setSubject(s);
     setCustomSubject(false);
-    if (data.subjectColors?.[s] && !initial) setColor(data.subjectColors[s]);
+    /* Beim Anlegen die bereits vergebene Farbe des Fachs uebernehmen, damit
+       "Sport" in jeder Klasse gleich aussieht. Beim Bearbeiten nicht - dort
+       gilt die bewusst gewaehlte Farbe des Fachs. */
+    if (data.subjectColors?.[s] && !initial?.id) setColor(data.subjectColors[s]);
   }
 
   function save() {
@@ -9568,10 +9624,16 @@ function FachModal({ data, initial, onSave, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-stone-900/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    /* z-[70]: das Fach-Modal wird auch aus dem Klassen-Vollbild (z-[55]) und
+       dessen Aktionsmenue (z-[65]) heraus geoeffnet. Mit z-50 lag es dahinter -
+       der "+ anlegen"-Knopf im Unterricht-Tab schien dadurch wirkungslos. */
+    <div className="fixed inset-0 bg-stone-900/40 flex items-center justify-center p-4 z-[70]" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 overflow-y-auto dialog" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold text-stone-800">{initial ? "Fach bearbeiten" : "Fach hinzufügen"}</div>
+          {/* Beim Anlegen wird initial mit der vorbelegten Klasse befuellt und
+              ist damit ebenfalls gesetzt - nur eine vorhandene id bedeutet
+              wirklich "bearbeiten". */}
+          <div className="font-semibold text-stone-800">{initial?.id ? "Fach bearbeiten" : "Fach hinzufügen"}</div>
           <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><X size={18} /></button>
         </div>
 
