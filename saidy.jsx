@@ -4929,7 +4929,7 @@ export default function App() {
           /* Alte pauschale Art-9-Bestaetigung auf die betroffenen Kinder uebertragen,
              damit sie nach dem Update nicht erneut fuer jedes Kind abgefragt wird. */
           migriereMedicalConsent(parsed.students);
-          if (!parsed.settings?.bundesland && !(parsed.classes || []).length && !(parsed.students || []).length) setShowOnboarding(true);
+          if (!parsed.settings?.bundesland) setShowOnboarding(true);
           /* Eigener try-Block: ein Fehler in der Backup-Erinnerung darf nicht dazu führen,
              dass der äußere catch greift und die echten Daten durch Demodaten ersetzt. */
           try {
@@ -5677,7 +5677,7 @@ export default function App() {
         </aside>
 
         {/* Inhalt */}
-        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8 md:pt-[max(env(safe-area-inset-top),2rem)]">
+        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(var(--nav-hoehe)+var(--nav-unten))] md:pb-8 md:pt-[max(env(safe-area-inset-top),2rem)]">
           {/* Der Deckel sitzt bewusst hier innen und nicht am <main>: aussen
               waere er linksbuendig an der Seitenleiste geklebt, innen laesst
               er sich zentrieren. Die Modals darunter sind position:fixed und
@@ -5857,7 +5857,7 @@ export default function App() {
              durchscheinend plus Blur ergibt die uebliche Milchglas-Leiste. */
           background: "color-mix(in srgb, var(--creme) 92%, transparent)",
           borderTop: "1px solid var(--linie-fein)",
-          paddingBottom: "env(safe-area-inset-bottom)",
+          paddingBottom: "var(--nav-unten)",
           overflow: "visible",
         }}
       >
@@ -6059,7 +6059,7 @@ export default function App() {
           <div className="md:hidden fixed inset-0 bg-stone-900/20 z-[44]" onClick={() => setFabOpen(false)} />
           <div
             className="md:hidden fixed z-[45] left-0 right-0 px-4 flex flex-col items-center gap-2"
-            style={{ bottom: "calc(env(safe-area-inset-bottom) + 90px)" }}
+            style={{ bottom: "calc(var(--nav-unten) + 90px)" }}
           >
             {[kindSuchenAction, ...fabActions, ...globalFabActions].map(({ label, icon: Icon, onClick }, i) => (
               <button
@@ -6087,7 +6087,7 @@ export default function App() {
 
       {/* Toast-Meldung */}
       {toast && (
-        <div className={`fixed bottom-[calc(env(safe-area-inset-bottom)+76px)] md:bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-[color:var(--n-800)] text-[color:var(--n-0)] text-sm px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-3 max-w-[90vw] ${typeof toast === "object" && toast?.action ? "" : "pointer-events-none"}`}>
+        <div className={`fixed bottom-[calc(var(--nav-unten)+76px)] md:bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-[color:var(--n-800)] text-[color:var(--n-0)] text-sm px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-3 max-w-[90vw] ${typeof toast === "object" && toast?.action ? "" : "pointer-events-none"}`}>
           <span className="truncate">{typeof toast === "string" ? toast : toast?.text}</span>
           {typeof toast === "object" && toast?.action && (
             <button
