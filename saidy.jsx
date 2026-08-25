@@ -845,6 +845,70 @@ function sanitizeImport(imported) {
   return { daten: raus, gekuerzt };
 }
 
+/* sanitizeImport prueft absichtlich nur einen Teil der Sammlungen - Kinder,
+   Noten, Faecher und Einstellungen brauchen eine eigene Behandlung und werden
+   deshalb hier ergaenzt. Wer nur sanitizeImport auf einen kompletten
+   Datenstand anwendet und das Ergebnis fuer vollstaendig haelt, verliert genau
+   diese vier. Beim Laden aus Supabase ist das passiert: die Kinder lagen in
+   der Datenbank und wurden bei jedem Anmelden weggeworfen.
+   Darum gibt es diese Funktion: sie ist der einzige vollstaendige Weg von
+   rohem Datenstand zu geprueftem Datenstand - fuer Backup UND Cloud. */
+function sanitizeVollstaendig(imported) {
+  const merged = { ...EMPTY_DATA, ...(imported && typeof imported === "object" ? imported : {}) };
+  const { daten: geprueft, gekuerzt } = sanitizeImport(imported || {});
+  Object.assign(merged, geprueft);
+
+  const kurz = (v, n) => (typeof v === "string" ? v.slice(0, n) : null);
+
+  merged.students = (Array.isArray(merged.students) ? merged.students : [])
+    .filter((s) => s && typeof s === "object")
+    .map((s) => ({
+      ...S_SAUBER(s),
+      /* Nur Rasterformate zulassen. „data:image/" allein liesse auch
+         data:image/svg+xml durch - und SVG kann Skripte enthalten.
+         Eigene Fotos kommen aus resizeImageFile immer als JPEG. */
+      photo: typeof s.photo === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(s.photo) ? s.photo : "",
+      name: typeof s.name === "string" ? s.name.slice(0, 200) : s.name,
+      medicalInfo: typeof s.medicalInfo === "string" ? s.medicalInfo.slice(0, 2000) : s.medicalInfo,
+      foerderStatus: typeof s.foerderStatus === "string" ? s.foerderStatus.slice(0, 500) : s.foerderStatus,
+      parentPhone: typeof s.parentPhone === "string" ? s.parentPhone.slice(0, 100) : s.parentPhone,
+      birthday: S_DATUM(s.birthday),
+      deletedAt: S_DATUM(s.deletedAt),
+    }));
+
+  /* Einstellungen nicht blind uebernehmen: `merged` ist ein flacher Spread,
+     `settings` wuerde also komplett ersetzt. Nur bekannte Felder durchlassen,
+     alles andere faellt auf die Vorgaben zurueck. */
+  const impSettings = (typeof imported?.settings === "object" && imported.settings) || {};
+  merged.settings = {
+    ...(EMPTY_DATA.settings || {}),
+    ...impSettings,
+    backupNotifications: impSettings.backupNotifications === true,
+    dashboardOrder: Array.isArray(impSettings.dashboardOrder)
+      ? impSettings.dashboardOrder.filter((k) => typeof k === "string")
+      : (EMPTY_DATA.settings || {}).dashboardOrder,
+  };
+
+  merged.grades = (Array.isArray(merged.grades) ? merged.grades : []).map((g) => ({
+    ...g, topic: kurz(g.topic, 100), title: kurz(g.title, 200),
+  }));
+
+  merged.faecher = (Array.isArray(merged.faecher) ? merged.faecher : [])
+    .filter((f) => f && typeof f === "object")
+    .map((f) => ({
+      ...S_SAUBER(f),
+      subject: kurz(f.subject, 80),
+      room: kurz(f.room, 40),
+      color: S_FARBE(f.color),
+      nextTestTitle: kurz(f.nextTestTitle, 100),
+      /* S_DATUM statt Mustervergleich: ein Jahr wie 9999 hat frueher die
+         App eingefroren und wuerde die reine Formpruefung passieren. */
+      nextTestDate: S_DATUM(f.nextTestDate),
+    }));
+
+  return { daten: merged, gekuerzt };
+}
+
 /* ---------- Foto-Verarbeitung & Avatar ---------- */
 
 function resizeImageFile(file, size = 128) {
@@ -4760,8 +4824,11 @@ export default function App() {
         const row = rows?.[0];
         if (row && row.data) {
           hadRowRef.current = true;
-          const { daten: sanitized } = sanitizeImport(row.data);
-          const parsed = { ...EMPTY_DATA, ...sanitized };
+          /* sanitizeVollstaendig, nicht sanitizeImport: letzteres prueft nur
+             einen Teil der Sammlungen. Wer sein Ergebnis fuer den ganzen
+             Datenstand haelt, verliert Kinder, Noten, Faecher und
+             Einstellungen - genau das ist hier lange passiert. */
+          const { daten: parsed } = sanitizeVollstaendig(row.data);
           // Migration: frühere dritte Kategorie "Klassenarbeit" in "schriftlich" überführen
           parsed.grades = (parsed.grades || []).map((g) =>
             g.category === "klassenarbeit" ? { ...g, category: "schriftlich" } : g
@@ -5290,58 +5357,10 @@ export default function App() {
           onResult?.({ ok: false, msg: "Diese Datei konnte nicht eingelesen werden. Bitte stelle sicher, dass du die Datei direkt aus Tu-vi gesichert hast (Einstellungen → Sichern)." });
           return;
         }
-        const merged = { ...EMPTY_DATA, ...imported };
-        /* Alle uebrigen Sammlungen pruefen (Notizen, Vorfaelle, Fehlzeiten,
-           Termine, Stundenplan, Klassen, Aufgaben, Dienste, Themen). Vorher
-           liefen die ungeprueft durch. */
-        const { daten: geprueft, gekuerzt } = sanitizeImport(imported);
-        Object.assign(merged, geprueft);
-        // Sanitize: photo URLs must be data URIs; reject http/blob/other schemes; cap string field lengths
-        if (Array.isArray(merged.students)) {
-          merged.students = merged.students
-            .filter((s) => s && typeof s === "object")
-            .map((s) => ({
-              ...S_SAUBER(s),
-              /* Nur Rasterformate zulassen. „data:image/" allein liesse auch
-                 data:image/svg+xml durch - und SVG kann Skripte enthalten.
-                 Eigene Fotos kommen aus resizeImageFile immer als JPEG. */
-              photo: typeof s.photo === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(s.photo) ? s.photo : "",
-              name: typeof s.name === "string" ? s.name.slice(0, 200) : s.name,
-              medicalInfo: typeof s.medicalInfo === "string" ? s.medicalInfo.slice(0, 2000) : s.medicalInfo,
-              foerderStatus: typeof s.foerderStatus === "string" ? s.foerderStatus.slice(0, 500) : s.foerderStatus,
-              parentPhone: typeof s.parentPhone === "string" ? s.parentPhone.slice(0, 100) : s.parentPhone,
-              birthday: S_DATUM(s.birthday),
-              deletedAt: S_DATUM(s.deletedAt),
-            }));
-        }
-        /* Einstellungen aus einer fremden Datei nicht blind übernehmen: `merged` ist ein
-           flacher Spread, `settings` würde also komplett ersetzt. Nur bekannte Felder
-           durchlassen, alles andere auf die Vorgaben zurückfallen. */
-        const impSettings = (typeof imported.settings === "object" && imported.settings) || {};
-        merged.settings = {
-          ...(EMPTY_DATA.settings || {}),
-          ...impSettings,
-          backupNotifications: impSettings.backupNotifications === true,
-          dashboardOrder: Array.isArray(impSettings.dashboardOrder)
-            ? impSettings.dashboardOrder.filter((k) => typeof k === "string")
-            : (EMPTY_DATA.settings || {}).dashboardOrder,
-        };
-        const kurz = (v, n) => (typeof v === "string" ? v.slice(0, n) : null);
-        merged.grades = (Array.isArray(merged.grades) ? merged.grades : []).map((g) => ({
-          ...g, topic: kurz(g.topic, 100), title: kurz(g.title, 200),
-        }));
-        merged.faecher = (Array.isArray(merged.faecher) ? merged.faecher : [])
-          .filter((f) => f && typeof f === "object")
-          .map((f) => ({
-            ...S_SAUBER(f),
-            subject: kurz(f.subject, 80),
-            room: kurz(f.room, 40),
-            color: S_FARBE(f.color),
-            nextTestTitle: kurz(f.nextTestTitle, 100),
-            /* S_DATUM statt Mustervergleich: ein Jahr wie 9999 hat frueher die
-               App eingefroren und wuerde die reine Formpruefung passieren. */
-            nextTestDate: S_DATUM(f.nextTestDate),
-          }));
+        /* Dieselbe Pruefung wie beim Laden aus der Cloud - eine Stelle, ein
+           Verhalten. Solange es zwei gab, fehlten auf dem einen Weg vier
+           Sammlungen, die auf dem anderen mitkamen. */
+        const { daten: merged, gekuerzt } = sanitizeVollstaendig(imported);
         justLoadedRef.current = false;
         setData(merged);
         recordBackup();
