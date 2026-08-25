@@ -2134,7 +2134,7 @@ function computePendingLessons(data, now) {
 
 /* Benachrichtigung sicher senden. Auf Android Chrome wirft `new Notification()` einen
    „Illegal constructor" – dort sind nur Service-Worker-Benachrichtigungen erlaubt.
-   Das Icon wird relativ zum Deployment-Pfad aufgelöst (GitHub Pages liegt im Unterordner).
+   Das Icon wird relativ zum Deployment-Pfad aufgelöst.
    Schlägt alles fehl, bleibt es folgenlos – eine Benachrichtigung ist nie kritisch. */
 function notify(title, body) {
   try {
@@ -2890,7 +2890,7 @@ const HELP_DATA = [
       { q: "Kann Tu-vi dunkel oder hell dargestellt werden?", a: `Ja, du entscheidest das selbst: „Mehr" → „Einstellungen" → „Darstellung" → ganz oben unter „Erscheinungsbild" stehen drei Knöpfe. „Hell" und „Dunkel" gelten fest, unabhängig davon, wie dein Gerät eingestellt ist – du kannst Tu-vi also hell nutzen, obwohl dein iPhone im Dunkelmodus läuft. „Automatisch" übernimmt die Einstellung des Geräts und wechselt abends mit, wenn dieses auf dunkel umschaltet. Voreingestellt ist „Automatisch". Die Wahl gilt jeweils nur auf dem Gerät, an dem du sie triffst – am Mac hell und am iPhone dunkel ist also möglich. Ausdrucke (Schülerakte, Berichte, Notenlisten) sind immer hell, damit sie auf Papier lesbar bleiben.` },
       { q: "Wie ist die Heute-Seite aufgebaut?", a: `Von oben nach unten priorisiert – die App zeigt nicht alles auf einmal, sondern das was gerade zählt: (1) Kopf mit der Wortmarke „Tu-vi", Begrüßung, Datum und rechts dem Sternchen für den Farb-Modus. (2) „JETZT" – die große Karte für die laufende Stunde, mit Restzeit, Fach & Klasse, Thema, den zu dieser Stunde gehörenden offenen Punkten (Entschuldigungen, „heute Klassenarbeit"-Warnung) und dem Material aus dem Fach. Ein „Stunde öffnen"-Knopf springt in die Schnellerfassung. (3) „ALS NÄCHSTES" – die nächste Stunde, mit „in X Min." oder „in X Std." und – das ist der eigentliche Trick – den Material-Chips unter „Vorher mitnehmen", damit du in der aktuellen Stunde schon weißt, was du gleich einsammeln musst (z. B. „12 Volleybälle · 6 Hütchen · Leibchen"). (4) Zweispaltig „X Dinge brauchen deine Aufmerksamkeit" (Sheet mit allen Signalen) und „Nicht vergessen" (persönliche Aufgabenliste mit +-Feld zum sofort Ergänzen). (5) „Danach heute" – die restlichen Stunden als kompakte Zeilenliste. (6) Kleine Wochentagsleiste zum Vor- und Zurückblättern. (7) Wochenrückblick von Freitag 12 Uhr bis Sonntag Nacht, falls aktiv. (8) Unterrichtstipp des Tages, falls in den Einstellungen aktiv.` },
       { q: "Was zeigen die Karten JETZT und ALS NÄCHSTES?", a: `Beide Karten führen dich durch den aktuellen Moment. JETZT ist die dominante Karte für die laufende Stunde: Fach·Klasse·Thema groß, darunter die konkret zu dieser Stunde relevanten Punkte – Zahl der offenen Entschuldigungen dieser Klasse, „Heute: [Klassenarbeit-Titel]" wenn eine Prüfung ansteht, verknüpfte Aufgaben, und ganz wichtig: das Material, das du für dieses Fach eingetragen hast (Feld „Immer mitnehmen" im Fach-Editor). Rechts oben läuft die Restzeit. „Stunde öffnen" springt in die Schnellerfassung. Die ALS-NÄCHSTES-Karte ist etwas kleiner: Anfangszeit + „in X Std. Y Min.", Fach·Klasse·Raum, Thema falls hinterlegt, und die Material-Chips als „Vorher mitnehmen". Der Sinn: du bist noch in Mathe, siehst aber schon dass du gleich zwölf Volleybälle brauchst, und kannst sie auf dem Weg mitnehmen.` },
-      { q: `Was steht in der Kachel „X Dinge brauchen deine Aufmerksamkeit"?`, a: `Automatisch erkannte Signale für heute – nur solche die tatsächlich anstehen, sonst verschwindet die Kachel. Sie sammelt: (1) noch nachzutragende Stunden, (2) auffällige Klassen aus dem Klassenradar (kritisch/warnend), (3) dringliche Erinnerungen (Kinder mit vielen Fehltagen, Kinder ohne Eintrag seit 14+ Tagen, wiederholte Vorfälle, offene Zeugnisnoten). Ein Tipp öffnet ein Sheet mit der vollständigen Liste; ein Tipp auf einen Eintrag springt direkt in den passenden Bereich (Klassen-Dashboard, Entschuldigungen usw.). Alles lokal berechnet – keine externen Datenübertragungen. „Nicht vergessen" daneben ist bewusst getrennt: dort stehen nur deine manuell erfassten Aufgaben.` },
+      { q: `Was steht in der Kachel „X Dinge brauchen deine Aufmerksamkeit"?`, a: `Automatisch erkannte Signale für heute – nur solche die tatsächlich anstehen, sonst verschwindet die Kachel. Sie sammelt: (1) noch nachzutragende Stunden, (2) auffällige Klassen aus dem Klassenradar (kritisch/warnend), (3) dringliche Erinnerungen (Kinder mit vielen Fehltagen, Kinder ohne Eintrag seit 14+ Tagen, wiederholte Vorfälle, offene Zeugnisnoten). Ein Tipp öffnet ein Sheet mit der vollständigen Liste; ein Tipp auf einen Eintrag springt direkt in den passenden Bereich (Klassen-Dashboard, Entschuldigungen usw.). Lokal berechnet, auf Basis deiner synchronisierten Daten. „Nicht vergessen" daneben ist bewusst getrennt: dort stehen nur deine manuell erfassten Aufgaben.` },
       { q: `Warum zeigt „Nicht vergessen" nicht alle Aufgaben?`, a: `Damit die Startseite nicht zur Endlosliste wird. Die Kachel zeigt höchstens drei Aufgaben, und zwar die dringendsten: zuerst überfällige (rot markiert), dann heute fällige (gelb), dann solche ohne Datum, zuletzt spätere. Oben rechts steht „N heute" – oder „N offen", wenn heute nichts fällig ist. Ein Tipp auf die Kachel oder auf „+N weitere" öffnet die vollständige Liste – dort kannst du auch direkt abhaken. Ganz unten in dieser Liste führt „Alle Aufgaben und Listen" in den Aufgaben-Bereich. Erledigte Aufgaben verschwinden aus der Kachel.` },
       { q: "Wie lege ich Material für ein Fach fest, das immer mitzunehmen ist?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung" → im Editor die Sektion „Immer mitnehmen". Trage ein Ding pro Zeile ein und tippe das +-Symbol oder drücke Enter – z. B. „12 Volleybälle", „6 Hütchen", „Leibchen", „Beamer". Die Einträge erscheinen automatisch auf der Heute-Seite: in der JETZT-Karte beim aktiven Fach, und – wichtiger – in der ALS-NÄCHSTES-Karte als Chip-Reihe „Vorher mitnehmen", damit du sie in der Vorstunde noch einsammeln kannst. Kannst du jederzeit über das × am Chip löschen. Wird pro Fach gespeichert, nicht pro Stunde – Sport hat also für jede Sportstunde dieselben Bälle.` },
       { q: "Was ist der Unterrichtstipp des Tages?", a: `Ganz unten auf der Übersicht liegt eine kompakte Zeile mit einem Tipp aus dem Wissenspool – Titel plus Merksatz. Der Tipp wechselt automatisch mit jedem Tag (er ist an das Datum gekoppelt, bleibt also bei mehrmaligem Öffnen am selben Tag gleich). Tippe drauf, dann öffnet sich die volle Karte: „Warum?" mit Kurzbegründung, „So setzt du es um" als praktische Punkte, und der Merksatz zum Mitnehmen. Ein „Nächster Tipp"-Knopf springt zufällig zu einer anderen Karte, so kannst du zwischendurch etwas schmökern. Unter „Einstellungen" → „Darstellung" lässt sich die Kachel abschalten.` },
@@ -4275,7 +4275,12 @@ function LoginScreen() {
         setSuccess("E-Mail gesendet! Schau in deinen Posteingang und klicke auf den Link, um dein Passwort zurückzusetzen.");
       }
     } catch (e) {
-      setError(e.message === "Invalid login credentials" ? "E-Mail oder Passwort falsch." : e.message);
+      const msg = e.message === "Invalid login credentials" ? "E-Mail oder Passwort falsch."
+        : e.message === "Email not confirmed" ? "Bitte bestätige zuerst deine E-Mail-Adresse."
+        : e.message === "User already registered" ? "Diese E-Mail ist bereits registriert."
+        : "Es ist ein Fehler aufgetreten. Bitte versuche es erneut.";
+      console.warn("Auth-Fehler:", e.message);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -4343,7 +4348,9 @@ function LoginScreen() {
               der es passiert - nicht nur in einen Link weiter unten. */}
           {mode === "signup" && (
             <p className="text-[11px] text-stone-400 leading-relaxed mt-2.5 text-center">
-              Mit dem Erstellen eines Kontos bestätigst du, die Datenschutzhinweise gelesen zu haben.
+              Mit dem Erstellen eines Kontos bestätigst du, die{" "}
+              <button type="button" onClick={() => setZeigeRecht(true)} className="underline akzent-text hover:opacity-80">Datenschutzhinweise</button>{" "}
+              gelesen zu haben.
             </p>
           )}
           {mode === "login" && (
@@ -4401,7 +4408,8 @@ function ResetPasswordScreen() {
       if (error) throw error;
       setDone(true);
     } catch (e) {
-      setError(e.message);
+      console.warn("Passwort-Fehler:", e.message);
+      setError("Passwort konnte nicht geändert werden. Bitte versuche es erneut.");
     } finally {
       setLoading(false);
     }
@@ -4726,7 +4734,8 @@ export default function App() {
           .eq("user_id", user.id)
           .maybeSingle();
         if (row && row.data) {
-          const parsed = { ...EMPTY_DATA, ...row.data };
+          const { daten: sanitized } = sanitizeImport(row.data);
+          const parsed = { ...EMPTY_DATA, ...sanitized };
           // Migration: frühere dritte Kategorie "Klassenarbeit" in "schriftlich" überführen
           parsed.grades = (parsed.grades || []).map((g) =>
             g.category === "klassenarbeit" ? { ...g, category: "schriftlich" } : g
@@ -6315,8 +6324,8 @@ function sportVorlagePdf({ vorlage, name, klasse, datum, thema, anwesend, titel 
      Der leere Vordruck ohne Namen braucht ihn nicht. */
   if (name) {
     d.fussnote([
-      "Vertraulich · Nur für den berechtigten Personenkreis. Enthält personenbezogene Daten eines Kindes (Art. 6 DSGVO).",
-      "Weitergabe nur über schulisch genehmigte Wege - keine privaten Messenger. § 203 StGB beachten, danach vernichten.",
+      "Vertraulich · Nur für den berechtigten Personenkreis. Enthält personenbezogene Daten eines Kindes.",
+      "Weitergabe nur über schulisch genehmigte Wege - keine privaten Messenger. Nach Verwendung vernichten.",
     ]);
   }
 
@@ -6576,11 +6585,16 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
       {confirmTeilen && (
         <div className="druck-hide fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[75]" onClick={() => setConfirmTeilen(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="font-semibold text-stone-800 mb-2">Vorlage teilen</div>
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-3">
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                <strong>Datenschutzhinweis:</strong> Diese PDF enthält den Namen des Kindes{vorlage === "regelbruch" ? " und eine Verhaltensdokumentation" : ""}. Teile sie nur über sichere, schulisch genehmigte Kanäle. Keine privaten Messenger oder Cloud-Dienste (iCloud, WhatsApp, Google Drive).
-              </p>
+            <div className="flex items-start gap-2.5 mb-3">
+              <span className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"><ShieldCheck size={17} /></span>
+              <div>
+                <div className="font-semibold text-stone-800">Vorlage teilen</div>
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mt-2">
+                  <p className="text-[13px] text-amber-800 leading-relaxed">
+                    <strong>Datenschutzhinweis:</strong> Diese PDF enthält den Namen des Kindes{vorlage === "regelbruch" ? " und eine Verhaltensdokumentation" : ""}. Teile sie nur über sichere, schulisch genehmigte Kanäle. Keine privaten Messenger oder Cloud-Dienste (iCloud, WhatsApp, Google Drive).
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setConfirmTeilen(false)} className="flex-1 justify-center">Abbrechen</Button>
@@ -16182,7 +16196,7 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-amber-900 mb-1">Sensible pädagogische Daten</div>
                 <p className="text-xs text-amber-800 leading-snug">
-                  Die Akte kann Angaben nach Art. 9 DSGVO enthalten (Gesundheit, Herkunft, Fördermerkmale). Teile das PDF ausschließlich mit dem berechtigten Personenkreis (Nachfolge-Lehrkraft, Eltern in bestätigten Gesprächen). <strong>Kein Versand per E-Mail an Dritte.</strong> Vertrauliche Behandlung nach § 203 StGB.
+                  Die Akte kann besonders schützenswerte Angaben enthalten (Gesundheit, Herkunft, Fördermerkmale). Teile das PDF ausschließlich mit dem berechtigten Personenkreis (Nachfolge-Lehrkraft, Eltern in bestätigten Gesprächen). <strong>Kein Versand per E-Mail an Dritte.</strong>
                 </p>
                 <button onClick={warnungBestaetigen} className="mt-2 text-xs font-semibold text-amber-900 underline hover:text-amber-950">Verstanden – nicht mehr zeigen</button>
               </div>
@@ -16360,8 +16374,8 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
 
           {/* Fuss - Art. 9 DSGVO + § 203 StGB Hinweis */}
           <div className="mt-8 pt-3 border-t border-stone-300 text-[9px] text-stone-500 leading-snug space-y-1">
-            <div><strong>Vertraulich · Nur für den berechtigten Personenkreis.</strong> Diese Übersicht enthält personenbezogene Daten nach Art. 6 DSGVO und ggf. besondere Kategorien nach <strong>Art. 9 DSGVO</strong> (u. a. Gesundheit, ethnische Herkunft, weltanschauliche Merkmale). Verarbeitung ausschließlich zur pädagogischen Übergabe.</div>
-            <div>Weitergabe an Unbefugte oder Versand per unverschlüsselter E-Mail an Dritte ist unzulässig. Verschwiegenheitspflicht nach <strong>§ 203 StGB</strong> beachten. Nach Zweckerreichung datenschutzkonform vernichten (Papier: schreddern; Datei: sicher löschen).</div>
+            <div><strong>Vertraulich · Nur für den berechtigten Personenkreis.</strong> Diese Übersicht enthält personenbezogene Daten und ggf. besonders schützenswerte Angaben (u. a. Gesundheit, Herkunft, Fördermerkmale). Verarbeitung ausschließlich zur pädagogischen Übergabe.</div>
+            <div>Weitergabe an Unbefugte oder Versand per unverschlüsselter E-Mail an Dritte ist unzulässig. Nach Zweckerreichung datenschutzkonform vernichten (Papier: schreddern; Datei: sicher löschen).</div>
             <div className="text-stone-400">Erzeugt mit Tu-vi · Stand: {heute}</div>
           </div>
         </div>
@@ -16695,13 +16709,18 @@ function PrintReport({ mode, fach, cls, students, data, halbjahr, onClose }) {
       </div>
 
       {confirmPdfShare && (
-        <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[70]" onClick={() => setConfirmPdfShare(false)}>
+        <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[75]" onClick={() => setConfirmPdfShare(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="font-semibold text-stone-800 mb-2">PDF teilen</div>
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-3">
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                <strong>Datenschutzhinweis:</strong> Diese PDF enthält personenbezogene Schülerdaten. Teile sie nur über sichere, schulisch genehmigte Kanäle. Keine privaten Messenger oder Cloud-Dienste (iCloud, WhatsApp, Google Drive).
-              </p>
+            <div className="flex items-start gap-2.5 mb-3">
+              <span className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"><ShieldCheck size={17} /></span>
+              <div>
+                <div className="font-semibold text-stone-800">PDF teilen</div>
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mt-2">
+                  <p className="text-[13px] text-amber-800 leading-relaxed">
+                    <strong>Datenschutzhinweis:</strong> Diese PDF enthält personenbezogene Schülerdaten. Teile sie nur über sichere, schulisch genehmigte Kanäle. Keine privaten Messenger oder Cloud-Dienste (iCloud, WhatsApp, Google Drive).
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setConfirmPdfShare(false)} className="flex-1 justify-center">Abbrechen</Button>
@@ -16711,13 +16730,18 @@ function PrintReport({ mode, fach, cls, students, data, halbjahr, onClose }) {
         </div>
       )}
       {confirmPdfDownload && (
-        <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[70]" onClick={() => setConfirmPdfDownload(false)}>
+        <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[75]" onClick={() => setConfirmPdfDownload(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="font-semibold text-stone-800 mb-2">PDF herunterladen</div>
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-3">
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                <strong>Datenschutzhinweis:</strong> Diese PDF enthält personenbezogene Schülerdaten. Speichere sie nur auf schulisch genehmigten Geräten und lösche sie nach Verwendung.
-              </p>
+            <div className="flex items-start gap-2.5 mb-3">
+              <span className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"><ShieldCheck size={17} /></span>
+              <div>
+                <div className="font-semibold text-stone-800">PDF herunterladen</div>
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mt-2">
+                  <p className="text-[13px] text-amber-800 leading-relaxed">
+                    <strong>Datenschutzhinweis:</strong> Diese PDF enthält personenbezogene Schülerdaten. Speichere sie nur auf schulisch genehmigten Geräten und lösche sie nach Verwendung.
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setConfirmPdfDownload(false)} className="flex-1 justify-center">Abbrechen</Button>

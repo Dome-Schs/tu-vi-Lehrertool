@@ -1,7 +1,7 @@
 # Saidy – Lehrertool
 
 React-PWA für Fachlehrkräfte (Sekundarstufe I). Single-file-Build via Vite + vite-plugin-singlefile.
-Alle App-Logik in `saidy.jsx`. Deployment über GitHub Pages (Branch: main → `.github/workflows/`).
+Alle App-Logik in `saidy.jsx`. Deployment über Hetzner (Apache, manueller Upload von `dist/`).
 
 ## Vision (Leitstern)
 
@@ -32,8 +32,8 @@ Nach Änderungen an `saidy.jsx` oder Agents: Artifact mit demselben Dateipfad ne
 
 ## Deployment
 
-Alle Änderungen direkt auf `main` committen und pushen — kein Feature-Branch, kein PR.
-GitHub Actions deployed `main` automatisch auf GitHub Pages.
+Build lokal mit `npm run build`, dann `dist/index.html` + `public/.htaccess` auf Hetzner hochladen.
+GitHub wird nur als Code-Repository genutzt, nicht für Deployment.
 
 ## Wichtige Regeln
 
@@ -49,9 +49,9 @@ Wenn ein neues Feature eingebaut oder ein bestehender Workflow geändert wird,
 - Farben: `--oliv: #4F5844`, `--creme: #F4F1E8`
 - Tailwind v3, CSS-Klassen `akzent-text`, `akzent-rand`, `akzent-flaeche`, `akzent-ton`
 - Bottom Sheets: `pb-[max(2rem,env(safe-area-inset-bottom))]` für iPhone Home-Indicator
-- Kein Backend – alles läuft lokal via `window.storage` / localStorage
+- Supabase (EU, Frankfurt) für Auth und Datenspeicherung, lokale Berechnung
 
 ### Daten
 - `window.storage.get/set` für Persistenz (localStorage-Mock in `src/main.jsx`)
 - Backup via `last_backup_at` in localStorage tracken
-- DSGVO: keine externen Datenübertragungen
+- DSGVO: Daten auf Supabase (EU, Frankfurt), verschlüsselt. AVV noch ausstehend.
