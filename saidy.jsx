@@ -11135,8 +11135,8 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
             const lastNoteRel = lastNote ? relativeTime(lastNote.date) : null;
 
             return (
-              <div key={s.id} className="space-y-1">
-                {/* Schülerkarte */}
+              <div key={s.id}>
+                {/* Schülerkarte - enthaelt alles zu diesem Kind */}
                 <div className="card overflow-hidden">
                   <button
                     onClick={() => { setSelectedStudent(s.id); setProfileTab("übersicht"); }}
@@ -11174,6 +11174,27 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                       <ChevronRight size={14} className="text-stone-300" />
                     </div>
                   </button>
+
+                  {/* Sekundaere Aktionen gehoeren in den Kasten des Kindes.
+                      Frueher standen sie darunter im Leeren: das kostete pro
+                      Kind eine eigene Zeile und liess offen, auf wen sie sich
+                      beziehen - bei 25 Kindern untereinander ein echtes
+                      Zuordnungsproblem. */}
+                  <div className="flex items-center justify-end gap-1 border-t border-stone-100 px-2 py-1">
+                    <button
+                      onClick={() => { setQuickGesprId(quickGesprId === s.id ? null : s.id); setGespraechDraft({ text: "", mood: "ok", typ: "schueler" }); }}
+                      className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-colors ${quickGesprId === s.id ? "akzent-text akzent-ton font-medium" : "text-stone-400 hover:text-stone-600"}`}
+                    >
+                      💬 Gespräch
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(s.id)}
+                      className="text-stone-300 hover:text-red-400 p-1 rounded-full"
+                      aria-label={`${s.name} löschen`}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
 
                   {/* Gespräch-Schnelleingabe */}
                   {quickGesprId === s.id && (
@@ -11214,22 +11235,6 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* Sekundäre Aktionen unter der Karte */}
-                <div className="flex items-center justify-end gap-2 px-2">
-                  <button
-                    onClick={() => { setQuickGesprId(quickGesprId === s.id ? null : s.id); setGespraechDraft({ text: "", mood: "ok", typ: "schueler" }); }}
-                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-colors ${quickGesprId === s.id ? "akzent-text akzent-ton font-medium" : "text-stone-400 hover:text-stone-600"}`}
-                  >
-                    💬 Gespräch
-                  </button>
-                  <button
-                    onClick={() => setConfirmDeleteId(s.id)}
-                    className="text-stone-300 hover:text-red-400 p-1 rounded-full"
-                  >
-                    <Trash2 size={13} />
-                  </button>
                 </div>
               </div>
             );
