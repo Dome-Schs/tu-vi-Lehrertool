@@ -1360,11 +1360,11 @@ function LegalModal({ onClose }) {
               <div>
                 <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">4. App-Daten (Schüler, Noten, Klassen)</div>
                 <div className="space-y-2 text-xs text-stone-600">
-                  <p>Deine Eingaben – Klassen, Schülerdaten, Noten, Notizen, Gespräche, Fehlzeiten, Vorfälle und Fotos – werden in deinem Konto auf einem <strong className="text-stone-800">Server gespeichert</strong>, damit sie auf mehreren Geräten verfügbar sind und bei Geräteverlust nicht verloren gehen. Die Übertragung erfolgt verschlüsselt (HTTPS).</p>
+                  <p>Deine Eingaben – Klassen, Schülerdaten, Noten, Notizen, Gespräche, Fehlzeiten, Vorfälle und Profilfotos der Kinder – werden in deinem Konto auf einem <strong className="text-stone-800">Server gespeichert</strong>, damit sie auf mehreren Geräten verfügbar sind und bei Geräteverlust nicht verloren gehen. Die Übertragung erfolgt verschlüsselt (HTTPS).</p>
                   <p>Zugriff auf diese Daten hat nur, wer sich mit deiner E-Mail-Adresse und deinem Passwort anmeldet. Der Zugriff ist auf Datenbankebene auf das eigene Konto beschränkt.</p>
                   <p>Als Betreiber der Datenbank hat der Entwickler technisch Zugriff auf die gespeicherten Daten. Er verarbeitet sie ausschließlich zum Betrieb der App, wertet sie nicht aus und gibt sie nicht weiter. Damit liegt eine <strong className="text-stone-800">Auftragsverarbeitung nach Art. 28 DSGVO</strong> vor; die nutzende Lehrkraft bleibt Verantwortliche im Sinne von Art. 4 Nr. 7 DSGVO.</p>
                   <p className="text-amber-800">Hinweis: Ein Auftragsverarbeitungsvertrag ist derzeit noch nicht bereitgestellt. Bitte kläre vor dem Einsatz mit Schulleitung oder Datenschutzbeauftragten, ob die Nutzung für dich zulässig ist.</p>
-                  <p>Bei abgelegten <strong className="text-stone-800">Dokumenten</strong> gilt eine Besonderheit: Die <strong className="text-stone-800">Dateien selbst</strong> – Atteste, Gutachten, Fotos – bleiben ausschließlich auf deinem Gerät. Übertragen wird nur der Eintrag dazu: Dateiname, Notiz, Datum und die Zuordnung zum Kind. Schreibe deshalb keine Diagnosen oder Befunde in Dateinamen und Notizen.</p>
+                  <p>Bei abgelegten <strong className="text-stone-800">Dokumenten</strong> gilt eine Besonderheit: Die <strong className="text-stone-800">Dateien selbst</strong> – Atteste, Gutachten, abfotografierte Unterlagen – bleiben ausschließlich auf deinem Gerät. Davon zu unterscheiden ist das Profilfoto eines Kindes: Es gehört zu den Eingaben oben und liegt im Konto auf dem Server. Übertragen wird nur der Eintrag dazu: Dateiname, Notiz, Datum und die Zuordnung zum Kind. Schreibe deshalb keine Diagnosen oder Befunde in Dateinamen und Notizen.</p>
                   <p>Die Lehrkraft ist dafür verantwortlich, geltende schulrechtliche Datenschutzvorgaben einzuhalten – etwa Einwilligungen bei Fotos oder Gesundheitsdaten.</p>
                 </div>
               </div>
@@ -1379,18 +1379,27 @@ function LegalModal({ onClose }) {
               </div>
               <div>
                 <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">6. Lokale Speicherung auf dem Gerät</div>
-                <p className="text-xs text-stone-600">Zusätzlich legt Tu-vi einige Angaben lokal im Browser ab: die Anmeldesitzung, den Zeitpunkt der letzten Datensicherung, Anzeigeeinstellungen sowie – falls eingerichtet – die Kennung der App-Sperre. Bei der App-Sperre mit Face ID oder Touch ID verlassen <strong className="text-stone-800">keine biometrischen Merkmale das Gerät</strong>; die Prüfung übernimmt das Betriebssystem, Tu-vi erhält nur die Rückmeldung, ob sie erfolgreich war. Es werden keine Tracking-Cookies gesetzt und keine Analysedienste eingesetzt.</p>
+                <p className="text-xs text-stone-600">Zusätzlich legt Tu-vi einige Angaben lokal im Browser ab: die Anmeldesitzung, den Zeitpunkt und den Umfang der letzten Datensicherung, Anzeigeeinstellungen (unter anderem Hell/Dunkel und die Frist für das automatische Sperren), Merker für einmalige Hinweise sowie – falls eingerichtet – die Kennung der App-Sperre. Dazu kommt eine Liste der Kinder, für die du die Einwilligung zu Gesundheitsangaben nach Art. 9 DSGVO bestätigt hast; sie bleibt bewusst auf dem Gerät und wandert weder in die Cloud noch in eine Datensicherung. Bei der App-Sperre mit Face ID oder Touch ID verlassen <strong className="text-stone-800">keine biometrischen Merkmale das Gerät</strong>; die Prüfung übernimmt das Betriebssystem, Tu-vi erhält nur die Rückmeldung, ob sie erfolgreich war. Es werden keine Tracking-Cookies gesetzt und keine Analysedienste eingesetzt.</p>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">7. Deine Rechte</div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">7. Export und Weitergabe</div>
+                <div className="space-y-2 text-xs text-stone-600">
+                  <p>Tu-vi kann Daten als Datei ausgeben: die Datensicherung (JSON), die Notenübersicht, die Schülerakte zur Übergabe und die Sport-Vorlagen (jeweils PDF). Diese Dateien enthalten <strong className="text-stone-800">Klarnamen</strong> und – je nachdem, was du auswählst – auch Förder- und Gesundheitsangaben.</p>
+                  <p>Beim <strong className="text-stone-800">Herunterladen</strong> bleibt die Datei auf deinem Gerät. Beim <strong className="text-stone-800">Teilen</strong> übergibt dein Gerät sie an eine App, die du selbst auswählst – etwa AirDrop, Mail oder Nachrichten. Ab diesem Moment verarbeitet nicht mehr Tu-vi die Daten, sondern die von dir gewählte App und deren Anbieter. Tu-vi kann das weder verhindern noch rückgängig machen.</p>
+                  <p>Die Wahl des Wegs liegt deshalb bei dir und in deiner Verantwortung als Verantwortliche im Sinne von Art. 4 Nr. 7 DSGVO. Tu-vi fragt vor jedem Export mit Schülerdaten nach und weist auf diesen Punkt hin. Private Messenger und private Cloud-Dienste sind für Schülerdaten in aller Regel nicht zulässig.</p>
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">8. Deine Rechte</div>
                 <div className="space-y-2 text-xs text-stone-600">
                   <p>Du hast das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21). Für eine Auskunft oder Löschung deines Kontos genügt eine E-Mail an kontakt@tu-vi.de.</p>
                   <p>Außerdem steht dir nach Art. 77 DSGVO ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu, etwa der Landesbeauftragten für Datenschutz und Informationsfreiheit Nordrhein-Westfalen.</p>
                   <p>Gelöschte Klassen und Kinder liegen 30 Tage im Papierkorb („Klassen &amp; Schüler", ganz unten) und werden danach endgültig entfernt.</p>
+                  <p><strong className="text-stone-800">Speicherdauer:</strong> Die App-Daten bleiben gespeichert, bis du sie löschst – spätestens werden sie mit der Auflösung deines Kontos entfernt. Eine automatische Löschung nach Zeitablauf gibt es nicht; welche Aufbewahrungsfristen für dienstliche Unterlagen an deiner Schule gelten, richtet sich nach dem Schulrecht deines Bundeslandes.</p>
                 </div>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">8. Haftungsausschluss</div>
+                <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-2">9. Haftungsausschluss</div>
                 <p className="text-xs text-stone-600">Die App wird ohne Gewähr bereitgestellt. Der Entwickler übernimmt keine Haftung für Datenverlust, fehlerhafte Berechnungen oder Folgen aus der Nutzung. Für die DSGVO-konforme Nutzung ist die nutzende Lehrkraft selbst verantwortlich.</p>
               </div>
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-800">
@@ -2871,10 +2880,9 @@ const HELP_DATA = [
       { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast dich auf diesem Gerät schon einmal angemeldet oder auf „Später" getippt – dann steht der Weg unter „Einstellungen" → „Als App ablegen". Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
       { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – beim Öffnen der App und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
       { q: "Sperrt sich Tu-vi, wenn ich es liegen lasse?", a: `Ja. Unter „Mehr" → „Einstellungen" → „Sicherheit & Konto" → „Automatisch sperren" wählst du zwischen Aus, 5, 15 und 30 Minuten; voreingestellt sind 15 Minuten. Passiert in dieser Zeit nichts – kein Tippen, kein Scrollen –, greift die Sperre. Was dann geschieht, hängt davon ab, was auf dem Gerät eingerichtet ist: Mit Face ID oder Touch ID wird nur gesperrt, und du bist mit einem Blick wieder da, genau an der Stelle, an der du warst. Ohne eingerichtete Sperre wirst du abgemeldet, weil eine wegwischbare Sperre kein Schutz wäre – zurück brauchst du dann E-Mail und Passwort. Gedacht ist das für den Fall, dass das iPad aufgeklappt auf dem Pult liegen bleibt. Die Einstellung gilt nur auf dem Gerät, an dem du sie triffst, und deine Daten gehen dabei nie verloren.` },
-      { q: "Kann ich die Sport-Vorlagen verschicken statt drucken?", a: `Ja. Im Fenster der Vorlage steht neben „Drucken" jetzt „Teilen". Damit entsteht aus derselben Vorlage ein PDF, das an das Teilen-Menü deines Geräts übergeben wird – auf iPhone und iPad landest du damit direkt bei AirDrop, Mail oder Nachrichten. Am Computer, wo Browser das Teilen von Dateien meist nicht unterstützen, wird das PDF stattdessen heruntergeladen und liegt im Download-Ordner. Der Dateiname enthält Vorlage, Kindname und Datum, damit du sie später wiederfindest. Denk daran: Das PDF enthält den Namen des Kindes – teile es nur über schulisch genehmigte Wege, nicht über private Messenger.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
-      { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu fünf Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und ganz am Ende das Löschen aller Daten) sowie „Über Tu-vi" (Impressum und Datenschutz). Ein Pfeil oben links führt aus jedem Bereich zurück.` },
+      { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
       { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste. Gelöschte Klassen und Kinder bleiben dort 30 Tage wiederherstellbar, danach werden sie endgültig entfernt. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht. Früher lag er in den Einstellungen – dort sucht ihn niemand, wenn gerade aus Versehen eine Klasse verschwunden ist.` },
       { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten". „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
@@ -2889,7 +2897,7 @@ const HELP_DATA = [
       { q: "Was ist der Wochenrückblick auf der Übersicht?", a: `Eine Karte, die von Freitag 12 Uhr bis Sonntag Nacht ganz oben auf der Übersicht erscheint (ab Montag ist sie automatisch weg). Sie zeigt drei Dinge: die Zahlen der Woche (gehaltene Stunden, vergebene Noten, geführte Gespräche, neue Notizen), was aufgefallen ist (Klassen mit Signalen aus dem Klassenradar, Kinder ohne Eintrag in dieser Woche) und einen Ausblick auf die nächste Woche (Klassenarbeiten, Termine). Ein × blendet die Karte für den Rest dieser Woche aus – am nächsten Freitag kommt sie wieder.` },
       { q: "Was macht der grüne Plus-Knopf in der Mitte?", a: `Er ist der Schnellzugriff zum Erfassen und funktioniert aus jedem Bereich heraus. Ganz oben steht immer „Kind suchen" – der kürzeste Weg ins Schülerprofil. Darunter: „Stunde nachtragen" springt direkt in die Schnellerfassung – Tu-vi wählt dabei selbst die passende Stunde, zuerst eine noch nicht erfasste, sonst die zuletzt gehaltene von heute. „Gespräch notieren" und „Notiz zu einem Kind" fragen zuerst nach dem Kind (einfach den Namen tippen) und dann nach dem Text; beim Gespräch kommen Art (Schüler, Eltern, Förder) und Stimmung dazu. „Aufgabe" und „Termin" legen einen To-do beziehungsweise einen Kalendereintrag an. Bist du gerade in einem Bereich mit eigener Aktion – etwa im Klassen-Tab – steht diese zusätzlich ganz oben in der Liste. Auf Tablet und Desktop heißt der Knopf „Schnell erfassen" und sitzt in der linken Seitenleiste, ganz oben; das aufklappende Menü enthält dieselben Aktionen.` },
       { q: "Wo finde ich die Aufgaben in der unteren Leiste?", a: `Die Leiste zeigt Übersicht, Klassen, den Plus-Knopf, Noten und „Mehr". Die Aufgaben sind unter „Mehr" zu finden – dort stehen oben die Bereiche „Stundenplan", „Kalender" und „Aufgaben", darunter die Werkzeuge „Suchen", „Dokumente", „Einstellungen" und „Hilfe". Eine neue Aufgabe legst du schneller über den grünen Plus-Knopf an.` },
-      { q: "Warum verschwindet die Navigationsleiste beim Scrollen?", a: `Damit mehr Platz für den Inhalt bleibt. Scrollst du auf einer Seite nach unten, gleitet die untere Leiste weg und stattdessen erscheint unten links ein olivfarbener Kreis mit einem Pfeil nach oben. Ein Tipp darauf holt die vollständige Leiste zurück. Scrollst du wieder nach oben, erscheint sie ohnehin von selbst. Auf dem Desktop bleibt die Seitenleiste immer sichtbar.` }
+      { q: "Warum nutzt Tu-vi am großen Bildschirm nicht die volle Breite?", a: `Alle Ansichten – Übersicht, Klassen, Noten, Vollbildseiten – liegen jetzt in derselben, mittig gehaltenen Breite. Am Monitor bleiben Textzeilen und Namenslisten dadurch lesbar, und beim Wechsel zwischen zwei Bereichen springt der Inhalt nicht mehr hin und her. Auf iPhone und iPad ändert sich nichts: Dort wird die ganze Fläche genutzt.` }
     ],
   },
   {
@@ -2919,14 +2927,16 @@ const HELP_DATA = [
     category: "Noten & Berichte",
     items: [
       { q: "Wie sehe ich, wie eine Klassenarbeit ausgefallen ist?", a: `Öffne die Klasse → Reiter „Noten" → das Fach. Unter den Wissensgebieten steht „Notentermine": jeder Tag, an dem du in diesem Fach benotet hast, mit Bezeichnung, Anzahl der Noten und Durchschnitt. Tippe einen Termin an, und du siehst alle Kinder mit ihrer Note nebeneinander – statt sie einzeln aufrufen zu müssen. Die Liste entsteht automatisch aus den vorhandenen Noten, du musst dafür nichts zusätzlich erfassen.` },
-      { q: "Kann ich eine Note nachträglich ändern oder nachtragen?", a: `Ja. Öffne den Termin unter „Notentermine" (Klasse → „Noten" → Fach). Dort änderst du jede Note direkt über das Auswahlfeld daneben. Kinder, die an dem Tag gefehlt haben, stehen unten unter „Ohne Note an diesem Termin" – ein Tipp auf „Note ergänzen" trägt sie nach und übernimmt dabei Datum, Bezeichnung, Gewichtung und Thema der Arbeit. So bleibt es ein einziger Termin und zerfällt nicht in zwei.` },
+      { q: "Kann ich eine Note nachträglich ändern oder nachtragen?", a: `Ja. Öffne den Termin unter „Notentermine" (Klasse → „Noten" → Fach). Dort änderst du jede Note direkt über das Auswahlfeld daneben; das Papierkorb-Symbol rechts löscht genau diese eine Note. Kinder, die an dem Tag gefehlt haben, stehen unten unter „Ohne Note an diesem Termin" – ein Tipp auf „Note ergänzen" trägt sie nach und übernimmt dabei Datum, Bezeichnung, Gewichtung und Thema der Arbeit. So bleibt es ein einziger Termin und zerfällt nicht in zwei.` },
       { q: "Wie benenne ich eine Klassenarbeit um oder korrigiere das Datum?", a: `Im geöffneten Termin stehen unten die Felder für Bezeichnung und Datum unter dem Hinweis „Gilt für alle Noten dieses Termins". Eine Änderung dort wirkt auf alle Noten des Termins gleichzeitig – wichtig, weil Tu-vi Noten anhand von Fach, Datum und Bezeichnung zusammenfasst. Änderst du das nur bei einem Kind, rutscht dessen Note in einen eigenen Termin. Über „Ganzen Termin löschen" verschwinden alle Noten dieses Tages auf einmal.` },
       { q: `Wie trage ich eine Note im Bereich „Noten & Berichte" ein?`, a: `Gehe zu „Noten & Berichte", wähle Klasse und Fach. Tippe auf eine:n Schüler:in – in der Karte „Neue Note" Kategorie und Note wählen und auf „+" tippen. Oder tippe direkt in der Notenübersicht auf die Mündl.-Spalte eines Kindes – ein Popover öffnet sich mit den fünf Schnellbewertungen ++, +, o, –, – –. Ein Tipp, fertig.` },
       { q: "Wie berechnet sich die Zeugnisnote?", a: `Tu-vi bildet den gewichteten Durchschnitt aus mündlichen und schriftlichen Noten. Voreingestellt ist 50 zu 50 Prozent – änderbar über Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung". Einzelne Noten lassen sich zusätzlich stärker gewichten (Faktor beim Bearbeiten der Note). Die berechnete Note erscheint in der Notenübersicht.` },
       { q: "Wie sehe ich alle Noten eines Kindes auf einen Blick?", a: `Kind-Profil öffnen und oben rechts auf das Balken-Symbol „Notenübersicht" tippen. Dort siehst du den aktuellen Schnitt in jedem Fach sowie die Zeugnisnote, falls schon eingetragen.` },
       { q: "Was ist der Stunden-Abschluss (30 Sekunden)?", a: `Sind heute Stunden noch nicht erfasst, sitzt oben rechts auf der Übersicht ein Klemmbrett-Symbol mit gelbem Punkt. Ein Tipp öffnet „Noch nicht erfasst", daneben steht pro Stunde „Erfassen" – und damit der 30-Sekunden-Abschluss, die Standard-Erfassung nach einer Stunde. Kein Formular mit leerem Notenfeld, sondern eine Liste aller Kinder mit vier One-Tap-Aktionen pro Zeile: + (positive Mitarbeit) · − (zurückhaltend) · ⚠︎ (Sportzeug bzw. Hausaufgabe vergessen) · Notiz (kurzes Textfeld). Ein Tipp pro Kind, alles wird am Ende auf einmal gespeichert. + und − werden als Beobachtungs-Notiz gespeichert (nicht als automatische Note, damit der Durchschnitt nicht verwässert wird); das Vergessen als Vorfall (bei Sport als „Sportzeug", sonst als „Hausaufgabe"). Wer eine echte Note vergeben will, wechselt unten über „Auch Noten vergeben →" in die ausführliche Schnellerfassung. Bei Sport-Stunden erscheint zusätzlich ein Drucker-Symbol pro Kind – dahinter liegen zwei druckbare Vorlagen: „Stundenprotokoll" (für Kinder die z.B. Sportzeug vergessen haben und mitschreiben statt teilnehmen) und „Regelbruch-Arbeitsauftrag" (Regeln abschreiben, Verhaltensplan, Elternunterschrift). Kindnamen und Klasse werden automatisch eingetragen.` },
       { q: "Wie ändere ich Material, Raum oder Gewichtung eines Fachs?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen, damit es aufklappt. Unter der Reihenplanung stehen zwei Knöpfe: „Material, Raum & Gewichtung" öffnet den Fach-Editor (dort auch der Termin der nächsten Klassenarbeit), „Noten eintragen" springt in die Notenübersicht dieses Fachs. Dieselben zwei Wege liegen auch hinter dem ···-Symbol rechts in der Fach-Zeile.` },
-      { q: "Wo finde ich die Sport-Druckvorlagen ohne Kind-Kontext?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter „Vorlagen zum Drucken": „Stundenprotokoll" und „Regelbruch-Auftrag". Das öffnet eine leere Vorlage zum Ausdrucken – nützlich für die Ersatzkopien in der Schublade oder wenn du sie spontan brauchst.` },
+      { q: "Wo finde ich die Sport-Druckvorlagen ohne Kind-Kontext?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter „Vorlagen zum Drucken": „Stundenprotokoll" und „Regelbruch-Auftrag". Das öffnet eine leere Vorlage zum Ausdrucken – nützlich für die Ersatzkopien in der Schublade oder wenn du sie spontan brauchst. Auch hier steht oben „Teilen", falls du den Vordruck lieber als PDF weitergibst.` },
+      { q: "Kann ich die Sport-Vorlagen verschicken statt drucken?", a: `Ja. Im Fenster der Vorlage steht neben „Drucken" der Knopf „Teilen". Steht ein Kindname auf dem Blatt, fragt Tu-vi einmal nach – wie bei jedem anderen Export auch. Danach entsteht aus derselben Vorlage ein PDF, das an das Teilen-Menü deines Geräts übergeben wird – auf iPhone und iPad landest du so direkt bei AirDrop, Mail oder Nachrichten. Am Computer, wo die meisten Browser kein Teilen von Dateien können, wird das PDF stattdessen heruntergeladen und liegt im Download-Ordner. Denk daran: Das PDF enthält den Namen des Kindes – gib es nur über schulisch genehmigte Wege weiter, nicht über private Messenger.` },
+      { q: "Warum steht beim Teilen kein Kindname im Dateinamen?", a: `Weil der Dateiname bei AirDrop schon in der Annahme-Abfrage auf dem anderen Gerät erscheint – also bevor die Datei überhaupt geöffnet wird. Ein Name wie „Störungen-Sport_Max-Mustermann.pdf" wäre dort eine Verhaltensbewertung im Klartext, sichtbar auch dann, wenn das Gerät versehentlich das falsche war. Beim Teilen heißt die Datei deshalb nur nach Vorlage und Datum. Lädst du sie stattdessen herunter, bleibt sie auf deinem eigenen Gerät – dann steht der volle Name drin, damit du sie wiederfindest. Auf Seite 1 steht der Name in beiden Fällen.` },
       { q: "Was ist der Schnellerfassungs-Modus?", a: `Die ausführliche Erfassung wird aus dem Stunden-Abschluss über den Link „Auch Noten vergeben" erreicht. Dort kannst du für alle Schüler:innen einer Klasse Noten (mündlich / schriftlich), ausführliche Notizen und Gespräche eintragen. Eine Doppelstunde wird einmal erfasst, nicht zweimal. Die Notenbuttons sind immer sichtbar. Neben dem Namen liegt das ⚠︎-Symbol für „Vergessen"; Notiz und Gespräch öffnen sich über das ···-Symbol.` },
       { q: "Was ist der Stunden-Timer bis zur Klassenarbeit?", a: `Ist für ein Fach ein Termin für die nächste Klassenarbeit hinterlegt, zeigt Tu-vi an, wie viele Unterrichtsstunden bis dahin noch bleiben. Gezählt wird in Unterrichtseinheiten: ein Tag mit diesem Fach ist eine Einheit – eine Doppelstunde aus zwei 45-Minuten-Blöcken zählt also einmal, genau wie eine einzelne Stunde. Ferien und schulfreie Tage werden abgezogen, der Prüfungstag selbst zählt nicht als Übungsstunde. Angezeigt wird der Hinweis erst, wenn es eng wird: amber ab drei verbleibenden Stunden, rot ab einer. Den Termin eintragen: Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung" → „Nächste Klassenarbeit / Test". Wichtig: Das Fach muss im Stundenplan stehen, sonst kann Tu-vi die Stunden nicht zählen und zeigt stattdessen nur das Datum.` },
       { q: "Wo sehe ich auf der Heute-Seite, wie viel Zeit bis zur Klassenarbeit bleibt?", a: `Am Prüfungstag selbst zeigt die JETZT-Karte deutlich rot „Heute: [Titel der Arbeit]" – nicht zu übersehen. Naht der Termin (letzte drei Übungsstunden), landet der Countdown zusätzlich in der Kachel „X Dinge brauchen deine Aufmerksamkeit" als dringliches Signal. Die volle Restzeit-Rechnung („noch 5 Stunden bis zur Arbeit, Ferien abgezogen") siehst du in der Schnellerfassung oder in der Notenübersicht des Fachs. Voraussetzung ist jeweils, dass für das Fach unter Klasse → Reiter „Unterricht" → Fach → „Material, Raum & Gewichtung" ein Termin bei „Nächste Klassenarbeit / Test" eingetragen ist und das Fach im Stundenplan steht.` },
@@ -2980,7 +2990,8 @@ const HELP_DATA = [
     items: [
       { q: "Wer ist verantwortlich für die Schülerdaten?", a: `Du als Lehrkraft bist gemäß Art. 4 Nr. 7 DSGVO datenschutzrechtlich Verantwortliche:r für die eingegebenen Daten. Da die Daten auf einem Server liegen, den der Entwickler betreibt, liegt zusätzlich eine Auftragsverarbeitung nach Art. 28 DSGVO vor – er verarbeitet sie ausschließlich zum Betrieb der App. Ein Auftragsverarbeitungsvertrag ist noch nicht bereitgestellt; kläre die Nutzung deshalb vorab mit Schulleitung oder Datenschutzbeauftragten.` },
       { q: "Wo finde ich das Impressum und die Datenschutzerklärung?", a: `Tippe auf „Mehr" → „Einstellungen" → „Über Tu-vi". Dort findest du „Impressum & Datenschutz".` },
-      { q: "Werden meine Daten irgendwohin übertragen?", a: `Ja – deine Eingaben werden in deinem Konto auf einem Server gespeichert, damit sie auf mehreren Geräten verfügbar sind und bei Geräteverlust nicht weg sind. Die Übertragung ist verschlüsselt, und der Zugriff ist auf dein Konto beschränkt. Nicht übertragen werden die abgelegten Dateien selbst (Atteste, Fotos aus der Dokumentenablage) – die bleiben auf deinem Gerät; nur der Eintrag dazu (Dateiname, Notiz, zu welchem Kind) wird mitgespeichert. Es gibt kein Tracking und keine Analysedienste. Details unter „Einstellungen" → „Über Tu-vi" → „Impressum & Datenschutz".` }
+      { q: "Werden meine Daten irgendwohin übertragen?", a: `Ja – deine Eingaben werden in deinem Konto auf einem Server gespeichert, damit sie auf mehreren Geräten verfügbar sind und bei Geräteverlust nicht weg sind. Die Übertragung ist verschlüsselt, und der Zugriff ist auf dein Konto beschränkt. Nicht übertragen werden die abgelegten Dateien selbst (Atteste, Fotos aus der Dokumentenablage) – die bleiben auf deinem Gerät; nur der Eintrag dazu (Dateiname, Notiz, zu welchem Kind) wird mitgespeichert. Es gibt kein Tracking und keine Analysedienste. Details unter „Einstellungen" → „Über Tu-vi" → „Impressum & Datenschutz".` },
+      { q: "Was passiert, wenn ich ein PDF teile?", a: `Dein Gerät übergibt die Datei an eine App, die du selbst aussuchst – AirDrop, Mail, Nachrichten und was sonst im Teilen-Menü steht. Ab diesem Moment liegt die Datei nicht mehr bei Tu-vi, sondern bei der gewählten App und deren Anbieter; zurückholen kann Tu-vi sie nicht. Deshalb fragt die App vor jedem Export mit Schülerdaten einmal nach. Die Wahl des Wegs ist deine Entscheidung als Verantwortliche:r – private Messenger und private Cloud-Dienste (WhatsApp, iCloud, Google Drive) sind für Schülerdaten in aller Regel nicht zulässig. Lädst du das PDF stattdessen herunter, bleibt es auf deinem Gerät. Der Abschnitt „Export und Weitergabe" in der Datenschutzerklärung erklärt das ausführlich.` }
     ],
   },
 ];
@@ -4327,6 +4338,14 @@ function LoginScreen() {
           >
             {loading ? "…" : mode === "login" ? "Anmelden" : mode === "signup" ? "Konto erstellen" : "Link senden"}
           </button>
+          {/* Beim Anlegen des Kontos werden zum ersten Mal Daten uebertragen.
+              Der Hinweis nach Art. 13 DSGVO gehoert deshalb an die Stelle, an
+              der es passiert - nicht nur in einen Link weiter unten. */}
+          {mode === "signup" && (
+            <p className="text-[11px] text-stone-400 leading-relaxed mt-2.5 text-center">
+              Mit dem Erstellen eines Kontos bestätigst du, die Datenschutzhinweise gelesen zu haben.
+            </p>
+          )}
           {mode === "login" && (
             <button
               onClick={() => switchMode("reset")}
@@ -5992,6 +6011,8 @@ const PDF_BREITE = 595.28;   // A4 in Punkt
 const PDF_HOEHE = 841.89;
 const PDF_RAND = 52;
 const PDF_INNEN = PDF_BREITE - 2 * PDF_RAND;
+/* Hoehe, die am Seitenfuss fuer den Vertraulichkeitsvermerk frei bleibt. */
+const PDF_FUSS = 30;
 
 function nachLatin1(t) {
   return String(t ?? "")
@@ -6000,6 +6021,11 @@ function nachLatin1(t) {
     .replace(/[“”„]/g, '"')
     .replace(/…/g, "...")
     .replace(/ /g, " ")
+    /* Zeilenumbrueche und andere Steuerzeichen gehoeren nicht in eine
+       PDF-Zeichenkette. Aus einem Namensfeld kommen sie normalerweise nicht,
+       aber eingefuegter Text kann welche mitbringen - dann stuende der Rest
+       der Zeile im PDF an einer unvorhersehbaren Stelle. */
+    .replace(/[\x00-\x1F\x7F]/g, " ")
     .replace(/[^\x00-\xFF]/g, "?");
 }
 
@@ -6082,6 +6108,20 @@ function pdfBauer() {
         strom += `0.55 G 0.6 w ${f.x.toFixed(2)} ${(oben - 28).toFixed(2)} m ${(f.x + f.breite).toFixed(2)} ${(oben - 28).toFixed(2)} l S\n`;
       }
       y = oben - hoehe;
+    },
+
+    /* Vertraulichkeitsvermerk am unteren Seitenrand. Schreibt an eine feste
+       Hoehe statt an die laufende Schreibmarke, damit er immer unten steht -
+       egal wie lang der Inhalt darueber ausfaellt. Wer Platz darueber
+       braucht, rechnet mit PDF_FUSS. */
+    fussnote(zeilen, { groesse = 7, grau = 0.45 } = {}) {
+      let fy = PDF_RAND + (zeilen.length - 1) * groesse * 1.5;
+      const oben = fy + groesse + 5;
+      strom += `0.75 G 0.5 w ${PDF_RAND.toFixed(2)} ${oben.toFixed(2)} m ${(PDF_BREITE - PDF_RAND).toFixed(2)} ${oben.toFixed(2)} l S\n`;
+      for (const z of zeilen) {
+        strom += `BT /F1 ${groesse} Tf ${grau} g 1 0 0 1 ${PDF_RAND.toFixed(2)} ${fy.toFixed(2)} Tm (${pdfText(z)}) Tj ET\n`;
+        fy -= groesse * 1.5;
+      }
     },
 
     kasten(hoehe, { x = PDF_RAND, breite = PDF_INNEN, grau = 0.6 } = {}) {
@@ -6186,11 +6226,15 @@ function sportVorlagePdf({ vorlage, name, klasse, datum, thema, anwesend, titel 
        Weissraum stehen - das Protokoll soll auf ein Blatt passen. Bleibt
        zu wenig Platz, entfaellt er lieber ganz, statt eine fast leere
        zweite Seite zu erzeugen. */
-    const restPlatz = d.y - PDF_RAND - 16;
-    if (restPlatz >= 70) {
+    /* Seit der Vertraulichkeitsvermerk unten Platz belegt, blieben knapp
+       unter 70 Punkt uebrig - der Kasten entfiel und hinterliess eine
+       leere Flaeche. 52 Punkt reichen fuer eine kleine Skizze und sind
+       allemal besser als weisses Nichts. */
+    const restPlatz = d.y - PDF_RAND - 16 - PDF_FUSS;
+    if (restPlatz >= 52) {
       d.text("Platz für Skizze", { groesse: 10.5, fett: true });
       d.luft(3);
-      d.kasten(d.y - PDF_RAND);
+      d.kasten(d.y - PDF_RAND - PDF_FUSS);
     }
   } else {
     for (const [nr, text] of [
@@ -6220,17 +6264,22 @@ function sportVorlagePdf({ vorlage, name, klasse, datum, thema, anwesend, titel 
       "In Gesprächsrunden werden Übungen und Stationen erklärt. Wer dabei redet, hört die Erklärung nicht und lenkt andere ab.",
       "In Gruppenphasen hilfst du, die Aufgabe zu lösen. Toben, schubsen, quatschen oder herumsitzen schadet der Gruppe.",
       "Werden Spielregeln nicht eingehalten, entstehen Konflikte – Ärger für die ganze Klasse. Und deine Sportnote kann sich verschlechtern.",
-    ].forEach((p) => { d.absatz(p, { groesse: 8.5, grau: 0.45 }); d.luft(5); });
-    d.luft(8);
+    ].forEach((p) => { d.absatz(p, { groesse: 8.5, grau: 0.45 }); d.luft(3); });
+    d.luft(6);
 
+    /* Die Abstaende sind hier bewusst knapper als im Stundenprotokoll:
+       Aufgaben, Regeln, Schreibfelder, Elterntext und Unterschriften
+       muessen zusammen auf ein Blatt - das Formular geht nach Hause und
+       kommt unterschrieben zurueck. 19 Punkt Zeilenhoehe bleiben fuer
+       Handschrift bequem. */
     d.text("Zu Aufgabe 2 (Begründung)", { groesse: 10.5, fett: true });
     d.luft(2);
-    d.schreibzeilen(4);
-    d.luft(14);
+    d.schreibzeilen(4, { hoehe: 19 });
+    d.luft(10);
     d.text("Zu Aufgabe 3 (Verhaltensplan)", { groesse: 10.5, fett: true });
     d.luft(2);
-    d.schreibzeilen(4);
-    d.luft(20);
+    d.schreibzeilen(4, { hoehe: 19 });
+    d.luft(12);
 
     d.linie(PDF_RAND, PDF_BREITE - PDF_RAND, { dicke: 0.8, grau: 0.5 });
     d.luft(14);
@@ -6242,13 +6291,33 @@ function sportVorlagePdf({ vorlage, name, klasse, datum, thema, anwesend, titel 
       "und mit dem Verhaltensplan (Aufgabe 3) einverstanden sind.",
       { groesse: 8.5, grau: 0.4 }
     );
-    d.luft(34);
-    d.linie(PDF_RAND, PDF_RAND + halb, { dicke: 0.7, grau: 0.4 });
-    d.linie(PDF_RAND + halb + 24, PDF_BREITE - PDF_RAND, { dicke: 0.7, grau: 0.4 });
+    /* Der Unterschriftenblock gehoert auf dasselbe Blatt wie der Elterntext.
+       Mit festen 34 Punkt Abstand rutschten "Ort, Datum" und "Unterschrift"
+       auf eine zweite Seite, auf der sonst nichts stand. Der Abstand nimmt
+       deshalb, was uebrig bleibt - hoechstens 34 Punkt.
+       94.25 = Linie + 4 Punkt Luft + Beschriftung (7.5 x 1.1) + Fussvermerk. */
+    const restVorUnterschrift = d.y - 94.25;
+    d.luft(restVorUnterschrift > 34 ? 34 : Math.max(restVorUnterschrift, 8));
+    /* Zwei Unterschriftenlinien nebeneinander, in derselben Halbbreite wie
+       die Felder oben. Hier stand vorher ein "halb", das es nie gab - der
+       ReferenceError flog mitten im Aufbau, wurde vom catch in teilen()
+       geschluckt, und der Knopf tat nach aussen einfach nichts. */
+    d.linie(PDF_RAND, PDF_RAND + spalte, { dicke: 0.7, grau: 0.4 });
+    d.linie(rechtsX, PDF_BREITE - PDF_RAND, { dicke: 0.7, grau: 0.4 });
     d.luft(4);
     d.text("Ort, Datum", { groesse: 7.5, grau: 0.5, abstand: 1.1 });
     d.luft(-8.25);
-    d.text("Unterschrift", { x: PDF_RAND + halb + 24, groesse: 7.5, grau: 0.5, abstand: 1.1 });
+    d.text("Unterschrift", { x: rechtsX, groesse: 7.5, grau: 0.5, abstand: 1.1 });
+  }
+
+  /* Das Blatt verlaesst die Schule - beim Regelbruch-Auftrag geht es sogar
+     an die Eltern. Der Vermerk sagt dem Finder, was er in der Hand haelt.
+     Der leere Vordruck ohne Namen braucht ihn nicht. */
+  if (name) {
+    d.fussnote([
+      "Vertraulich · Nur für den berechtigten Personenkreis. Enthält personenbezogene Daten eines Kindes (Art. 6 DSGVO).",
+      "Weitergabe nur über schulisch genehmigte Wege - keine privaten Messenger. § 203 StGB beachten, danach vernichten.",
+    ]);
   }
 
   return pdfDatei(d.fertig());
@@ -6273,6 +6342,7 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
   const titel = vorlage === "regelbruch" ? "Störungen im Sportunterricht" : "Sport-Stundenprotokoll";
 
   const [teilStatus, setTeilStatus] = useState(null);   // null | "laeuft" | "geladen"
+  const [confirmTeilen, setConfirmTeilen] = useState(false);
 
   function drucken() {
     setTimeout(() => window.print(), 50);
@@ -6293,9 +6363,17 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
       const sauber = (t) => (t || "")
         .replace(/[äÄöÖüÜß]/g, (z) => ({ "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue", "ß": "ss" }[z]))
         .replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const teile = [vorlage === "regelbruch" ? "Stoerungen-Sport" : "Sport-Stundenprotokoll", sauber(name), heutigesDatum];
-      const dateiname = `${teile.filter(Boolean).join("_")}.pdf`;
-      const datei = new File([blob], dateiname, { type: "application/pdf" });
+      /* Zwei Dateinamen mit Absicht. Beim Teilen sieht der Empfaenger den
+         Namen schon in der Annahme-Abfrage von AirDrop - also bevor er die
+         Datei ueberhaupt oeffnet. "Stoerungen-Sport_Max-Mustermann.pdf"
+         waere dort eine Verhaltensbewertung im Klartext, auch wenn das
+         Geraet gar nicht das richtige war. Beim Herunterladen bleibt die
+         Datei auf dem eigenen Geraet; dort hilft der volle Name beim
+         Wiederfinden. Die Zuordnung steht in beiden Faellen auf Seite 1. */
+      const art = vorlage === "regelbruch" ? "Sport-Arbeitsauftrag" : "Sport-Stundenprotokoll";
+      const teilName = `${art}_${heutigesDatum}.pdf`;
+      const ladeName = `${[art, sauber(name), heutigesDatum].filter(Boolean).join("_")}.pdf`;
+      const datei = new File([blob], teilName, { type: "application/pdf" });
 
       if (navigator.canShare?.({ files: [datei] })) {
         await navigator.share({ files: [datei], title: titel });
@@ -6305,7 +6383,7 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = dateiname;
+      a.download = ladeName;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
       setTeilStatus("geladen");
@@ -6344,7 +6422,10 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
             <div className="font-semibold text-stone-800 truncate">{titel}</div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={teilen} disabled={teilStatus === "laeuft"}>
+            {/* Steht ein Kindname auf dem Blatt, wird vorher gefragt - so wie
+                bei jedem anderen Export in Tu-vi auch. Der leere Vordruck
+                enthaelt keine Daten und geht ohne Rueckfrage raus. */}
+            <Button onClick={() => (name ? setConfirmTeilen(true) : teilen())} disabled={teilStatus === "laeuft"}>
               <Upload size={14} /> {teilStatus === "geladen" ? "Gespeichert" : "Teilen"}
             </Button>
             <Button variant="ghost" onClick={drucken}><Printer size={14} /> Drucken</Button>
@@ -6491,6 +6572,23 @@ function SportDruckVorlage({ vorlage, student, klasse, datum, thema, onClose }) 
           </div>
         </div>
       </div>
+
+      {confirmTeilen && (
+        <div className="druck-hide fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[75]" onClick={() => setConfirmTeilen(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="font-semibold text-stone-800 mb-2">Vorlage teilen</div>
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-3">
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                <strong>Datenschutzhinweis:</strong> Diese PDF enthält den Namen des Kindes{vorlage === "regelbruch" ? " und eine Verhaltensdokumentation" : ""}. Teile sie nur über sichere, schulisch genehmigte Kanäle. Keine privaten Messenger oder Cloud-Dienste (iCloud, WhatsApp, Google Drive).
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setConfirmTeilen(false)} className="flex-1 justify-center">Abbrechen</Button>
+              <Button onClick={() => { setConfirmTeilen(false); teilen(); }} className="flex-1 justify-center">Verstanden, teilen</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

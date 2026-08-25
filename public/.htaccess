@@ -18,3 +18,30 @@ AddCharset UTF-8 .html
 <FilesMatch "(sw\.js|registerSW\.js|manifest\.webmanifest)$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
+
+# Ueber die Anmeldemaske gehen E-Mail und Passwort. Wird tu-vi.de versehentlich
+# ueber http:// aufgerufen - etwa aus einem alten Lesezeichen oder im
+# Schul-WLAN -, koennte die ausgelieferte HTML-Datei unterwegs veraendert
+# werden, bevor der Browser die Content-Security-Policy ueberhaupt sieht.
+# Deshalb hart auf https:// umleiten.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Ein Jahr lang gar nicht erst unverschluesselt anfragen.
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  # Der Browser soll den vom Server genannten Dateityp glauben und nicht raten.
+  Header always set X-Content-Type-Options "nosniff"
+  # Beim Verlassen der Seite nicht verraten, welche Unterseite offen war.
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # Tu-vi gehoert in kein fremdes Rahmenfenster - sonst liesse sich die
+  # Anmelde- oder Sperrmaske hinter einer harmlosen Seite verstecken.
+  # frame-ancestors wirkt nur als Kopfzeile, im <meta>-Tag wird es ignoriert.
+  Header always set Content-Security-Policy "frame-ancestors 'none'"
+  # Kamera und Mikrofon braucht nur Tu-vi selbst (Dokumente fotografieren,
+  # Spracheingabe), eingebettete Inhalte nicht. Ortung gar nicht.
+  Header always set Permissions-Policy "geolocation=(), camera=(self), microphone=(self)"
+</IfModule>
