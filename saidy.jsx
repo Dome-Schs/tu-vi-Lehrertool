@@ -4567,6 +4567,9 @@ export default function App() {
   }, []);
 
   const [data, setData] = useState(EMPTY_DATA);
+  const dataRef = useRef(data);
+  const loadedRef = useRef(false);
+  const loadFailedRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false); // gespeicherte Daten unlesbar – Autosave blockieren
   const recoveryInputRef = useRef(null);
@@ -4796,6 +4799,27 @@ export default function App() {
           }
           // Migration: Fächer ohne Gewichtungsfeld (z. B. neuer angelegt vor diesem Update)
           parsed.faecher = (parsed.faecher || []).map((f) => (f.weights ? f : { ...f, weights: DEFAULT_WEIGHTS }));
+          // Migration: alte Beispieldaten entfernen (fruehere Versionen luden bei
+          // neuen Konten Democlassen "5c"/"7a" mit erfundenen Kindern)
+          const demoMarker = ["Max Mustermann", "Jenny Reuter", "Aylin Kaya"];
+          const alleNamen = new Set((parsed.students || []).map((s) => s.name));
+          if (demoMarker.every((n) => alleNamen.has(n))) {
+            const demoKlIds = new Set((parsed.classes || []).filter((c) => /^(5c|7a)$/.test(c.name)).map((c) => c.id));
+            if (demoKlIds.size) {
+              const demoSIds = new Set((parsed.students || []).filter((s) => demoKlIds.has(s.classId)).map((s) => s.id));
+              const demoFIds = new Set((parsed.faecher || []).filter((f) => demoKlIds.has(f.classId)).map((f) => f.id));
+              parsed.classes = (parsed.classes || []).filter((c) => !demoKlIds.has(c.id));
+              parsed.students = (parsed.students || []).filter((s) => !demoSIds.has(s.id));
+              parsed.faecher = (parsed.faecher || []).filter((f) => !demoFIds.has(f.id));
+              parsed.grades = (parsed.grades || []).filter((g) => !demoSIds.has(g.studentId));
+              parsed.notes = (parsed.notes || []).filter((n) => !demoSIds.has(n.studentId));
+              parsed.absences = (parsed.absences || []).filter((a) => !demoSIds.has(a.studentId));
+              parsed.incidents = (parsed.incidents || []).filter((i) => !demoSIds.has(i.studentId));
+              parsed.timetable = (parsed.timetable || []).filter((t) => !demoFIds.has(t.fachId));
+              parsed.duties = (parsed.duties || []).filter((d) => !demoKlIds.has(d.classId));
+              parsed.finalGrades = (parsed.finalGrades || []).filter((g) => !demoSIds.has(g.studentId));
+            }
+          }
           // Migration: frühere "todo"-Kalendereinträge werden zu eigenständigen Aufgaben
           if (!parsed.tasks) {
             const oldTodos = (parsed.events || []).filter((e) => e.type === "todo");
@@ -4814,7 +4838,7 @@ export default function App() {
           /* Alte pauschale Art-9-Bestaetigung auf die betroffenen Kinder uebertragen,
              damit sie nach dem Update nicht erneut fuer jedes Kind abgefragt wird. */
           migriereMedicalConsent(parsed.students);
-          if (!parsed.settings?.bundesland) setShowOnboarding(true);
+          if (!parsed.settings?.bundesland && !(parsed.classes || []).length && !(parsed.students || []).length) setShowOnboarding(true);
           /* Eigener try-Block: ein Fehler in der Backup-Erinnerung darf nicht dazu führen,
              dass der äußere catch greift und die echten Daten durch Demodaten ersetzt. */
           try {
@@ -4864,12 +4888,42 @@ export default function App() {
     })();
   }, [user, gesperrt]);
 
+  useEffect(() => { dataRef.current = data; }, [data]);
+  useEffect(() => { loadedRef.current = loaded; }, [loaded]);
+  useEffect(() => { loadFailedRef.current = loadFailed; }, [loadFailed]);
+
+  const dirtyRef = useRef(false);
+
+  const flushSave = useCallback(async () => {
+    if (!loadedRef.current || loadFailedRef.current) return;
+    if (!userRef.current) return;
+    if (!dirtyRef.current) return;
+    dirtyRef.current = false;
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    try {
+      const { error } = await supabase
+        .from("user_data")
+        .upsert(
+          { user_id: userRef.current.id, data: dataRef.current, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+      if (error) throw error;
+      setSaveState("saved");
+    } catch (e) {
+      console.warn("[Tu-vi] Speichern fehlgeschlagen:", e);
+      setSaveState("error");
+    }
+  }, []);
+
   useEffect(() => {
     if (!loaded || loadFailed) return;
     if (!userRef.current) return;
+    dirtyRef.current = true;
     setSaveState("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
+      saveTimer.current = null;
+      dirtyRef.current = false;
       try {
         const { error } = await supabase
           .from("user_data")
@@ -4886,6 +4940,18 @@ export default function App() {
     }, 500);
     return () => clearTimeout(saveTimer.current);
   }, [data, loaded]);
+
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flushSave();
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", flushSave);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", flushSave);
+    };
+  }, [flushSave]);
 
   const update = useCallback((fn) => setData((prev) => fn(structuredClone(prev))), []);
 
@@ -5495,7 +5561,7 @@ export default function App() {
         </aside>
 
         {/* Inhalt */}
-        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-8 md:pt-[max(env(safe-area-inset-top),2rem)]">
+        <main ref={mainRef} className="flex-1 md:ml-56 overflow-y-auto pt-[max(env(safe-area-inset-top),1.25rem)] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8 md:pt-[max(env(safe-area-inset-top),2rem)]">
           {/* Der Deckel sitzt bewusst hier innen und nicht am <main>: aussen
               waere er linksbuendig an der Seitenleiste geklebt, innen laesst
               er sich zentrieren. Die Modals darunter sind position:fixed und
@@ -5673,7 +5739,7 @@ export default function App() {
       >
         {/* Übersicht · Klassen · [+] · Noten · Mehr – „Aufgaben" liegt im Mehr-Menü
             und ist zusätzlich über den Plus-Knopf erreichbar. */}
-        <div className="flex items-stretch justify-around px-2 pt-2 pb-1">
+        <div className="flex items-stretch justify-around px-2 pt-1.5 pb-0">
           {[tabs[0], tabs[1]].map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
@@ -13780,15 +13846,15 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
         {activeTab === "ueberblick" && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
-              <div className="card card-p">
+              <button onClick={() => onOpenSchueler?.(klasseId)} className="card card-p text-left hover:akzent-rand transition-colors active:scale-[0.97]">
                 <div className="t-caption mb-1">Schüler:innen</div>
                 <div className="text-2xl font-bold tnum text-stone-800">{students.length}</div>
-              </div>
-              <div className="card card-p">
+              </button>
+              <button onClick={() => setActiveTab("unterricht")} className="card card-p text-left hover:akzent-rand transition-colors active:scale-[0.97]">
                 <div className="t-caption mb-1">Fächer</div>
                 <div className="text-2xl font-bold tnum text-stone-800">{faecher.length}</div>
-              </div>
-              <div className="card card-p">
+              </button>
+              <button onClick={() => setActiveTab("noten")} className="card card-p text-left hover:akzent-rand transition-colors active:scale-[0.97]">
                 <div className="t-caption mb-1">Klassen-Ø</div>
                 <div className="text-2xl font-bold tnum text-stone-800">
                   {(() => {
@@ -13801,7 +13867,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                     return (summe / gewicht).toFixed(1).replace(".", ",");
                   })()}
                 </div>
-              </div>
+              </button>
             </div>
 
             <div className="karte rounded-xl divide-y divide-stone-100 overflow-hidden">
@@ -17298,6 +17364,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
   const [showIncidents, setShowIncidents] = useState(false);
   const [showGradesList, setShowGradesList] = useState(false);
   const [editingGrade, setEditingGrade] = useState(null);
+  const [showNewFach, setShowNewFach] = useState(false);
   const [offenerTermin, setOffenerTermin] = useState(null); // Schluessel aus terminSchluessel()
   const [gesprNDraft, setGesprNDraft] = useState({ text: "", mood: "ok", typ: "schueler" });
   const [showSprechtagPicker, setShowSprechtagPicker] = useState(false);
@@ -17623,7 +17690,10 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
             );
           })}
           {!data.faecher.filter((f) => f.classId === selectedClass).length && (
-            <p className="text-sm text-stone-400">Für diese Klasse sind noch keine Fächer angelegt.</p>
+            <div className="rounded-xl border border-dashed border-stone-300 p-6 text-center">
+              <p className="text-sm text-stone-500 mb-3">Für diese Klasse sind noch keine Fächer angelegt.</p>
+              <button onClick={() => setShowNewFach(true)} className="text-sm akzent-flaeche text-white px-4 py-2 rounded-lg font-medium inline-flex items-center gap-1.5"><Plus size={14} /> Fach anlegen</button>
+            </div>
           )}
         </div>
       )}
@@ -18342,6 +18412,31 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
           data={data}
           halbjahr={halbjahr}
           onClose={() => setPrintMode(null)}
+        />
+      )}
+
+      {showNewFach && selectedClass && (
+        <FachModal
+          data={data}
+          initial={{ classId: selectedClass }}
+          onSave={(payload) => {
+            update((d) => {
+              let finalClassId = payload.classId;
+              if (!finalClassId && payload.newClassName) {
+                finalClassId = uid();
+                d.classes.push({ id: finalClassId, name: payload.newClassName });
+              }
+              if (!d.subjectColors) d.subjectColors = {};
+              d.subjectColors[payload.subject] = payload.color;
+              const mat = Array.isArray(payload.material) ? payload.material.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()) : [];
+              const rei = Array.isArray(payload.reihe) ? payload.reihe.filter((r) => r && r.kw).map((r) => ({ id: r.id || uid(), kw: r.kw, thema: (r.thema || "").trim() })) : [];
+              const fId = uid();
+              d.faecher.push({ id: fId, classId: finalClassId, subject: payload.subject, color: payload.color, room: payload.room, weights: payload.weights || DEFAULT_WEIGHTS, nextTestDate: payload.nextTestDate || null, nextTestTitle: payload.nextTestTitle || null, material: mat, reihe: rei });
+              return d;
+            });
+            setShowNewFach(false);
+          }}
+          onClose={() => setShowNewFach(false)}
         />
       )}
     </div>
