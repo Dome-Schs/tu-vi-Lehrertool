@@ -10924,6 +10924,7 @@ function DokumenteAllgemein({ data, update, onClose }) {
 function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, incidents, documents, update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
   const [photoError, setPhotoError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirmDeleteZielId, setConfirmDeleteZielId] = useState(null);
   const [leitfadenFor, setLeitfadenFor] = useState(null); // studentId
   const [exportFor, setExportFor] = useState(null); // studentId
   /* Haelt die studentId, fuer die gerade die Einwilligung erfragt wird - die
@@ -12136,7 +12137,7 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                           <span className={`text-[10px] font-semibold mr-1 ${z.typ === "wochen" ? "text-blue-500" : "text-amber-600"}`}>{z.typ === "wochen" ? "Wochenziel" : "Förderziel"}</span>
                           <span className="text-sm text-stone-700">{z.text}</span>
                         </div>
-                        <button onClick={() => onDeleteFoerderZiel(z.id)} className="shrink-0 text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
+                        <button onClick={() => setConfirmDeleteZielId(z.id)} className="shrink-0 text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
                       </li>
                     ))}
                     {sZiele.filter((z) => z.doneAt).map((z) => (
@@ -12145,7 +12146,7 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                           <Check size={11} className="text-white" />
                         </button>
                         <span className="text-sm text-stone-400 line-through flex-1">{z.text}</span>
-                        <button onClick={() => onDeleteFoerderZiel(z.id)} className="shrink-0 text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
+                        <button onClick={() => setConfirmDeleteZielId(z.id)} className="shrink-0 text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
                       </li>
                     ))}
                     {!sZiele.length && <li className="text-sm text-stone-400 py-1">Noch keine Ziele eingetragen.</li>}
@@ -12241,6 +12242,15 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
       confirmLabel="Löschen"
       onConfirm={() => { onDeleteStudent(confirmDeleteId); setConfirmDeleteId(null); }}
       onCancel={() => setConfirmDeleteId(null)}
+    />
+
+    <ConfirmDialog
+      open={!!confirmDeleteZielId}
+      title="Ziel wirklich löschen?"
+      message="Anders als bei Notizen und Gesprächen gibt es dafür keinen Papierkorb – das Ziel ist danach unwiderruflich weg."
+      confirmLabel="Löschen"
+      onConfirm={() => { onDeleteFoerderZiel(confirmDeleteZielId); setConfirmDeleteZielId(null); }}
+      onCancel={() => setConfirmDeleteZielId(null)}
     />
     </>
   );
@@ -12341,6 +12351,7 @@ function DiensteTab({ data, update }) {
   const [showNew, setShowNew] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [confirmWeek, setConfirmWeek] = useState(false);
+  const [confirmDeleteDutyId, setConfirmDeleteDutyId] = useState(null);
 
   const duties = (data.duties || []).filter((d) => d.classId === selectedClass);
   const classStudents = data.students.filter((s) => s.classId === selectedClass);
@@ -12715,7 +12726,7 @@ function DiensteTab({ data, update }) {
 
                           <div className="flex justify-between">
                             <Button variant="ghost" onClick={() => resetRound(duty.id)}>Zurücksetzen</Button>
-                            <Button variant="danger" onClick={() => deleteDuty(duty.id)}><Trash2 size={15} /> Löschen</Button>
+                            <Button variant="danger" onClick={() => setConfirmDeleteDutyId(duty.id)}><Trash2 size={15} /> Löschen</Button>
                           </div>
                         </div>
                       )}
@@ -12739,6 +12750,15 @@ function DiensteTab({ data, update }) {
       )}
 
       {showNew && <DutyModal onSave={addDuty} onClose={() => setShowNew(false)} />}
+
+      <ConfirmDialog
+        open={!!confirmDeleteDutyId}
+        title="Dienst wirklich löschen?"
+        message={`Die Einteilung und der bisherige Verlauf von „${duties.find((d) => d.id === confirmDeleteDutyId)?.name || ""}" gehen dabei unwiderruflich verloren.`}
+        confirmLabel="Löschen"
+        onConfirm={() => { deleteDuty(confirmDeleteDutyId); setConfirmDeleteDutyId(null); }}
+        onCancel={() => setConfirmDeleteDutyId(null)}
+      />
 
       {confirmWeek && (
         <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-50" onClick={() => setConfirmWeek(false)}>
@@ -17289,6 +17309,7 @@ function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, o
   const [titel, setTitel] = useState(termin.title);
   const [datum, setDatum] = useState(termin.date);
   const [loeschen, setLoeschen] = useState(false);
+  const [confirmDeleteGradeId, setConfirmDeleteGradeId] = useState(null);
 
   const notenNachKind = Object.fromEntries(termin.noten.map((g) => [g.studentId, g]));
   const mitNote = students.filter((s) => notenNachKind[s.id]);
@@ -17387,7 +17408,7 @@ function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, o
                     {GRADE_OPTIONS.map((o) => <option key={o.label} value={o.value}>{o.label}</option>)}
                   </select>
                   <button
-                    onClick={() => entferneNote(g.id)}
+                    onClick={() => setConfirmDeleteGradeId(g.id)}
                     className="w-11 h-11 rounded-full text-stone-400 hover:text-red-600 flex items-center justify-center shrink-0"
                     aria-label={`Note von ${s.name} löschen`}
                   >
@@ -17454,6 +17475,15 @@ function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, o
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDeleteGradeId}
+        title="Note wirklich löschen?"
+        message={`Die Note von ${students.find((s) => s.id === termin.noten.find((g) => g.id === confirmDeleteGradeId)?.studentId)?.name || "diesem Kind"} ist danach unwiderruflich weg.`}
+        confirmLabel="Löschen"
+        onConfirm={() => { entferneNote(confirmDeleteGradeId); setConfirmDeleteGradeId(null); }}
+        onCancel={() => setConfirmDeleteGradeId(null)}
+      />
     </div>
   );
 }
@@ -17502,6 +17532,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
   const [showIncidents, setShowIncidents] = useState(false);
   const [showGradesList, setShowGradesList] = useState(false);
   const [editingGrade, setEditingGrade] = useState(null);
+  const [confirmDeleteGradeId, setConfirmDeleteGradeId] = useState(null);
   const [showNewFach, setShowNewFach] = useState(false);
   const [offenerTermin, setOffenerTermin] = useState(null); // Schluessel aus terminSchluessel()
   const [gesprNDraft, setGesprNDraft] = useState({ text: "", mood: "ok", typ: "schueler" });
@@ -18481,7 +18512,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                                 />
                               )}
                               <div className="flex gap-2">
-                                <Button variant="danger" onClick={() => { removeGrade(g.id); setEditingGrade(null); }} className="justify-center"><Trash2 size={15} /> Löschen</Button>
+                                <Button variant="danger" onClick={() => setConfirmDeleteGradeId(g.id)} className="justify-center"><Trash2 size={15} /> Löschen</Button>
                                 <Button onClick={() => setEditingGrade(null)} className="flex-1 justify-center">Fertig</Button>
                               </div>
                             </li>
@@ -18510,7 +18541,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                               {!g.auto ? (
                                 <button onClick={() => setEditingGrade(g.id)} className="text-stone-300 hover:akzent-text shrink-0 p-1" title="Bearbeiten"><Settings2 size={15} /></button>
                               ) : (
-                                <button onClick={() => removeGrade(g.id)} className="text-stone-300 hover:text-red-600 shrink-0 p-1" title="Löschen"><Trash2 size={15} /></button>
+                                <button onClick={() => setConfirmDeleteGradeId(g.id)} className="text-stone-300 hover:text-red-600 shrink-0 p-1" title="Löschen"><Trash2 size={15} /></button>
                               )}
                             </li>
                           )
@@ -18520,6 +18551,15 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                       <Button onClick={addGradeForStudent} className="w-full justify-center mt-4"><Plus size={15} /> Note hinzufügen</Button>
                       </div>
                     </div>
+
+                    <ConfirmDialog
+                      open={!!confirmDeleteGradeId}
+                      title="Note wirklich löschen?"
+                      message={`Die Note von ${student.name} ist danach unwiderruflich weg.`}
+                      confirmLabel="Löschen"
+                      onConfirm={() => { removeGrade(confirmDeleteGradeId); setConfirmDeleteGradeId(null); setEditingGrade(null); }}
+                      onCancel={() => setConfirmDeleteGradeId(null)}
+                    />
                   </div>
                 )}
                   </div>
