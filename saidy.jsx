@@ -2947,7 +2947,8 @@ const HELP_DATA = [
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
       { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
-      { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste. Gelöschte Klassen und Kinder bleiben dort 30 Tage wiederherstellbar, danach werden sie endgültig entfernt. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht. Früher lag er in den Einstellungen – dort sucht ihn niemand, wenn gerade aus Versehen eine Klasse verschwunden ist.` },
+      { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen und Kinder bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
+      { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder mit allen Noten und Notizen sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
       { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten". „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
       { q: `Was steht im Reiter „Listen" bei den Klassen?`, a: `Drei Übersichten über alle Klassen hinweg: Entschuldigungen, Förderziele und Geburtstage. Der Unterschied zu den Kacheln auf der Startseite: Die Listen lassen sich auch dann öffnen, wenn gerade nichts offen ist – etwa um im Elterngespräch nachzusehen, wann ein Kind zuletzt eine Entschuldigung abgegeben hat.` },
@@ -14259,6 +14260,36 @@ function KlassenFusszeile({ rohdaten: data, update }) {
      zurueck - der Knopf "Jetzt endgueltig loeschen" lief dadurch in einen
      ReferenceError. */
   const [confirmDeleteSnapshot, setConfirmDeleteSnapshot] = useState(false);
+  /* Zugeklappt starten: der Papierkorb fuellt sich uebers Schuljahr, und
+     stand er offen, dominierte er irgendwann die Seite unter der eigentlich
+     aktiven Klassenliste. */
+  const [papierkorbOffen, setPapierkorbOffen] = useState(false);
+  const [confirmHardDelete, setConfirmHardDelete] = useState(null); // { type: "class" | "student", id, label }
+
+  function hardDeleteClass(id) {
+    update((d) => {
+      const studentIds = d.students.filter((s) => s.classId === id).map((s) => s.id);
+      d.classes = d.classes.filter((c) => c.id !== id);
+      d.students = d.students.filter((s) => s.classId !== id);
+      d.notes = d.notes.filter((n) => !studentIds.includes(n.studentId));
+      d.grades = d.grades.filter((g) => !studentIds.includes(g.studentId) && g.classId !== id);
+      d.incidents = (d.incidents || []).filter((i) => !studentIds.includes(i.studentId));
+      d.absences = (d.absences || []).filter((a) => !studentIds.includes(a.studentId));
+      d.finalGrades = (d.finalGrades || []).filter((fg) => !studentIds.includes(fg.studentId));
+      return d;
+    });
+  }
+  function hardDeleteStudent(id) {
+    update((d) => {
+      d.students = d.students.filter((s) => s.id !== id);
+      d.notes = d.notes.filter((n) => n.studentId !== id);
+      d.grades = d.grades.filter((g) => g.studentId !== id);
+      d.incidents = (d.incidents || []).filter((i) => i.studentId !== id);
+      d.absences = (d.absences || []).filter((a) => a.studentId !== id);
+      d.finalGrades = (d.finalGrades || []).filter((fg) => fg.studentId !== id);
+      return d;
+    });
+  }
 
   return (
     <>
@@ -14270,7 +14301,14 @@ function KlassenFusszeile({ rohdaten: data, update }) {
         const daysLeftSnapshot = snapshotValid
           ? Math.max(1, 30 - Math.floor((Date.now() - new Date(snapshot.deletedAt).getTime()) / 86400000))
           : 0;
-        const total = deletedStudents.length + deletedClasses.length + (snapshotValid ? 1 : 0);
+        /* Kinder einer geloeschten Klasse tauchen durch die Kaskade auch
+           einzeln in deletedStudents auf. Als eigene Zeilen daneben waeren
+           es bei 25 Kindern plus Klasse 26 Zeilen fuer ein einziges Loeschen -
+           genau das Ueberladen, das aufgeklappt werden sollte. Sie zaehlen
+           deshalb nur noch zur Klassenzeile, auch in der Kopfzeilen-Zahl. */
+        const deletedClassIds = new Set(deletedClasses.map((c) => c.id));
+        const standaloneStudents = deletedStudents.filter((s) => !deletedClassIds.has(s.classId));
+        const total = standaloneStudents.length + deletedClasses.length + (snapshotValid ? 1 : 0);
         if (total === 0) return null;
         function restoreStudent(id) {
           update((d) => { const s = d.students.find((s) => s.id === id); if (s) delete s.deletedAt; return d; });
@@ -14288,40 +14326,77 @@ function KlassenFusszeile({ rohdaten: data, update }) {
         }
         return (
           <div className="pt-5 border-t border-stone-100">
-            <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Papierkorb</div>
-            <p className="text-xs text-stone-500 mb-3">Gelöschte Einträge bleiben 30 Tage wiederherstellbar, dann werden sie endgültig entfernt.</p>
-            <ul className="space-y-1.5">
-              {snapshotValid && (
-                <li className="flex-col gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="flex-1 text-sm text-stone-700 truncate">Alle Daten (Reset vom {new Date(snapshot.deletedAt).toLocaleDateString("de-DE")})</span>
-                    <span className="text-[11px] text-stone-400 shrink-0">{daysLeftSnapshot}T</span>
-                    <button onClick={restoreAllData} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
-                  </div>
-                  <button
-                    onClick={() => setConfirmDeleteSnapshot(true)}
-                    className="text-[11px] text-red-500 hover:underline mt-1"
-                  >
-                    Jetzt endgültig löschen (auch Gesundheitsdaten & Fotos)
-                  </button>
-                </li>
-              )}
-              {deletedClasses.map((c) => (
-                <li key={c.id} className="flex items-center gap-2 bg-stone-50 rounded-lg px-3 py-2">
-                  <span className="flex-1 text-sm text-stone-600 truncate">Klasse: {c.name}</span>
-                  <button onClick={() => restoreClass(c.id)} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
-                </li>
-              ))}
-              {deletedStudents.map((s) => {
-                const cls = (data.classes || []).find((c) => c.id === s.classId);
-                return (
-                  <li key={s.id} className="flex items-center gap-2 bg-stone-50 rounded-lg px-3 py-2">
-                    <span className="flex-1 text-sm text-stone-600 truncate">{s.name}{cls ? ` (${cls.name})` : ""}</span>
-                    <button onClick={() => restoreStudent(s.id)} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
-                  </li>
-                );
-              })}
-            </ul>
+            <button
+              onClick={() => setPapierkorbOffen((o) => !o)}
+              className="w-full flex items-center justify-between gap-2 min-h-[44px] -my-1 press-scale"
+            >
+              <span className="text-xs font-semibold text-stone-400 uppercase tracking-wide flex items-center gap-1.5">
+                Papierkorb
+                <span className="text-[10px] normal-case font-medium bg-stone-100 text-stone-500 rounded-full px-1.5 py-0.5">{total}</span>
+              </span>
+              <ChevronDown size={14} className={`text-stone-400 transition-transform ${papierkorbOffen ? "rotate-180" : ""}`} />
+            </button>
+            {papierkorbOffen && (
+              <>
+                <p className="text-xs text-stone-500 mt-2 mb-3">
+                  Bleibt 30 Tage wiederherstellbar, dann automatisch endgültig entfernt. Wer nicht warten will, löscht einzelne Einträge auch früher endgültig – das lässt sich danach nicht mehr rückgängig machen.
+                </p>
+                <ul className="space-y-1.5">
+                  {snapshotValid && (
+                    <li className="flex-col gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="flex-1 text-sm text-stone-700 truncate">Alle Daten (Reset vom {new Date(snapshot.deletedAt).toLocaleDateString("de-DE")})</span>
+                        <span className="text-[11px] text-stone-400 shrink-0">{daysLeftSnapshot}T</span>
+                        <button onClick={restoreAllData} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
+                      </div>
+                      <button
+                        onClick={() => setConfirmDeleteSnapshot(true)}
+                        className="text-[11px] text-red-500 hover:underline mt-1"
+                      >
+                        Jetzt endgültig löschen (auch Gesundheitsdaten & Fotos)
+                      </button>
+                    </li>
+                  )}
+                  {deletedClasses.map((c) => {
+                    const kinderZahl = data.students.filter((s) => s.classId === c.id && s.deletedAt).length;
+                    return (
+                      <li key={c.id} className="flex-col gap-1 bg-stone-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex-1 text-sm text-stone-600 truncate">
+                            Klasse: {c.name}
+                            {kinderZahl > 0 && <span className="text-stone-400"> · {kinderZahl} Kind{kinderZahl === 1 ? "" : "er"}</span>}
+                          </span>
+                          <button onClick={() => restoreClass(c.id)} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
+                        </div>
+                        <button
+                          onClick={() => setConfirmHardDelete({ type: "class", id: c.id, label: c.name, kinderZahl })}
+                          className="text-[11px] text-red-500 hover:underline"
+                        >
+                          Jetzt endgültig löschen
+                        </button>
+                      </li>
+                    );
+                  })}
+                  {standaloneStudents.map((s) => {
+                    const cls = (data.classes || []).find((c) => c.id === s.classId);
+                    return (
+                      <li key={s.id} className="flex-col gap-1 bg-stone-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex-1 text-sm text-stone-600 truncate">{s.name}{cls ? ` (${cls.name})` : ""}</span>
+                          <button onClick={() => restoreStudent(s.id)} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
+                        </div>
+                        <button
+                          onClick={() => setConfirmHardDelete({ type: "student", id: s.id, label: s.name })}
+                          className="text-[11px] text-red-500 hover:underline"
+                        >
+                          Jetzt endgültig löschen
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
           </div>
         );
       })()}
@@ -14353,6 +14428,37 @@ function KlassenFusszeile({ rohdaten: data, update }) {
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setConfirmDeleteSnapshot(false)} className="flex-1 justify-center">Abbrechen</Button>
               <Button variant="danger" onClick={() => { update((d) => { d.deletedSnapshot = null; return d; }); setConfirmDeleteSnapshot(false); }} className="flex-1 justify-center">Endgültig löschen</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmHardDelete && (
+        <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center p-4 z-[70]" onClick={() => setConfirmHardDelete(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="font-semibold text-stone-800 mb-2">Endgültig löschen?</div>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-3">
+              <p className="text-[11px] text-red-800 leading-relaxed">
+                <strong>Diese Aktion kann nicht rückgängig gemacht werden.</strong>{" "}
+                {confirmHardDelete.type === "class"
+                  ? <>„{confirmHardDelete.label}" wird mit {confirmHardDelete.kinderZahl > 0 ? `allen ${confirmHardDelete.kinderZahl} Kindern, ` : ""}allen Noten und Notizen sofort und unwiederbringlich gelöscht.</>
+                  : <>„{confirmHardDelete.label}" wird mit allen Noten und Notizen sofort und unwiederbringlich gelöscht.</>}
+                {" "}Die verbleibenden Tage im Papierkorb entfallen damit.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setConfirmHardDelete(null)} className="flex-1 justify-center">Abbrechen</Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (confirmHardDelete.type === "class") hardDeleteClass(confirmHardDelete.id);
+                  else hardDeleteStudent(confirmHardDelete.id);
+                  setConfirmHardDelete(null);
+                }}
+                className="flex-1 justify-center"
+              >
+                Endgültig löschen
+              </Button>
             </div>
           </div>
         </div>
