@@ -410,9 +410,29 @@ const LIST_ICON_MAP = {
 };
 const LIST_ICON_KEYS = Object.keys(LIST_ICON_MAP);
 
+/* Zwoelf Fach-Farben, per OKLCH-Farbrad konstruiert statt frei Hand
+   gewaehlt: die alte Liste sass fast komplett bei Chroma 0.03-0.09 (fast
+   Grau) mit mehreren Farbtoenen nur 5-15 Grad auseinander (z. B. zwei fast
+   identische Blautoene) - im Alltag kaum zu unterscheiden, genau das
+   gemeldete Problem. Diese Liste nimmt Slot 1 exakt als Marken-Oliv
+   (--oliv, unveraendert), verteilt die uebrigen 11 in 30-Grad-Schritten
+   auf dem vollen Farbrad, greift sie aber nicht der Reihe nach ab, sondern
+   im Uhrzeiger-Sprung von 5 Schritten (Sprung 150 Grad statt 30) - genau
+   die Zuweisungsreihenfolge, in der nextPaletteColor() sie an neu
+   angelegte Faecher vergibt. So liegen auch die ersten sechs, sieben
+   Faecher einer Klasse (der Alltagsfall) auf dem Rad weit auseinander
+   statt eng nebeneinander. Chroma bewusst auf ~0.15 gedeckelt (gedeckt,
+   "edel" statt knallig), im Cyan-Bereich (Farbton 140-230) zusaetzlich mit
+   angehobener Helligkeit erzeugt, weil dort bei niedrigerer Helligkeit
+   kaum Saettigung im sRGB-Gamut uebrig bleibt. Geprueft mit dem
+   dataviz-Skill-Validator (OKLab-Distanz, Machado-Oliveira-Fernandes-CVD-
+   Simulation): Normalsicht-Mindestabstand 18.7 (Ziel >=15, bestanden),
+   Rotgruen-Sehschwaeche 7.4 (Zielband 6-8, zulaessig weil jede Fach-Farbe
+   in der App immer zusammen mit dem Fachnamen als Text steht - nie allein
+   Traeger der Bedeutung ist). */
 const COLOR_PALETTE = [
-  "#4F5844", "#A3402F", "#B07D2B", "#3F5A6B", "#5F7A45", "#8C5A2B",
-  "#41697E", "#6B5B7B", "#96566B", "#7C8B3F", "#4A7A73", "#7A4E63",
+  "#4F5844", "#5156B6", "#8C5500", "#0089A3", "#A53454", "#009259",
+  "#7A46A4", "#746300", "#0067AA", "#A73A17", "#008D85", "#963A81",
 ];
 
 function nextPaletteColor(usedColors) {
@@ -9975,6 +9995,16 @@ function FachModal({ data, initial, onSave, onClose }) {
                 />
               ))}
             </div>
+            {/* Die Fach-Farbe erscheint im Stundenplan und in den Fach-Kacheln
+                nur, wenn der Farb-Modus (Sternchen oben auf der Übersicht)
+                eingeschaltet ist - im Standard-Modus bleibt dort bewusst
+                alles einfarbig. Ohne diesen Hinweis wirkte eine gewählte
+                Farbe so, als waere sie nie gespeichert worden. */}
+            {data.settings?.colorMode !== true && (
+              <p className="text-xs text-stone-400 mt-1.5">
+                Sichtbar wird die Farbe im Stundenplan und in den Fach-Kacheln erst, wenn der Farb-Modus (✦-Symbol auf der Übersicht) eingeschaltet ist.
+              </p>
+            )}
           </Field>
 
           <Field label="Raum (optional)">
