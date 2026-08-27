@@ -3034,6 +3034,7 @@ const HELP_DATA = [
       { q: "Woran sehe ich, ob meine Eingaben gespeichert sind?", a: `Oben links unter dem Namen „Tu-vi" steht der Speicherstand: „Speichert …" während geschrieben wird, danach „Gespeichert". Tu-vi sichert automatisch, kurz nach jeder Änderung – einen Speichern-Knopf gibt es bewusst nicht. Erscheint stattdessen „⚠ Nicht gespeichert" und oben im Inhalt ein roter Balken, ist die Änderung NICHT auf dem Server angekommen. Tu-vi versucht es dann von selbst noch zweimal; im Balken steht zusätzlich „Erneut versuchen". Wichtig: Melde dich in diesem Fall nicht ab, bevor der Balken verschwunden ist – sichere lieber über „Backup erstellen" im selben Balken, dann ist nichts verloren.` },
       { q: "Meine Daten sind nach dem Abmelden weg – was tun?", a: `Dann konnte Tu-vi nicht auf den Server schreiben. Beim Abmelden wird der lokale Stand geleert, weil die Daten auf dem Server liegen – kam dort nichts an, ist die Arbeit weg. Achte deshalb auf den roten Balken „Daten konnten nicht gespeichert werden": Er nennt den genauen Grund und bietet „Erneut versuchen" sowie „Backup erstellen". Tu-vi meldet inzwischen jeden fehlgeschlagenen Schreibvorgang – auch die stillen, die früher fälschlich als „Gespeichert" durchgingen –, und wartet beim Abmelden ab, bis der letzte Stand geschrieben ist. Bleibt der Fehler bestehen, sichere über „Backup erstellen" und melde dich per Mail an die Kontaktadresse unter „Über Tu-vi".` },
       { q: "Warum sehe ich Änderungen vom iPhone nicht am Computer?", a: `Tu-vi speichert alles auf dem Server, nicht im Gerät – die Änderung sollte also nach kurzer Zeit überall auftauchen. Zwei Bedingungen müssen stimmen: Erstens muss auf dem Gerät, an dem du geändert hast, „Gespeichert" stehen (nicht „⚠ Nicht gespeichert"). Zweitens holt das zweite Gerät die Daten beim Anmelden und beim Entsperren – ein bereits offenes Fenster aktualisiert sich nicht von allein. Lade die Seite dort neu oder sperre und entsperre die App, dann ist der neue Stand da.` },
+      { q: `Was bedeutet „Anderes Gerät hat gespeichert"?`, a: `Das erscheint, wenn du auf zwei Geräten fast gleichzeitig gearbeitet hast – zum Beispiel iPhone und Computer beide offen, auf beiden etwas geändert. Tu-vi erkennt das und pausiert das Speichern auf diesem Gerät, statt den anderen Stand stillschweigend zu überschreiben. Ein Balken bietet zwei Wege: „Anderen Stand übernehmen" lädt, was auf dem anderen Gerät gespeichert wurde – deine eigenen Änderungen seit dem Konflikt gehen dabei verloren. „Meine Version behalten" überschreibt stattdessen den anderen Stand, nach einer Sicherheitsabfrage, weil dabei dessen Änderungen verloren gehen. Am einfachsten vermeidest du das, indem du nicht auf zwei Geräten gleichzeitig arbeitest.` },
       { q: "Wie erstelle ich ein Backup?", a: `Gehe zu „Mehr" → „Einstellungen" → „Daten & Sicherung". Dort erscheint zuerst ein kurzer Datenschutz-Hinweis, den du bestätigst. Danach: „Sichern" legt die Datei im Download-Ordner ab, „Teilen" öffnet die Teilen-Ansicht (z. B. für „In Dateien sichern" oder AirDrop). Wichtig: abgelegte Dokumente sind darin nicht enthalten – die brauchen eine eigene Sicherung, direkt darunter unter „Dokumente sichern".` },
       { q: "Wie lege ich ein Dokument bei einem Kind ab?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → Kind antippen → im Profil auf den Reiter „Mehr". Ganz unten steht „Dokumente" mit zwei Knöpfen: „Foto" öffnet direkt die Kamera – ideal, um eine Entschuldigung abzufotografieren. „Datei" öffnet die Dateien-App, dort wählst du ein PDF oder ein vorhandenes Bild. Fotos werden automatisch verkleinert, damit sie wenig Platz brauchen. Ein Tipp auf einen Eintrag öffnet ihn, das Papierkorb-Symbol löscht ihn.` },
       { q: "Kann ich Dokumente auch bei einer Klasse, einem Fach oder ganz allgemein ablegen?", a: `Ja. Im Klassen-Dashboard (Klasse antippen → „Überblick" → „Klassen-Dashboard") liegt ganz unten die Ablage für die ganze Klasse – etwa Sitzplan oder Elternbrief. In der Notenübersicht eines Fachs (Noten → Klasse → Fach) findest du dieselbe Ablage für Arbeitsblätter oder Lösungen. Für alles ohne festen Bezug – Konferenzprotokolle, Formulare, Schulordnung – gibt es unter „Mehr" → „Dokumente" einen eigenen allgemeinen Bereich. Dort steht auch eine durchsuchbare Liste aller abgelegten Dokumente, egal wo sie hängen.` },
@@ -4580,6 +4581,9 @@ export default function App() {
   /* Die Untaetigkeits-Abmeldung unten braucht abmelden(), das erst weiter
      unten entstehen kann (es haengt am Speichern). Der Ref ueberbrueckt das. */
   const abmeldenRef = useRef(null);
+  /* Dasselbe Problem: conflictUeberschreiben() (weiter unten bei doSave)
+     braucht flushSave(), das selbst erst nach doSave entsteht. */
+  const flushSaveRef = useRef(null);
   useEffect(() => {
     if (!user || gesperrt) return;
     const minuten = leseAutoSperre();
@@ -4632,6 +4636,9 @@ export default function App() {
       if (!u) {
         justLoadedRef.current = true;
         hadRowRef.current = false;
+        remoteUpdatedAtRef.current = null;
+        conflictRef.current = false;
+        setSaveConflict(null);
         setLoaded(false);
         setData(EMPTY_DATA);
       }
@@ -4645,12 +4652,22 @@ export default function App() {
   const loadFailedRef = useRef(false);
   const justLoadedRef = useRef(true);
   const hadRowRef = useRef(false);
+  /* Der updated_at-Stand, von dem dieses Geraet zuletzt weiss - aus dem
+     letzten Laden oder dem letzten eigenen Speichern. Ohne diesen Wächter
+     gewinnt beim Speichern einfach, wer zuletzt schreibt: Ein zweites
+     Geraet, das zwischenzeitlich gespeichert hat, wuerde stillschweigend
+     ueberschrieben. Mit ihm meldet das UPDATE keine Treffer mehr, wenn der
+     Datensatz sich seitdem geaendert hat - siehe doSave(). */
+  const remoteUpdatedAtRef = useRef(null);
+  const conflictRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const recoveryInputRef = useRef(null);
   const [tab, setTab] = useState("dashboard");
-  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error
+  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error | conflict
   const [saveErrorMsg, setSaveErrorMsg] = useState(null);
+  const [saveConflict, setSaveConflict] = useState(null); // { serverData, serverUpdatedAt } | null
+  const [confirmUeberschreiben, setConfirmUeberschreiben] = useState(false);
   const [halbjahr, setHalbjahr] = useState(currentHalbjahr());
 
   /* Der Hinweis auf den Home-Bildschirm gehoert an den Anfang, nicht in den
@@ -4825,6 +4842,7 @@ export default function App() {
         const row = rows?.[0];
         if (row && row.data) {
           hadRowRef.current = true;
+          remoteUpdatedAtRef.current = row.updated_at;
           /* sanitizeVollstaendig, nicht sanitizeImport: letzteres prueft nur
              einen Teil der Sammlungen. Wer sein Ergebnis fuer den ganzen
              Datenstand haelt, verliert Kinder, Noten, Faecher und
@@ -5000,6 +5018,12 @@ export default function App() {
   const doSave = useCallback(async (payload) => {
     const uid = userRef.current?.id;
     if (!uid) return;
+    /* Ein ungeloester Konflikt (ein anderes Geraet hat zwischenzeitlich
+       gespeichert) blockiert weitere Schreibversuche - sonst wuerde der
+       naechste Autosave stillschweigend genau das tun, was der Konflikt
+       verhindern soll. Erst wenn die Lehrkraft sich entschieden hat
+       (siehe conflictUebernehmen/conflictUeberschreiben), geht es weiter. */
+    if (conflictRef.current) return;
     const klassen = (payload.classes || []).length;
     const schueler = (payload.students || []).length;
     /* Schutz gegen das Ueberschreiben eines echten Bestands mit Leerstand
@@ -5011,32 +5035,64 @@ export default function App() {
     const stempel = new Date().toISOString();
     console.log(`[Tu-vi] Speichere ${klassen} Klassen / ${schueler} Schueler …`);
     try {
-      const { data: akt, error: aktFehler } = await supabase
-        .from("user_data")
-        .update({ data: payload, updated_at: stempel })
-        .eq("user_id", uid)
-        .select("user_id");
-      if (aktFehler) throw aktFehler;
+      if (hadRowRef.current) {
+        /* Der Waechter (.eq("updated_at", ...)) ist das eigentliche Herzstueck:
+           er sorgt dafuer, dass ein UPDATE nur greift, wenn der Datensatz seit
+           dem letzten Laden/Speichern dieses Geraets unveraendert ist. Ohne ihn
+           gewinnt beim Speichern schlicht, wer zuletzt schreibt - ein zweites
+           Geraet wuerde stillschweigend ueberschrieben. */
+        let query = supabase.from("user_data").update({ data: payload, updated_at: stempel }).eq("user_id", uid);
+        if (remoteUpdatedAtRef.current) query = query.eq("updated_at", remoteUpdatedAtRef.current);
+        const { data: akt, error: aktFehler } = await query.select("user_id");
+        if (aktFehler) throw aktFehler;
 
-      if (!akt || akt.length === 0) {
-        /* Keine Zeile getroffen. Beim Laden war aber eine da - dann verbietet
-           eine RLS-Regel das UPDATE. Hier auf gut Glueck einzufuegen waere
-           falsch: fehlt in der Datenbank die UNIQUE-Regel auf user_id, laege
-           danach ein zweiter Datensatz desselben Kontos herum. */
-        if (hadRowRef.current) {
+        if (!akt || akt.length === 0) {
+          /* Keine Zeile getroffen, obwohl wir wissen, dass eine existiert.
+             Zwei moegliche Gruende - erst den haeufigeren, harmlosen pruefen:
+             hat ein anderes Geraet zwischenzeitlich gespeichert? Nur wenn
+             das nicht zutrifft, liegt es an einer fehlenden RLS-Regel. */
+          const { data: serverRows, error: leseFehler } = await supabase
+            .from("user_data").select("data, updated_at").eq("user_id", uid)
+            .order("updated_at", { ascending: false }).limit(1);
+          if (leseFehler) throw leseFehler;
+          const server = serverRows?.[0];
+          if (server && remoteUpdatedAtRef.current && server.updated_at !== remoteUpdatedAtRef.current) {
+            conflictRef.current = true;
+            setSaveConflict({ serverData: server.data, serverUpdatedAt: server.updated_at });
+            setSaveState("conflict");
+            console.log("[Tu-vi] Konflikt: ein anderes Geraet hat zwischenzeitlich gespeichert");
+            return;
+          }
           throw new Error(
             "Der gespeicherte Datensatz wurde nicht geändert. " +
             "In Supabase fehlt für die Tabelle user_data eine UPDATE-Regel mit auth.uid() = user_id."
           );
         }
+        remoteUpdatedAtRef.current = stempel;
+      } else {
         const { data: neu, error: neuFehler } = await supabase
           .from("user_data")
           .insert({ user_id: uid, data: payload, updated_at: stempel })
           .select("user_id");
         if (neuFehler) {
-          /* 23505: ein anderes Geraet war schneller. Beim naechsten Lauf
-             greift dann der UPDATE-Zweig. */
+          /* 23505: ein anderes Geraet hat im selben Moment die erste Zeile
+             angelegt (z. B. zwei Geraete, die sich beim selben neuen Konto
+             gleichzeitig anmelden). Genau der Fall, fuer den es die
+             Konflikt-Anzeige gibt - also dorthin, statt blind erneut
+             INSERT zu versuchen und immer wieder an derselben Kollision
+             zu scheitern. */
           if (neuFehler.code === "23505") {
+            const { data: serverRows } = await supabase
+              .from("user_data").select("data, updated_at").eq("user_id", uid)
+              .order("updated_at", { ascending: false }).limit(1);
+            const server = serverRows?.[0];
+            hadRowRef.current = true;
+            if (server) {
+              conflictRef.current = true;
+              setSaveConflict({ serverData: server.data, serverUpdatedAt: server.updated_at });
+              setSaveState("conflict");
+              return;
+            }
             throw new Error("Ein anderes Gerät hat zeitgleich gespeichert. Beim nächsten Versuch wird ergänzt.");
           }
           throw neuFehler;
@@ -5047,6 +5103,7 @@ export default function App() {
             "Für die Tabelle user_data fehlt eine INSERT-Regel mit auth.uid() = user_id."
           );
         }
+        remoteUpdatedAtRef.current = stempel;
       }
 
       hadRowRef.current = true;
@@ -5067,6 +5124,35 @@ export default function App() {
     }
   }, []);
 
+  /* Server-Stand uebernehmen: die eigenen, noch ungespeicherten Aenderungen
+     seit dem Konflikt weichen dem, was auf dem anderen Geraet gespeichert
+     wurde. justLoadedRef verhindert, dass dieser uebernommene Stand sofort
+     wieder zurueckgeschrieben wird. */
+  const conflictUebernehmen = useCallback(() => {
+    if (!saveConflict) return;
+    const { daten: server } = sanitizeVollstaendig(saveConflict.serverData);
+    justLoadedRef.current = true;
+    hadRowRef.current = true;
+    remoteUpdatedAtRef.current = saveConflict.serverUpdatedAt;
+    conflictRef.current = false;
+    setSaveConflict(null);
+    setData(server);
+    setSaveState("saved");
+    setSaveErrorMsg(null);
+  }, [saveConflict]);
+
+  /* Eigene Version behalten: der Waechter wird auf den jetzt bekannten
+     Serverstand angehoben, danach greift ein ganz normaler Speicherversuch -
+     und ueberschreibt damit bewusst, was auf dem anderen Geraet lag. */
+  const conflictUeberschreiben = useCallback(() => {
+    if (!saveConflict) return;
+    remoteUpdatedAtRef.current = saveConflict.serverUpdatedAt;
+    conflictRef.current = false;
+    setSaveConflict(null);
+    dirtyRef.current = true;
+    flushSaveRef.current?.();
+  }, [saveConflict]);
+
   const flushSave = useCallback(async () => {
     if (!loadedRef.current || loadFailedRef.current) return;
     if (!userRef.current) return;
@@ -5075,6 +5161,7 @@ export default function App() {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     await doSave(dataRef.current);
   }, [doSave]);
+  useEffect(() => { flushSaveRef.current = flushSave; }, [flushSave]);
 
   /* Abmelden erst nach dem Speichern: sonst faellt eine Aenderung, die noch
      in der 500-ms-Wartezeit haengt, beim Abmelden ersatzlos weg. */
@@ -5091,6 +5178,10 @@ export default function App() {
       setSaveState(hadRowRef.current ? "saved" : "idle");
       return;
     }
+    /* Waehrend eines ungeloesten Konflikts nicht ueber den Hinweis
+       druebersspeichern - dirtyRef bleibt aber gesetzt, damit die naechste
+       Entscheidung (conflictUeberschreiben) den aktuellen Stand erwischt. */
+    if (conflictRef.current) { dirtyRef.current = true; return; }
     dirtyRef.current = true;
     setSaveState("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -5547,7 +5638,7 @@ export default function App() {
               <div>
                 <div className="text-sm font-semibold text-stone-800 leading-tight tracking-wide">Tu-vi</div>
                 <div className="text-[10px] text-stone-400 leading-none mt-0.5">
-                  {saveState === "saving" ? "Speichert …" : saveState === "error" ? "⚠ Nicht gespeichert" : saveState === "saved" ? "Gespeichert" : ""}
+                  {saveState === "saving" ? "Speichert …" : saveState === "error" ? "⚠ Nicht gespeichert" : saveState === "conflict" ? "⚠ Anderes Gerät hat gespeichert" : saveState === "saved" ? "Gespeichert" : ""}
                 </div>
               </div>
             </div>
@@ -5698,6 +5789,29 @@ export default function App() {
               </div>
             </div>
           )}
+          {saveConflict && (
+            <div className="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+              <span className="text-amber-600 shrink-0 mt-0.5">⚠</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-amber-900 font-medium">Auf einem anderen Gerät wurde zwischenzeitlich gespeichert</p>
+                <p className="text-amber-800 text-xs mt-1">
+                  Zuletzt dort gespeichert: {new Date(saveConflict.serverUpdatedAt).toLocaleString("de-DE")}. Speichern ist pausiert, damit hier nichts stillschweigend überschrieben wird.
+                </p>
+              </div>
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <button onClick={conflictUebernehmen} className="text-xs font-medium text-amber-800 hover:text-amber-950 underline underline-offset-2">Anderen Stand übernehmen</button>
+                <button onClick={() => setConfirmUeberschreiben(true)} className="text-xs font-medium text-amber-800 hover:text-amber-950 underline underline-offset-2">Meine Version behalten</button>
+              </div>
+            </div>
+          )}
+          <ConfirmDialog
+            open={confirmUeberschreiben}
+            title="Wirklich die eigene Version behalten?"
+            message="Was seit dem letzten Speichern auf dem anderen Gerät geändert wurde, wird damit überschrieben und ist danach weg."
+            confirmLabel="Überschreiben"
+            onConfirm={() => { setConfirmUeberschreiben(false); conflictUeberschreiben(); }}
+            onCancel={() => setConfirmUeberschreiben(false)}
+          />
           {backupReminderDays !== null && (
             <div className="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
               <Download size={16} className="text-amber-600 shrink-0 mt-0.5" />
