@@ -867,7 +867,11 @@ function sanitizeVollstaendig(imported) {
       /* Nur Rasterformate zulassen. „data:image/" allein liesse auch
          data:image/svg+xml durch - und SVG kann Skripte enthalten.
          Eigene Fotos kommen aus resizeImageFile immer als JPEG. */
-      photo: typeof s.photo === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(s.photo) ? s.photo : "",
+      /* 300 KB Base64 deckt das eigene 128x128-JPEG (resizeImageFile) mit
+         viel Luft ab. Ohne Grenze koennte eine fremde/manipulierte
+         Backup-Datei ein beliebig grosses Bild einschleusen, das dann
+         ungeprueft in der Cloud-Datenbank landet. */
+      photo: typeof s.photo === "string" && s.photo.length <= 300_000 && /^data:image\/(jpeg|png|webp);base64,/.test(s.photo) ? s.photo : "",
       name: typeof s.name === "string" ? s.name.slice(0, 200) : s.name,
       medicalInfo: typeof s.medicalInfo === "string" ? s.medicalInfo.slice(0, 2000) : s.medicalInfo,
       foerderStatus: typeof s.foerderStatus === "string" ? s.foerderStatus.slice(0, 500) : s.foerderStatus,
@@ -905,6 +909,41 @@ function sanitizeVollstaendig(imported) {
          App eingefroren und wuerde die reine Formpruefung passieren. */
       nextTestDate: S_DATUM(f.nextTestDate),
     }));
+
+  /* foerderZiele und sitzplaene liefen bisher an keiner Sanitize-Stelle
+     vorbei - sie kamen nur ueber den rohen Spread oben durch. Foerderziele
+     koennen aehnlich schuetzenswerte Inhalte tragen wie medicalInfo (z. B.
+     Hinweise auf einen Foerderbedarf), waren aber unbegrenzt. */
+  merged.foerderZiele = (Array.isArray(merged.foerderZiele) ? merged.foerderZiele : [])
+    .filter((z) => z && typeof z === "object" && typeof z.studentId === "string")
+    .map((z) => ({
+      ...S_SAUBER(z),
+      text: kurz(z.text, 500) || "",
+      typ: z.typ === "wochen" ? "wochen" : "foerder",
+      createdAt: S_DATUM(z.createdAt),
+      doneAt: S_DATUM(z.doneAt),
+    }));
+
+  merged.sitzplaene = (merged.sitzplaene && typeof merged.sitzplaene === "object" && !Array.isArray(merged.sitzplaene))
+    ? Object.fromEntries(
+        Object.entries(merged.sitzplaene)
+          .filter(([, plan]) => plan && typeof plan === "object")
+          .map(([classId, plan]) => {
+            const positions = (plan.positions && typeof plan.positions === "object" && !Array.isArray(plan.positions))
+              ? Object.fromEntries(
+                  Object.entries(plan.positions)
+                    .filter(([, pos]) => pos && typeof pos.x === "number" && typeof pos.y === "number")
+                    .map(([studentId, pos]) => [studentId, {
+                      x: Math.max(0, Math.min(1, pos.x)),
+                      y: Math.max(0, Math.min(1, pos.y)),
+                      quality: ["gut", "mittel", "schlecht"].includes(pos.quality) ? pos.quality : null,
+                    }])
+                )
+              : {};
+            return [classId, { positions, tafelEdge: ["top", "bottom", "left", "right"].includes(plan.tafelEdge) ? plan.tafelEdge : "top" }];
+          })
+      )
+    : {};
 
   return { daten: merged, gekuerzt };
 }
@@ -2948,7 +2987,7 @@ const HELP_DATA = [
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
       { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
       { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen und Kinder bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
-      { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder mit allen Noten und Notizen sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
+      { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder mit sämtlichen zugehörigen Daten (Noten, Notizen, Förderziele, Dokumente, Sitzplan-Einträge) sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
       { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten". „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
       { q: `Was steht im Reiter „Listen" bei den Klassen?`, a: `Drei Übersichten über alle Klassen hinweg: Entschuldigungen, Förderziele und Geburtstage. Der Unterschied zu den Kacheln auf der Startseite: Die Listen lassen sich auch dann öffnen, wenn gerade nichts offen ist – etwa um im Elterngespräch nachzusehen, wann ein Kind zuletzt eine Entschuldigung abgegeben hat.` },
@@ -14410,9 +14449,17 @@ function KlassenFusszeile({ rohdaten: data, update }) {
   const [papierkorbOffen, setPapierkorbOffen] = useState(false);
   const [confirmHardDelete, setConfirmHardDelete] = useState(null); // { type: "class" | "student", id, label }
 
-  function hardDeleteClass(id) {
+  /* "Unwiderruflich" muss auch stimmen: eine erste Fassung raeumte nur Noten,
+     Notizen, Fehlzeiten, Vorfaelle und Zeugnisnoten auf und liess Foerderziele,
+     Dokumente, Sitzplan-Eintraege und Dienst-Eintraege mit der Kind-ID stehen -
+     personenbezogene Reste trotz der Zusage im Bestaetigungsdialog. */
+  async function hardDeleteClass(id) {
+    const studentIds = data.students.filter((s) => s.classId === id).map((s) => s.id);
+    const dokIds = (data.documents || [])
+      .filter((doc) => (doc.scope === "student" && studentIds.includes(doc.scopeId)) || (doc.scope === "class" && doc.scopeId === id))
+      .map((doc) => doc.id);
+    await Promise.all(dokIds.map((did) => docLoeschen(did).catch(() => {})));
     update((d) => {
-      const studentIds = d.students.filter((s) => s.classId === id).map((s) => s.id);
       d.classes = d.classes.filter((c) => c.id !== id);
       d.students = d.students.filter((s) => s.classId !== id);
       d.notes = d.notes.filter((n) => !studentIds.includes(n.studentId));
@@ -14420,10 +14467,16 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.incidents = (d.incidents || []).filter((i) => !studentIds.includes(i.studentId));
       d.absences = (d.absences || []).filter((a) => !studentIds.includes(a.studentId));
       d.finalGrades = (d.finalGrades || []).filter((fg) => !studentIds.includes(fg.studentId));
+      d.foerderZiele = (d.foerderZiele || []).filter((z) => !studentIds.includes(z.studentId));
+      d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
+      if (d.sitzplaene) delete d.sitzplaene[id];
+      d.duties = (d.duties || []).filter((duty) => duty.classId !== id);
       return d;
     });
   }
-  function hardDeleteStudent(id) {
+  async function hardDeleteStudent(id) {
+    const dokIds = (data.documents || []).filter((doc) => doc.scope === "student" && doc.scopeId === id).map((doc) => doc.id);
+    await Promise.all(dokIds.map((did) => docLoeschen(did).catch(() => {})));
     update((d) => {
       d.students = d.students.filter((s) => s.id !== id);
       d.notes = d.notes.filter((n) => n.studentId !== id);
@@ -14431,6 +14484,23 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.incidents = (d.incidents || []).filter((i) => i.studentId !== id);
       d.absences = (d.absences || []).filter((a) => a.studentId !== id);
       d.finalGrades = (d.finalGrades || []).filter((fg) => fg.studentId !== id);
+      d.foerderZiele = (d.foerderZiele || []).filter((z) => z.studentId !== id);
+      d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
+      if (d.sitzplaene) {
+        Object.keys(d.sitzplaene).forEach((classId) => {
+          const plan = d.sitzplaene[classId];
+          if (plan?.positions && id in plan.positions) {
+            const { [id]: entfernt, ...rest } = plan.positions;
+            d.sitzplaene[classId] = { ...plan, positions: rest };
+          }
+        });
+      }
+      (d.duties || []).forEach((duty) => {
+        if (Array.isArray(duty.queue)) duty.queue = duty.queue.filter((sid) => sid !== id);
+        if (Array.isArray(duty.done)) duty.done = duty.done.filter((sid) => sid !== id);
+        if (Array.isArray(duty.log)) duty.log = duty.log.filter((eintrag) => eintrag.studentId !== id);
+        if (duty.repeats && id in duty.repeats) delete duty.repeats[id];
+      });
       return d;
     });
   }
@@ -14585,8 +14655,8 @@ function KlassenFusszeile({ rohdaten: data, update }) {
               <p className="text-[11px] text-red-800 leading-relaxed">
                 <strong>Diese Aktion kann nicht rückgängig gemacht werden.</strong>{" "}
                 {confirmHardDelete.type === "class"
-                  ? <>„{confirmHardDelete.label}" wird mit {confirmHardDelete.kinderZahl > 0 ? `allen ${confirmHardDelete.kinderZahl} Kindern, ` : ""}allen Noten und Notizen sofort und unwiederbringlich gelöscht.</>
-                  : <>„{confirmHardDelete.label}" wird mit allen Noten und Notizen sofort und unwiederbringlich gelöscht.</>}
+                  ? <>„{confirmHardDelete.label}" wird mit {confirmHardDelete.kinderZahl > 0 ? `allen ${confirmHardDelete.kinderZahl} Kindern und deren ` : "allen "}Noten, Notizen, Förderzielen, Dokumenten und Sitzplan-Einträgen sofort und unwiederbringlich gelöscht.</>
+                  : <>„{confirmHardDelete.label}" wird mit allen Noten, Notizen, Förderzielen, Dokumenten und Sitzplan-Einträgen sofort und unwiederbringlich gelöscht.</>}
                 {" "}Die verbleibenden Tage im Papierkorb entfallen damit.
               </p>
             </div>
