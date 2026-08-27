@@ -83,7 +83,7 @@ const QUICK_SYMBOLS = [
    Dateien selbst liegen in IndexedDB. So bleibt die normale Datensicherung
    klein, und nach dem Wiederherstellen auf einem neuen Geraet ist wenigstens
    sichtbar, welche Unterlagen es gab. */
-const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false } };
+const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false } };
 
 /* Sortierbar sind nur die Karten im unteren Raster.
    Fest sitzen: „Unterricht" als Hauptkarte sowie die Dreierreihe aus Terminen,
@@ -878,6 +878,12 @@ function sanitizeVollstaendig(imported) {
       parentPhone: typeof s.parentPhone === "string" ? s.parentPhone.slice(0, 100) : s.parentPhone,
       birthday: S_DATUM(s.birthday),
       deletedAt: S_DATUM(s.deletedAt),
+      /* Fehlt der Wert (z. B. bei allen bisherigen Kindern vor diesem
+         Feature), gilt "neustarter" - "alle starten bei Neustarter". Das
+         wird an den Anzeigestellen ueber graduierungLabel()/-Chip() sowieso
+         schon so gehandhabt, hier zusaetzlich beim Speichern absichern. */
+      graduierungStufe: GRADUIERUNGS_STUFEN.some((g) => g.key === s.graduierungStufe) ? s.graduierungStufe : "neustarter",
+      graduierungAufProbe: s.graduierungAufProbe === true,
     }));
 
   /* Einstellungen nicht blind uebernehmen: `merged` ist ein flacher Spread,
@@ -944,6 +950,18 @@ function sanitizeVollstaendig(imported) {
           })
       )
     : {};
+
+  const gueltigeStufe = (v) => (GRADUIERUNGS_STUFEN.some((g) => g.key === v) ? v : "neustarter");
+  merged.graduierungVerlauf = (Array.isArray(merged.graduierungVerlauf) ? merged.graduierungVerlauf : [])
+    .filter((e) => e && typeof e === "object" && typeof e.studentId === "string")
+    .map((e) => ({
+      ...S_SAUBER(e),
+      datum: S_DATUM(e.datum) || isoDate(new Date()),
+      vonStufe: gueltigeStufe(e.vonStufe),
+      nachStufe: gueltigeStufe(e.nachStufe),
+      aufProbe: e.aufProbe === true,
+      begruendung: kurz(e.begruendung, 500) || "",
+    }));
 
   return { daten: merged, gekuerzt };
 }
@@ -3025,6 +3043,7 @@ const HELP_DATA = [
       { q: "Was ist der Klassenradar?", a: `Signale die auffällige Klassen automatisch erkennen und in die Kachel „X Dinge brauchen deine Aufmerksamkeit" auf der Heute-Seite spielen. Drei Signale werden über die letzten 14 Tage berechnet: (1) häufige Klassenbucheinträge – ab 3 in 14 Tagen Warnung, ab 5 kritisch; (2) Klassenschnitt in einem Fach schlechter als 3,5 – ab 3,5 Warnung, ab 4,0 kritisch (nur ab 3 Noten im Fach, sonst Rauschen); (3) mindestens 4 Kinder mit „nicht so gut" oder „schlecht" in Gesprächen – ab 4 Warnung, ab 6 kritisch. Ist alles ruhig, bleibt die Kachel unauffällig oder verschwindet ganz. Ein Tipp im Aufmerksamkeits-Sheet öffnet direkt das Klassen-Dashboard mit allen Details.` },
       { q: "Was zeigt das Klassen-Dashboard?", a: `Klasse antippen → Reiter „Überblick" → „Klassen-Dashboard". Es zeigt: Anzahl Schüler:innen, Klassen-Ø und Förderbedarf als Kacheln; eine Notenverteilungs-Leiste; eine Anwesenheits-Übersicht der letzten 12 Wochen als Farbfeld (je dunkler, desto mehr Kinder fehlten an dem Tag, rot heißt unentschuldigt dabei) mit Hinweis, auf welchen Wochentag die meisten Fehltage fallen; eine Liste „Lange kein Eintrag" mit den Kindern die am längsten keine Note oder Notiz bekommen haben – mit Name und Anzahl Tage, direkt antippbar; eine „Aufmerksamkeit"-Liste; Geburtstage der nächsten 21 Tage sowie die letzten Notizen und Gespräche. Tippen auf ein Kind oder einen Punkt öffnet das Schülerprofil.` },
       { q: "Was sind die farbigen Signale im Schülerprofil?", a: `Direkt unter der Profilkarte erscheinen farbige Signale: Rot (kritisch), Gelb (beobachten), Grün (positiv) und Blau (Info). Sie werden automatisch aus den Daten berechnet – z. B. kritischer Notenschnitt, kein Eintrag seit mehr als 14 Tagen, negative Stimmung in Folge, Förderbedarf ohne aktives Ziel, oder Geburtstag in den nächsten 7 Tagen. Tippe auf ein Signal, um direkt zum betreffenden Tab zu springen.` },
+      { q: "Was ist die Graduierung im Schülerprofil?", a: `Das bildet das schulinterne Stufenmodell ab, bei dem Kinder mit steigender Stufe mehr Freiheiten, aber auch mehr Pflichten bekommen. Es gibt vier feste Stufen in fester Reihenfolge: Neustarter → Starter → Durchstarter → Lernprofi. Jedes Kind startet als Neustarter. Die aktuelle Stufe steht als Chip direkt in der Schülerkarte in der Liste und oben im Profil unter „Graduierung" – so ist sie auf einen Blick sichtbar, auch bei Vertretung oder Übergabe. Zusätzlich lässt sich „Auf Probe" markieren. Über „Ändern" im Profil wählst du die neue Stufe, setzt bei Bedarf „Auf Probe" und trägst eine Begründung ein (Pflichtfeld) – erst dann lässt sich speichern. Jede Änderung – auch eine Rückstufung – wird mit Datum, alter und neuer Stufe sowie Begründung im Verlauf darunter festgehalten, damit nachvollziehbar bleibt, wann und warum sich die Stufe geändert hat.` },
     ],
   },
   {
@@ -5274,6 +5293,17 @@ export default function App() {
       data.classes.some((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff) ||
       data.notes.some((n) => n.deletedAt && new Date(n.deletedAt).getTime() < cutoff);
     if (!hasStaleDeletions) return;
+    /* Derselbe Vollstaendigkeits-Anspruch wie bei "Jetzt endgueltig loeschen":
+       auch die automatische 30-Tage-Bereinigung muss wirklich alles raeumen,
+       nicht nur die Sammlungen, die zuerst nahelagen. documents-Blobs liegen
+       in IndexedDB und muessen darum ausserhalb von update() angestossen
+       werden - bestmoeglich, der Metadaten-Eintrag verschwindet in jedem Fall. */
+    const expiredStudentIdsVorab = data.students.filter((s) => s.deletedAt && new Date(s.deletedAt).getTime() < cutoff).map((s) => s.id);
+    const expiredClassIdsVorab = data.classes.filter((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff).map((c) => c.id);
+    const expiredDokIds = (data.documents || [])
+      .filter((doc) => (doc.scope === "student" && expiredStudentIdsVorab.includes(doc.scopeId)) || (doc.scope === "class" && expiredClassIdsVorab.includes(doc.scopeId)))
+      .map((doc) => doc.id);
+    expiredDokIds.forEach((did) => { docLoeschen(did).catch(() => {}); });
     update((d) => {
       if (d.deletedSnapshot && new Date(d.deletedSnapshot.deletedAt).getTime() < cutoff) {
         d.deletedSnapshot = null;
@@ -5290,6 +5320,27 @@ export default function App() {
       d.incidents = (d.incidents || []).filter((i) => !expiredStudentIds.includes(i.studentId));
       d.absences = (d.absences || []).filter((a) => !expiredStudentIds.includes(a.studentId));
       d.finalGrades = (d.finalGrades || []).filter((fg) => !expiredStudentIds.includes(fg.studentId));
+      d.foerderZiele = (d.foerderZiele || []).filter((z) => !expiredStudentIds.includes(z.studentId));
+      d.documents = (d.documents || []).filter((doc) => !expiredDokIds.includes(doc.id));
+      d.graduierungVerlauf = (d.graduierungVerlauf || []).filter((e) => !expiredStudentIds.includes(e.studentId));
+      expiredClassIds.forEach((cid) => { if (d.sitzplaene) delete d.sitzplaene[cid]; });
+      d.duties = (d.duties || []).filter((duty) => !expiredClassIds.includes(duty.classId));
+      (d.duties || []).forEach((duty) => {
+        if (Array.isArray(duty.queue)) duty.queue = duty.queue.filter((sid) => !expiredStudentIds.includes(sid));
+        if (Array.isArray(duty.done)) duty.done = duty.done.filter((sid) => !expiredStudentIds.includes(sid));
+        if (Array.isArray(duty.log)) duty.log = duty.log.filter((eintrag) => !expiredStudentIds.includes(eintrag.studentId));
+        if (duty.repeats) expiredStudentIds.forEach((sid) => { delete duty.repeats[sid]; });
+      });
+      if (d.sitzplaene) {
+        Object.keys(d.sitzplaene).forEach((classId) => {
+          const plan = d.sitzplaene[classId];
+          if (!plan?.positions) return;
+          let veraendert = false;
+          const positions = { ...plan.positions };
+          expiredStudentIds.forEach((sid) => { if (sid in positions) { delete positions[sid]; veraendert = true; } });
+          if (veraendert) d.sitzplaene[classId] = { ...plan, positions };
+        });
+      }
       return d;
     });
   }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -10280,6 +10331,23 @@ const GESPRAECH_TYPEN = [
   { key: "foerder", label: "Förder" },
 ];
 
+/* Graduierungsmodell: ein schulspezifisches Stufensystem mit Rechten und
+   Pflichten je Stufe (z. B. freie Platzwahl, iPad-Nutzung), das Kinder
+   auf- UND absteigen koennen. Die vier Stufen und ihre Reihenfolge sind
+   fest, weil sie so an der Schule des Auftraggebers gelten - andere
+   Schulen mit einem anderen Modell brauchten eine eigene Anpassung dieser
+   Liste. chip-* Klassen sind die vorhandenen, themenfaehigen Ampelfarben
+   (kein neues Sonderfarbschema), aufsteigend von neutral bis zum
+   App-eigenen Akzent als hoechste Stufe. */
+const GRADUIERUNGS_STUFEN = [
+  { key: "neustarter", label: "Neustarter", chip: "chip-neutral" },
+  { key: "starter", label: "Starter", chip: "chip-info" },
+  { key: "durchstarter", label: "Durchstarter", chip: "chip-gut" },
+  { key: "lernprofi", label: "Lernprofi", chip: "chip-akzent" },
+];
+const graduierungLabel = (key) => GRADUIERUNGS_STUFEN.find((g) => g.key === key)?.label || "Neustarter";
+const graduierungChip = (key) => GRADUIERUNGS_STUFEN.find((g) => g.key === key)?.chip || "chip-neutral";
+
 /* Notenübersicht eines Schülers / einer Schülerin über alle Fächer */
 function StudentOverviewModal({ student, faecher, grades, finalGrades, halbjahr, onClose }) {
   const facherWithGrades = faecher
@@ -11105,7 +11173,7 @@ function DokumenteAllgemein({ data, update, onClose }) {
 }
 
 /* Eigenständiges Fenster für die Schülerliste einer Klasse – bewusst getrennt von der Klassenübersicht */
-function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, incidents, documents, update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
+function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, incidents, documents, graduierungVerlauf, update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
   const [photoError, setPhotoError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmDeleteZielId, setConfirmDeleteZielId] = useState(null);
@@ -11130,10 +11198,16 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
     try { alter = localStorage.getItem(key); } catch {}
     setBesuchRef(alter || null);
     try { localStorage.setItem(key, isoDate(new Date())); } catch {}
+    setShowGraduierungForm(false);
   }, [selectedStudent]);
   const [newTag, setNewTag] = useState("");
   const [addingTag, setAddingTag] = useState(false);
   const [listSort, setListSort] = useState("name");
+  /* Formular fuer den Graduierungs-Stufenwechsel - haelt beim Oeffnen die
+     aktuelle Stufe/Probe des Kindes als Ausgangswert, damit "Ändern" nicht
+     versehentlich auf Neustarter zurueckspringt. */
+  const [showGraduierungForm, setShowGraduierungForm] = useState(false);
+  const [graduierungDraft, setGraduierungDraft] = useState({ stufe: "neustarter", aufProbe: false, begruendung: "" });
 
   function studentAvg(studentId) {
     const sg = (grades || []).filter((g) => g.studentId === studentId);
@@ -11334,6 +11408,11 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                         <span className="text-sm font-semibold text-stone-900 truncate">{s.name}</span>
                         {mood && <span className="text-base leading-none shrink-0" title={mood.label}>{mood.emoji}</span>}
                       </div>
+                      {/* Graduierungsstufe */}
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        <span className={`chip ${graduierungChip(s.graduierungStufe)}`}>{graduierungLabel(s.graduierungStufe)}</span>
+                        {s.graduierungAufProbe && <span className="chip chip-warn">Auf Probe</span>}
+                      </div>
                       {/* Förderstatus-Chips */}
                       {foerderTagList.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-1">
@@ -11452,6 +11531,28 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
         onUpdateField(s.id, "foerderStatus", next);
         setNewTag("");
         setAddingTag(false);
+      }
+
+      const sGraduierung = (graduierungVerlauf || []).filter((e) => e.studentId === s.id).sort((a, b) => b.datum.localeCompare(a.datum));
+      function graduierungAendern(neueStufe, aufProbe, begruendung) {
+        update((d) => {
+          const student = (d.students || []).find((st) => st.id === s.id);
+          if (!student) return d;
+          d.graduierungVerlauf = d.graduierungVerlauf || [];
+          d.graduierungVerlauf.push({
+            id: uid(),
+            studentId: s.id,
+            datum: isoDate(new Date()),
+            vonStufe: student.graduierungStufe || "neustarter",
+            nachStufe: neueStufe,
+            aufProbe: !!aufProbe,
+            begruendung: begruendung.trim(),
+          });
+          student.graduierungStufe = neueStufe;
+          student.graduierungAufProbe = !!aufProbe;
+          return d;
+        });
+        setShowGraduierungForm(false);
       }
 
       const profileAvg = studentAvg(s.id);
@@ -11657,6 +11758,83 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                         <div className="t-caption mb-0.5">Erziehungsber.</div>
                         <div className="text-xs font-semibold text-stone-800 truncate">{s.parentName || "–"}</div>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Graduierungsmodell - Stufe + "auf Probe" direkt am Kind sichtbar,
+                    mit Verlaufshistorie und Begruendungspflicht bei jeder Aenderung. */}
+                <div className="card p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="t-label">Graduierung</span>
+                    {!showGraduierungForm && (
+                      <button
+                        onClick={() => { setGraduierungDraft({ stufe: s.graduierungStufe || "neustarter", aufProbe: !!s.graduierungAufProbe, begruendung: "" }); setShowGraduierungForm(true); }}
+                        className="text-xs font-semibold akzent-text press-scale"
+                      >
+                        Ändern
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={`chip ${graduierungChip(s.graduierungStufe)}`}>{graduierungLabel(s.graduierungStufe)}</span>
+                    {s.graduierungAufProbe && <span className="chip chip-warn">Auf Probe</span>}
+                  </div>
+
+                  {showGraduierungForm && (
+                    <div className="mt-3 pt-3 border-t border-stone-100 space-y-2.5">
+                      <div className="flex flex-wrap gap-1.5">
+                        {GRADUIERUNGS_STUFEN.map((g) => (
+                          <button
+                            key={g.key}
+                            onClick={() => setGraduierungDraft((d) => ({ ...d, stufe: g.key }))}
+                            className={`chip ${graduierungDraft.stufe === g.key ? g.chip : "chip-neutral"} ${graduierungDraft.stufe === g.key ? "" : "opacity-50"}`}
+                          >
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                      <label className="flex items-center gap-2 text-xs text-stone-600">
+                        <input
+                          type="checkbox"
+                          checked={graduierungDraft.aufProbe}
+                          onChange={(e) => setGraduierungDraft((d) => ({ ...d, aufProbe: e.target.checked }))}
+                        />
+                        Auf Probe
+                      </label>
+                      <textarea
+                        value={graduierungDraft.begruendung}
+                        onChange={(e) => setGraduierungDraft((d) => ({ ...d, begruendung: e.target.value }))}
+                        placeholder="Begründung (Pflichtfeld)…"
+                        className="w-full text-sm p-2.5 rounded-xl border border-stone-200 resize-none"
+                        rows={2}
+                      />
+                      <div className="flex gap-2">
+                        <Button variant="ghost" onClick={() => setShowGraduierungForm(false)} className="flex-1 justify-center">Abbrechen</Button>
+                        <Button
+                          disabled={!graduierungDraft.begruendung.trim()}
+                          onClick={() => graduierungAendern(graduierungDraft.stufe, graduierungDraft.aufProbe, graduierungDraft.begruendung)}
+                          className="flex-1 justify-center"
+                        >
+                          Speichern
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {sGraduierung.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-stone-100 space-y-2">
+                      {sGraduierung.map((e) => (
+                        <div key={e.id} className="text-xs">
+                          <div className="flex items-center gap-1.5 text-stone-700 font-medium">
+                            <span>{localDate(e.datum).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}</span>
+                            <span className="text-stone-400">·</span>
+                            <span>{graduierungLabel(e.vonStufe)} → {graduierungLabel(e.nachStufe)}</span>
+                            {e.aufProbe && <span className="chip chip-warn">Auf Probe</span>}
+                          </div>
+                          {e.begruendung && <div className="text-stone-500 mt-0.5">{e.begruendung}</div>}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -14471,6 +14649,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
       if (d.sitzplaene) delete d.sitzplaene[id];
       d.duties = (d.duties || []).filter((duty) => duty.classId !== id);
+      d.graduierungVerlauf = (d.graduierungVerlauf || []).filter((e) => !studentIds.includes(e.studentId));
       return d;
     });
   }
@@ -14501,6 +14680,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
         if (Array.isArray(duty.log)) duty.log = duty.log.filter((eintrag) => eintrag.studentId !== id);
         if (duty.repeats && id in duty.repeats) delete duty.repeats[id];
       });
+      d.graduierungVerlauf = (d.graduierungVerlauf || []).filter((e) => e.studentId !== id);
       return d;
     });
   }
@@ -15170,6 +15350,7 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
           absences={data.absences || []}
           incidents={data.incidents || []}
           documents={data.documents || []}
+          graduierungVerlauf={data.graduierungVerlauf || []}
           update={update}
           settings={data.settings || {}}
           notenfarben={data.settings?.notenfarben !== false}
