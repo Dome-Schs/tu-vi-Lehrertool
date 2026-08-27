@@ -2992,7 +2992,7 @@ const HELP_DATA = [
     category: "Erste Schritte",
     items: [
       { q: "Wie lege ich eine neue Klasse an?", a: `Tippe unten auf „Klassen" → Reiter „Klassen". Ganz unten unter der Klassenliste steht der Knopf „Neue Klasse" – Namen eingeben, speichern, fertig.` },
-      { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Namensliste als Datei einlesen.` },
+      { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Klassenliste als CSV-Datei (.csv) einlesen – kein PDF und kein Excel/Word direkt, in Excel oder der Schulverwaltung über „Exportieren" bzw. „Speichern unter" als CSV erzeugen. Erkannt werden eine Spalte „Name" oder getrennt „Vorname"/„Nachname" sowie optional „Geburtsdatum".` },
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi beginnt leer – keine Klassen, keine Kinder, keine Termine. Zuerst fragt die App nach deinem Bundesland und trägt die Schulferien ein; das lässt sich mit „Später einrichten" überspringen und in den Einstellungen nachholen. Danach steht auf der Übersicht eine Willkommenskarte mit dem einzigen sinnvollen ersten Schritt: eine Klasse anlegen. Sind Klasse und Kinder da, kommen Fächer und Stundenplan dazu – alles Weitere entsteht im Alltag. Wenn du dich lieber erst umsehen möchtest, kannst du unter „Einstellungen" → „Daten & Sicherung" → „Erweiterte Einstellungen" Beispieldaten laden: zwei erfundene Klassen mit Noten und Terminen. Der Knopf erscheint nur, solange du noch keine eigene Klasse angelegt hast – so kann er nichts überschreiben.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
@@ -9951,6 +9951,17 @@ function FachModal({ data, initial, onSave, onClose }) {
               onFocus={() => setCustomSubject(true)} maxLength={80}
               onChange={(e) => { setCustomSubject(true); setSubject(e.target.value); }}
             />
+            {/* Die Sportzeug-Erfassung (Spalte in der Notenuebersicht,
+                Vergessen-Symbol im Stundenabschluss, Druckvorlagen) haengt
+                rein am Fachnamen ("sport" darin) - es gibt bewusst keinen
+                eigenen Schalter dafuer. Ohne diesen Hinweis wirkte das beim
+                Anlegen unsichtbar, als waere gar nichts passiert. */}
+            {/sport/i.test(subject) && (
+              <p className="text-xs text-stone-500 mt-1.5 flex items-center gap-1">
+                <Check size={12} className="text-[var(--s-gut)] shrink-0" />
+                Als Sport erkannt – Sportzeug-Spalte in der Notenübersicht, das Vergessen-Symbol im Stundenabschluss und die Druckvorlagen sind automatisch dabei.
+              </p>
+            )}
           </Field>
 
           <Field label="Farbe">
@@ -10198,6 +10209,10 @@ function ImportCsvModal({ className, onImport, onClose }) {
 
   function handleFile(file) {
     setError("");
+    if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
+      setError(`„${file.name}" ist keine CSV-Datei. Tu-vi kann nur CSV-Dateien (.csv) einlesen – exportiere die Klassenliste z. B. aus Excel oder der Schulverwaltung als CSV und lade diese Datei hoch.`);
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) { setError("Diese Datei ist zu groß (max. 5 MB). Bitte wähle eine CSV-Exportdatei."); return; }
     const reader = new FileReader();
     reader.onload = () => {
@@ -10256,14 +10271,14 @@ function ImportCsvModal({ className, onImport, onClose }) {
               onClick={() => fileInputRef.current?.click()}
               className="w-full border-2 border-dashed border-stone-300 rounded-xl py-8 text-center text-sm text-stone-500 hover:akzent-rand hover:akzent-text"
             >
-              Klassenliste hochladen
+              CSV-Datei hochladen
             </button>
             <input
               ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
             <p className="text-xs text-stone-400 mt-3">
-              Erwartet eine Kopfzeile, z. B. „Name" oder getrennt „Vorname"/„Nachname". Eine optionale Spalte „Geburtsdatum" (TT.MM.JJJJ) wird automatisch erkannt.
+              Nur CSV-Dateien (.csv) – kein PDF, kein Excel/Word direkt. In Excel oder der Schulverwaltung über „Exportieren" / „Speichern unter" als CSV erzeugen. Erwartet eine Kopfzeile, z. B. „Name" oder getrennt „Vorname"/„Nachname". Eine optionale Spalte „Geburtsdatum" (TT.MM.JJJJ) wird automatisch erkannt.
             </p>
           </div>
         )}
