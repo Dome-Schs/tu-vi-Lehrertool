@@ -3034,7 +3034,7 @@ const HELP_DATA = [
       { q: "Woran sehe ich, ob meine Eingaben gespeichert sind?", a: `Oben links unter dem Namen „Tu-vi" steht der Speicherstand: „Speichert …" während geschrieben wird, danach „Gespeichert". Tu-vi sichert automatisch, kurz nach jeder Änderung – einen Speichern-Knopf gibt es bewusst nicht. Erscheint stattdessen „⚠ Nicht gespeichert" und oben im Inhalt ein roter Balken, ist die Änderung NICHT auf dem Server angekommen. Tu-vi versucht es dann von selbst noch zweimal; im Balken steht zusätzlich „Erneut versuchen". Wichtig: Melde dich in diesem Fall nicht ab, bevor der Balken verschwunden ist – sichere lieber über „Backup erstellen" im selben Balken, dann ist nichts verloren.` },
       { q: "Meine Daten sind nach dem Abmelden weg – was tun?", a: `Dann konnte Tu-vi nicht auf den Server schreiben. Beim Abmelden wird der lokale Stand geleert, weil die Daten auf dem Server liegen – kam dort nichts an, ist die Arbeit weg. Achte deshalb auf den roten Balken „Daten konnten nicht gespeichert werden": Er nennt den genauen Grund und bietet „Erneut versuchen" sowie „Backup erstellen". Tu-vi meldet inzwischen jeden fehlgeschlagenen Schreibvorgang – auch die stillen, die früher fälschlich als „Gespeichert" durchgingen –, und wartet beim Abmelden ab, bis der letzte Stand geschrieben ist. Bleibt der Fehler bestehen, sichere über „Backup erstellen" und melde dich per Mail an die Kontaktadresse unter „Über Tu-vi".` },
       { q: "Warum sehe ich Änderungen vom iPhone nicht am Computer?", a: `Tu-vi speichert alles auf dem Server, nicht im Gerät – die Änderung sollte also nach kurzer Zeit überall auftauchen. Zwei Bedingungen müssen stimmen: Erstens muss auf dem Gerät, an dem du geändert hast, „Gespeichert" stehen (nicht „⚠ Nicht gespeichert"). Zweitens holt das zweite Gerät die Daten beim Anmelden und beim Entsperren – ein bereits offenes Fenster aktualisiert sich nicht von allein. Lade die Seite dort neu oder sperre und entsperre die App, dann ist der neue Stand da.` },
-      { q: `Was bedeutet „Anderes Gerät hat gespeichert"?`, a: `Das erscheint, wenn du auf zwei Geräten fast gleichzeitig gearbeitet hast – zum Beispiel iPhone und Computer beide offen, auf beiden etwas geändert. Tu-vi erkennt das und pausiert das Speichern auf diesem Gerät, statt den anderen Stand stillschweigend zu überschreiben. Ein Balken bietet zwei Wege: „Anderen Stand übernehmen" lädt, was auf dem anderen Gerät gespeichert wurde – deine eigenen Änderungen seit dem Konflikt gehen dabei verloren. „Meine Version behalten" überschreibt stattdessen den anderen Stand, nach einer Sicherheitsabfrage, weil dabei dessen Änderungen verloren gehen. Am einfachsten vermeidest du das, indem du nicht auf zwei Geräten gleichzeitig arbeitest.` },
+      { q: `Was bedeutet „Anderes Gerät hat gespeichert"?`, a: `Das erscheint, wenn du auf zwei Geräten fast gleichzeitig gearbeitet hast – zum Beispiel iPhone und Computer beide offen, auf beiden etwas geändert. Tu-vi erkennt das und pausiert das Speichern auf diesem Gerät, statt den anderen Stand stillschweigend zu überschreiben. Ein Balken bietet zwei Wege, beide mit Sicherheitsabfrage, weil in beiden Fällen etwas verloren geht: „Änderungen vom anderen Gerät laden" holt, was dort gespeichert wurde – was du hier seit dem Konflikt eingegeben hast, ist danach weg. „Auf diesem Gerät weiterarbeiten" macht es umgekehrt: was auf dem anderen Gerät seither eingegeben wurde, ist danach weg. Am einfachsten vermeidest du das, indem du nicht auf zwei Geräten gleichzeitig arbeitest.` },
       { q: "Wie erstelle ich ein Backup?", a: `Gehe zu „Mehr" → „Einstellungen" → „Daten & Sicherung". Dort erscheint zuerst ein kurzer Datenschutz-Hinweis, den du bestätigst. Danach: „Sichern" legt die Datei im Download-Ordner ab, „Teilen" öffnet die Teilen-Ansicht (z. B. für „In Dateien sichern" oder AirDrop). Wichtig: abgelegte Dokumente sind darin nicht enthalten – die brauchen eine eigene Sicherung, direkt darunter unter „Dokumente sichern".` },
       { q: "Wie lege ich ein Dokument bei einem Kind ab?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → Kind antippen → im Profil auf den Reiter „Mehr". Ganz unten steht „Dokumente" mit zwei Knöpfen: „Foto" öffnet direkt die Kamera – ideal, um eine Entschuldigung abzufotografieren. „Datei" öffnet die Dateien-App, dort wählst du ein PDF oder ein vorhandenes Bild. Fotos werden automatisch verkleinert, damit sie wenig Platz brauchen. Ein Tipp auf einen Eintrag öffnet ihn, das Papierkorb-Symbol löscht ihn.` },
       { q: "Kann ich Dokumente auch bei einer Klasse, einem Fach oder ganz allgemein ablegen?", a: `Ja. Im Klassen-Dashboard (Klasse antippen → „Überblick" → „Klassen-Dashboard") liegt ganz unten die Ablage für die ganze Klasse – etwa Sitzplan oder Elternbrief. In der Notenübersicht eines Fachs (Noten → Klasse → Fach) findest du dieselbe Ablage für Arbeitsblätter oder Lösungen. Für alles ohne festen Bezug – Konferenzprotokolle, Formulare, Schulordnung – gibt es unter „Mehr" → „Dokumente" einen eigenen allgemeinen Bereich. Dort steht auch eine durchsuchbare Liste aller abgelegten Dokumente, egal wo sie hängen.` },
@@ -4667,6 +4667,11 @@ export default function App() {
   const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error | conflict
   const [saveErrorMsg, setSaveErrorMsg] = useState(null);
   const [saveConflict, setSaveConflict] = useState(null); // { serverData, serverUpdatedAt } | null
+  /* Beide Wege aus einem Konflikt verwerfen die Arbeit einer Seite - das
+     eine Mal die eigene, das andere Mal die vom anderen Geraet. Beide
+     verdienen dieselbe Rueckfrage; fehlte sie bei einer der beiden, waere
+     genau die der leichtere Weg zum stillen Datenverlust. */
+  const [confirmUebernehmen, setConfirmUebernehmen] = useState(false);
   const [confirmUeberschreiben, setConfirmUeberschreiben] = useState(false);
   const [halbjahr, setHalbjahr] = useState(currentHalbjahr());
 
@@ -5781,7 +5786,12 @@ export default function App() {
               <div className="flex-1 min-w-0">
                 <p className="text-red-800 font-medium">Daten konnten nicht gespeichert werden</p>
                 <p className="text-red-700 text-xs mt-1">Änderungen gehen beim Abmelden verloren. Bitte erstelle sicherheitshalber ein Backup.</p>
-                {saveErrorMsg && <p className="text-red-500 text-[10px] mt-1 font-mono break-all">{saveErrorMsg}</p>}
+                {saveErrorMsg && (
+                  <details className="mt-1.5">
+                    <summary className="text-red-600 text-[11px] cursor-pointer select-none">Technische Details (für die Fehlersuche)</summary>
+                    <p className="text-red-500 text-[10px] mt-1 font-mono break-all">{saveErrorMsg}</p>
+                  </details>
+                )}
               </div>
               <div className="flex flex-col gap-1.5 shrink-0">
                 <button onClick={() => { dirtyRef.current = true; flushSave(); }} className="text-xs font-medium text-red-700 hover:text-red-900 underline underline-offset-2">Erneut versuchen</button>
@@ -5793,26 +5803,34 @@ export default function App() {
             <div className="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
               <span className="text-amber-600 shrink-0 mt-0.5">⚠</span>
               <div className="flex-1 min-w-0">
-                <p className="text-amber-900 font-medium">Auf einem anderen Gerät wurde zwischenzeitlich gespeichert</p>
+                <p className="text-amber-900 font-medium">Du hast auf einem anderen Gerät ({relativeZeitpunkt(saveConflict.serverUpdatedAt)}) etwas gespeichert</p>
                 <p className="text-amber-800 text-xs mt-1">
-                  Zuletzt dort gespeichert: {new Date(saveConflict.serverUpdatedAt).toLocaleString("de-DE")}. Speichern ist pausiert, damit hier nichts stillschweigend überschrieben wird.
+                  Hier wurde inzwischen ebenfalls etwas geändert. Beides zusammen geht nicht – wähle, was gilt:
                 </p>
               </div>
               <div className="flex flex-col gap-1.5 shrink-0">
-                <button onClick={conflictUebernehmen} className="text-xs font-medium text-amber-800 hover:text-amber-950 underline underline-offset-2">Anderen Stand übernehmen</button>
-                <button onClick={() => setConfirmUeberschreiben(true)} className="text-xs font-medium text-amber-800 hover:text-amber-950 underline underline-offset-2">Meine Version behalten</button>
+                <button onClick={() => setConfirmUebernehmen(true)} className="text-xs font-medium text-amber-800 hover:text-amber-950 underline underline-offset-2">Änderungen vom anderen Gerät laden</button>
+                <button onClick={() => setConfirmUeberschreiben(true)} className="text-xs font-medium text-amber-800 hover:text-amber-950 underline underline-offset-2">Auf diesem Gerät weiterarbeiten</button>
               </div>
             </div>
           )}
           <ConfirmDialog
+            open={confirmUebernehmen}
+            title="Änderungen vom anderen Gerät laden?"
+            message="Was du hier auf diesem Gerät seit eben eingegeben hast, geht dabei verloren."
+            confirmLabel="Laden"
+            onConfirm={() => { setConfirmUebernehmen(false); conflictUebernehmen(); }}
+            onCancel={() => setConfirmUebernehmen(false)}
+          />
+          <ConfirmDialog
             open={confirmUeberschreiben}
-            title="Wirklich die eigene Version behalten?"
-            message="Was seit dem letzten Speichern auf dem anderen Gerät geändert wurde, wird damit überschrieben und ist danach weg."
-            confirmLabel="Überschreiben"
+            title="Auf diesem Gerät weiterarbeiten?"
+            message="Was auf dem anderen Gerät seither eingegeben wurde, geht dabei verloren."
+            confirmLabel="Weiterarbeiten"
             onConfirm={() => { setConfirmUeberschreiben(false); conflictUeberschreiben(); }}
             onCancel={() => setConfirmUeberschreiben(false)}
           />
-          {backupReminderDays !== null && (
+          {backupReminderDays !== null && !saveConflict && saveState !== "error" && (
             <div className="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
               <Download size={16} className="text-amber-600 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -6238,6 +6256,18 @@ function addDays(d, n) {
 function isoDate(d) {
   const p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+/* Fuer den Geraete-Konflikt: der Zeitpunkt liegt fast immer Minuten zurueck,
+   nicht Tage - eine sekundengenaue Uhrzeit ("10:42:13 Uhr") liest niemand in
+   den paar Sekunden, in denen ueber "Anderen Stand uebernehmen" oder
+   "Meine Version behalten" entschieden wird. */
+function relativeZeitpunkt(iso) {
+  const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diffMin < 1) return "gerade eben";
+  if (diffMin < 60) return `vor ${diffMin} Min.`;
+  const diffStd = Math.round(diffMin / 60);
+  if (diffStd < 24) return `vor ${diffStd} Std.`;
+  return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 // Parst reine YYYY-MM-DD-Strings als lokale Mitternacht statt UTC, verhindert Vortagsanzeige in UTC+1/+2
 function localDate(str) {
@@ -12869,7 +12899,7 @@ function DiensteTab({ data, update }) {
       <ConfirmDialog
         open={!!confirmDeleteDutyId}
         title="Dienst wirklich löschen?"
-        message={`Die Einteilung und der bisherige Verlauf von „${duties.find((d) => d.id === confirmDeleteDutyId)?.name || ""}" gehen dabei unwiderruflich verloren.`}
+        message={`Die Einteilung und der bisherige Verlauf von „${duties.find((d) => d.id === confirmDeleteDutyId)?.name || ""}" gehen dabei verloren. Anders als bei Notizen und Gesprächen gibt es dafür keinen Papierkorb.`}
         confirmLabel="Löschen"
         onConfirm={() => { deleteDuty(confirmDeleteDutyId); setConfirmDeleteDutyId(null); }}
         onCancel={() => setConfirmDeleteDutyId(null)}
@@ -17699,7 +17729,7 @@ function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, o
       <ConfirmDialog
         open={!!confirmDeleteGradeId}
         title="Note wirklich löschen?"
-        message={`Die Note von ${students.find((s) => s.id === termin.noten.find((g) => g.id === confirmDeleteGradeId)?.studentId)?.name || "diesem Kind"} ist danach unwiderruflich weg.`}
+        message={`Die Note von ${students.find((s) => s.id === termin.noten.find((g) => g.id === confirmDeleteGradeId)?.studentId)?.name || "diesem Kind"} ist danach weg. Anders als bei Notizen und Gesprächen gibt es dafür keinen Papierkorb.`}
         confirmLabel="Löschen"
         onConfirm={() => { entferneNote(confirmDeleteGradeId); setConfirmDeleteGradeId(null); }}
         onCancel={() => setConfirmDeleteGradeId(null)}
@@ -18775,7 +18805,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                     <ConfirmDialog
                       open={!!confirmDeleteGradeId}
                       title="Note wirklich löschen?"
-                      message={`Die Note von ${student.name} ist danach unwiderruflich weg.`}
+                      message={`Die Note von ${student.name} ist danach weg. Anders als bei Notizen und Gesprächen gibt es dafür keinen Papierkorb.`}
                       confirmLabel="Löschen"
                       onConfirm={() => { removeGrade(confirmDeleteGradeId); setConfirmDeleteGradeId(null); setEditingGrade(null); }}
                       onCancel={() => setConfirmDeleteGradeId(null)}
