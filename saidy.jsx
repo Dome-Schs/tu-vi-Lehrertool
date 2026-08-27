@@ -83,7 +83,7 @@ const QUICK_SYMBOLS = [
    Dateien selbst liegen in IndexedDB. So bleibt die normale Datensicherung
    klein, und nach dem Wiederherstellen auf einem neuen Geraet ist wenigstens
    sichtbar, welche Unterlagen es gab. */
-const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false } };
+const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false } };
 
 /* Sortierbar sind nur die Karten im unteren Raster.
    Fest sitzen: „Unterricht" als Hauptkarte sowie die Dreierreihe aus Terminen,
@@ -982,6 +982,31 @@ function sanitizeVollstaendig(imported) {
       aufProbe: e.aufProbe === true,
       begruendung: kurz(e.begruendung, 500) || "",
     }));
+
+  /* subjectColors und periodTimes liefen bisher am rohen Spread vorbei durch -
+     funktional harmlos (landen nur in style={{backgroundColor}} bzw. als
+     Uhrzeit), aber inkonsistent zum sonst strikten Sanitize-Muster dieser
+     Funktion und ein potenzieller Stolperstein bei kuenftigen Aenderungen
+     an der Verwendung dieser Felder. */
+  merged.subjectColors = (merged.subjectColors && typeof merged.subjectColors === "object" && !Array.isArray(merged.subjectColors))
+    ? Object.fromEntries(
+        Object.entries(merged.subjectColors)
+          .filter(([name]) => typeof name === "string" && name.length <= 80)
+          .map(([name, farbe]) => [name, S_FARBE(farbe)])
+          .filter(([, farbe]) => farbe)
+      )
+    : {};
+
+  merged.periodTimes = (merged.periodTimes && typeof merged.periodTimes === "object" && !Array.isArray(merged.periodTimes))
+    ? Object.fromEntries(
+        Object.entries(merged.periodTimes)
+          .filter(([period]) => /^[1-9][0-9]?$/.test(period))
+          .map(([period, zeit]) => [period, {
+            start: S_ZEIT(zeit?.start) || "08:00",
+            end: S_ZEIT(zeit?.end) || "08:45",
+          }])
+      )
+    : {};
 
   return { daten: merged, gekuerzt };
 }
@@ -5333,8 +5358,9 @@ export default function App() {
        werden - bestmoeglich, der Metadaten-Eintrag verschwindet in jedem Fall. */
     const expiredStudentIdsVorab = data.students.filter((s) => s.deletedAt && new Date(s.deletedAt).getTime() < cutoff).map((s) => s.id);
     const expiredClassIdsVorab = data.classes.filter((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff).map((c) => c.id);
+    const expiredFachIdsVorab = (data.faecher || []).filter((f) => expiredClassIdsVorab.includes(f.classId)).map((f) => f.id);
     const expiredDokIds = (data.documents || [])
-      .filter((doc) => (doc.scope === "student" && expiredStudentIdsVorab.includes(doc.scopeId)) || (doc.scope === "class" && expiredClassIdsVorab.includes(doc.scopeId)))
+      .filter((doc) => (doc.scope === "student" && expiredStudentIdsVorab.includes(doc.scopeId)) || (doc.scope === "class" && expiredClassIdsVorab.includes(doc.scopeId)) || (doc.scope === "fach" && expiredFachIdsVorab.includes(doc.scopeId)))
       .map((doc) => doc.id);
     expiredDokIds.forEach((did) => { docLoeschen(did).catch(() => {}); });
     update((d) => {
@@ -5343,6 +5369,7 @@ export default function App() {
       }
       const expiredStudentIds = d.students.filter((s) => s.deletedAt && new Date(s.deletedAt).getTime() < cutoff).map((s) => s.id);
       const expiredClassIds = d.classes.filter((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff).map((c) => c.id);
+      const expiredFachIds = (d.faecher || []).filter((f) => expiredClassIds.includes(f.classId)).map((f) => f.id);
       d.students = d.students.filter((s) => !s.deletedAt || new Date(s.deletedAt).getTime() >= cutoff);
       d.classes = d.classes.filter((c) => !c.deletedAt || new Date(c.deletedAt).getTime() >= cutoff);
       d.notes = d.notes.filter((n) => {
@@ -5356,6 +5383,9 @@ export default function App() {
       d.foerderZiele = (d.foerderZiele || []).filter((z) => !expiredStudentIds.includes(z.studentId));
       d.documents = (d.documents || []).filter((doc) => !expiredDokIds.includes(doc.id));
       d.graduierungVerlauf = (d.graduierungVerlauf || []).filter((e) => !expiredStudentIds.includes(e.studentId));
+      d.faecher = (d.faecher || []).filter((f) => !expiredClassIds.includes(f.classId));
+      d.timetable = (d.timetable || []).filter((t) => !expiredFachIds.includes(t.fachId) && !expiredClassIds.includes(t.classId));
+      d.lessonTopics = (d.lessonTopics || []).filter((t) => !expiredFachIds.includes(t.fachId));
       expiredClassIds.forEach((cid) => { if (d.sitzplaene) delete d.sitzplaene[cid]; });
       d.duties = (d.duties || []).filter((duty) => !expiredClassIds.includes(duty.classId));
       (d.duties || []).forEach((duty) => {
@@ -10407,7 +10437,7 @@ const graduierungLabel = (key) => GRADUIERUNGS_STUFEN.find((g) => g.key === key)
 const graduierungChip = (key) => GRADUIERUNGS_STUFEN.find((g) => g.key === key)?.chip || "chip-neutral";
 
 /* Notenübersicht eines Schülers / einer Schülerin über alle Fächer */
-function StudentOverviewModal({ student, faecher, grades, finalGrades, halbjahr, onClose }) {
+function StudentOverviewModal({ student, faecher, grades, finalGrades, halbjahr, colored, onClose }) {
   const facherWithGrades = faecher
     .filter((f) => grades.some((g) => g.studentId === student.id && g.fachId === f.id))
     .sort((a, b) => a.subject.localeCompare(b.subject, "de"));
@@ -10436,7 +10466,7 @@ function StudentOverviewModal({ student, faecher, grades, finalGrades, halbjahr,
                 const gradeCount = fachGrades.length;
                 return (
                   <li key={fach.id} className="py-3 flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: fach.color ?? "#8E8E93" }} />
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colored && fach.color ? fach.color : "#8E8E93" }} />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-stone-800 truncate">{fach.subject}</div>
                       <div className="text-xs text-stone-400">{gradeCount} {gradeCount === 1 ? "Note" : "Noten"}</div>
@@ -10444,7 +10474,7 @@ function StudentOverviewModal({ student, faecher, grades, finalGrades, halbjahr,
                     <div className="text-right shrink-0">
                       {avg != null ? (
                         <>
-                          <div className={`font-semibold text-sm ${gradeColor(avg)}`}>{gradeLabel(avg)}</div>
+                          <div className={`font-semibold text-sm ${gradeColor(avg, colored)}`}>{gradeLabel(avg)}</div>
                           {finalGrade && (
                             <div className="text-[11px] text-stone-400">Zeugnis: {gradeLabel(finalGrade.value)}</div>
                           )}
@@ -11275,9 +11305,16 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
     return total / factors;
   }
 
+  /* Dieselbe Regel wie im Noten-Tab (isColor && notenfarben) - Notenfarben
+     sind Teil des Farb-Modus, nicht ein davon unabhaengiger Schalter. Diese
+     lokale Fassung pruefte bisher nur notenfarben und ignorierte den
+     Farb-Modus komplett - dieselbe Note sah dadurch im Schuelerprofil
+     farbig, im Noten-Tab aber grau aus, obwohl beide denselben
+     Einstellungs-Stand hatten. */
+  const isColor = settings?.colorMode === true;
   function gradeColor(avg) {
     if (avg == null) return "text-stone-300";
-    if (notenfarben === false) return "text-stone-700";
+    if (!isColor || notenfarben === false) return "text-stone-700";
     if (avg <= 2.5) return "text-[var(--s-gut)]";
     if (avg <= 3.5) return "text-[var(--s-warn)]";
     return "text-[var(--s-krit)]";
@@ -14691,8 +14728,13 @@ function KlassenFusszeile({ rohdaten: data, update }) {
      personenbezogene Reste trotz der Zusage im Bestaetigungsdialog. */
   async function hardDeleteClass(id) {
     const studentIds = data.students.filter((s) => s.classId === id).map((s) => s.id);
+    /* Faecher der Klasse gehoeren mit zur Loeschung - sonst bleiben Fach,
+       Stundenplan-Slots, Stundenthemen und fachbezogene Dokumente als
+       Karteileichen liegen und die Klasse "spukt" z.B. im Morgen-Briefing
+       weiter, solange sie noch im 30-Tage-Papierkorb liegt. */
+    const fachIds = (data.faecher || []).filter((f) => f.classId === id).map((f) => f.id);
     const dokIds = (data.documents || [])
-      .filter((doc) => (doc.scope === "student" && studentIds.includes(doc.scopeId)) || (doc.scope === "class" && doc.scopeId === id))
+      .filter((doc) => (doc.scope === "student" && studentIds.includes(doc.scopeId)) || (doc.scope === "class" && doc.scopeId === id) || (doc.scope === "fach" && fachIds.includes(doc.scopeId)))
       .map((doc) => doc.id);
     await Promise.all(dokIds.map((did) => docLoeschen(did).catch(() => {})));
     update((d) => {
@@ -14708,6 +14750,9 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       if (d.sitzplaene) delete d.sitzplaene[id];
       d.duties = (d.duties || []).filter((duty) => duty.classId !== id);
       d.graduierungVerlauf = (d.graduierungVerlauf || []).filter((e) => !studentIds.includes(e.studentId));
+      d.faecher = d.faecher.filter((f) => f.classId !== id);
+      d.timetable = (d.timetable || []).filter((t) => !fachIds.includes(t.fachId) && t.classId !== id);
+      d.lessonTopics = (d.lessonTopics || []).filter((t) => !fachIds.includes(t.fachId));
       return d;
     });
   }
@@ -15442,6 +15487,7 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
             grades={data.grades}
             finalGrades={data.finalGrades}
             halbjahr={halbjahr}
+            colored={data.settings?.colorMode === true && data.settings?.notenfarben !== false}
             onClose={() => setOverviewStudentId(null)}
           />
         );
@@ -15683,10 +15729,22 @@ function FaecherTab({ data, update, onOpenFach }) {
     setEditingFach(null);
   }
 
-  function deleteFach(id) {
+  async function deleteFach(id) {
+    /* Ein einzelnes Fach loeschen darf dieselben Reste hinterlassen wie das
+       Loeschen einer ganzen Klasse verhindert - Noten, Zeugnisnoten,
+       Vorfaelle, Stundenthemen und fachbezogene Dokumente haengen sonst mit
+       einem toten fachId weiter im Datensatz (Backup, Supabase), obwohl sie
+       nirgendwo mehr angezeigt werden. */
+    const dokIds = (data.documents || []).filter((doc) => doc.scope === "fach" && doc.scopeId === id).map((doc) => doc.id);
+    await Promise.all(dokIds.map((did) => docLoeschen(did).catch(() => {})));
     update((d) => {
       d.faecher = d.faecher.filter((f) => f.id !== id);
       d.timetable = d.timetable.filter((t) => t.fachId !== id);
+      d.grades = d.grades.filter((g) => g.fachId !== id);
+      d.finalGrades = (d.finalGrades || []).filter((fg) => fg.fachId !== id);
+      d.incidents = (d.incidents || []).filter((i) => i.fachId !== id);
+      d.lessonTopics = (d.lessonTopics || []).filter((t) => t.fachId !== id);
+      d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
       return d;
     });
   }
