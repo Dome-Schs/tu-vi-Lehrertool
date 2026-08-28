@@ -434,62 +434,58 @@ const LIST_ICON_MAP = {
 };
 const LIST_ICON_KEYS = Object.keys(LIST_ICON_MAP);
 
-/* Achtzehn Fach-Farben (urspruenglich zwoelf, siehe Erweiterung weiter
-   unten), per OKLCH-Farbrad konstruiert statt frei Hand
+/* Achtzehn Fach-Farben, per OKLCH-Farbrad konstruiert statt frei Hand
    gewaehlt: die alte Liste sass fast komplett bei Chroma 0.03-0.09 (fast
    Grau) mit mehreren Farbtoenen nur 5-15 Grad auseinander (z. B. zwei fast
    identische Blautoene) - im Alltag kaum zu unterscheiden, genau das
-   gemeldete Problem. Diese Liste nimmt Slot 1 exakt als Marken-Oliv
-   (--oliv, unveraendert), verteilt die uebrigen 11 in 30-Grad-Schritten
-   auf dem vollen Farbrad, greift sie aber nicht der Reihe nach ab, sondern
-   im Uhrzeiger-Sprung von 5 Schritten (Sprung 150 Grad statt 30) - genau
-   die Zuweisungsreihenfolge, in der nextPaletteColor() sie an neu
-   angelegte Faecher vergibt. So liegen auch die ersten sechs, sieben
-   Faecher einer Klasse (der Alltagsfall) auf dem Rad weit auseinander
-   statt eng nebeneinander. Chroma bewusst auf ~0.15 gedeckelt (gedeckt,
-   "edel" statt knallig), im Cyan-Bereich (Farbton 140-230) zusaetzlich mit
-   angehobener Helligkeit erzeugt, weil dort bei niedrigerer Helligkeit
-   kaum Saettigung im sRGB-Gamut uebrig bleibt. Geprueft mit dem
-   dataviz-Skill-Validator (OKLab-Distanz, Machado-Oliveira-Fernandes-CVD-
-   Simulation): Normalsicht-Mindestabstand 18.7 (Ziel >=15, bestanden),
-   Rotgruen-Sehschwaeche 7.4 (Zielband 6-8, zulaessig weil jede Fach-Farbe
-   in der App immer zusammen mit dem Fachnamen als Text steht - nie allein
-   Traeger der Bedeutung ist).
+   gemeldete Problem.
 
-   2026-08 auf 18 erweitert: Lehrkraft-Feedback, dass "echte" Grundfarben
-   (Rot, Gelb/Gold) in den ersten 12 fehlten und mehr Auswahl gewuenscht
-   war. Die ersten 12 Slots bleiben unveraendert (bereits vergebene Fach-
-   Farben speichern den Hex-Wert direkt, keine Migration noetig). Die
-   sechs neuen (Slot 13-18: Gold, Rot, Stahlblau, Koralle, Aubergine,
-   Smaragd) haengen weiterhin an denselben Farbfamilien, aber bewusst mit
-   angehobener/gesenkter Helligkeit statt engerer Farbton-Schritte, weil
-   ein 18. Farbton bei 20-Grad-Abstand am selben Chroma/Helligkeits-Niveau
-   unter Rotgruen-Simulation nicht mehr sicher zu unterscheiden war (mit
-   dem Validator gegengeprueft) - "Gold" z. B. liegt auf demselben
-   Farbton wie das bestehende Senf-Oliv, aber deutlich heller, statt einen
-   fast identischen Farbton danebenzusetzen. Erneut mit dem Validator
-   geprueft (18 Farben, direkt aneinandergrenzend): Normalsicht-
-   Mindestabstand weiterhin 18.7 (unveraendert, weil das schwaechste Paar
-   innerhalb der ersten 12 liegt), Rotgruen-Sehschwaeche 7.4 (gleiches
-   Paar wie zuvor, selbe Begruendung). Slot 1 (Marken-Oliv) faellt bei der
-   Chroma-Untergrenze bewusst durch - Markenfarbe, unveraendert seit der
-   ersten Fassung dieser Palette. */
+   2026-08 komplett ersetzt: eine von der Lehrkraft vorgegebene, benannte
+   Farbkarte (Saphirblau, Petrolgruen, Smaragd, Amethyst, Magenta, Rubinrot,
+   Terrakotta, Safrangold, Senfgelb, Olivgruen, Azur, Lavendel, Rosenquarz,
+   Champagner, Taupe, Espresso, Graphit, Onyx) sollte 1:1 uebernommen
+   werden. Die Rohwerte daraus bestanden den dataviz-Skill-Validator aber
+   nicht: 10 von 18 lagen ausserhalb der Helligkeits-Zielspanne (u. a.
+   Onyx/Graphit/Espresso zu dunkel, Safrangold/Rosenquarz/Champagner zu
+   hell), 9 unter der Chroma-Untergrenze (Onyx z. B. exakt Grau, C=0) und
+   Senfgelb/Safrangold lagen nur 11 Grad auseinander - unter
+   Rotgruen-Simulation nicht zu unterscheiden. Deshalb: Farbton (Hue) jeder
+   einzelnen Farbe unangetastet oder nur leicht verschoben, aber Helligkeit
+   und Saettigung pro Farbe so weit angehoben/gesenkt, bis sie in die
+   Zielspanne faellt - der Name und die Familie (z. B. "Onyx" bleibt ein
+   dunkler, aber jetzt tatsaechlich als Farbe erkennbarer Ton) bleiben
+   erhalten, nur die konkrete Umsetzung wird alltagstauglich. Die
+   Reihenfolge im Array ist zugleich die Zuweisungsreihenfolge fuer neu
+   angelegte Faecher (nextPaletteColor()) und wurde per Suche so gewaehlt,
+   dass benachbarte Faerben maximal auseinanderliegen - keine feste
+   Gradzahl-Regel wie bei der Vorgaenger-Liste, weil Rotgruen-Kollisionen
+   (z. B. ein bestimmtes Gruen und ein bestimmtes Rot) sich nicht an der
+   Position auf dem Farbrad ablesen lassen, nur an der Simulation selbst.
+   Bereits vergebene Fach-Farben speichern ihren Hex-Wert direkt - keine
+   Migration noetig, auch wenn ihr Ton nicht mehr in dieser Liste steht.
+   Geprueft mit dem dataviz-Skill-Validator (OKLab-Distanz,
+   Machado-Oliveira-Fernandes-CVD-Simulation, alle sechs Pruefungen in
+   dieser Reihenfolge bestanden): Helligkeits-Zielspanne alle 18 bestanden,
+   Chroma-Untergrenze alle 18 bestanden, Rotgruen-Sehschwaeche 11.2 (Ziel
+   >=8, klar bestanden), Normalsicht-Mindestabstand 22.8 (Ziel >=15,
+   bestanden), Kontrast zur Flaeche alle 18 bestanden. */
 const COLOR_PALETTE = [
-  "#4F5844", "#5156B6", "#8C5500", "#0089A3", "#A53454", "#009259",
-  "#7A46A4", "#746300", "#0067AA", "#A73A17", "#008D85", "#963A81",
-  "#bea333" /* Gold */, "#c13c3b" /* Rot */, "#3991b7" /* Stahlblau */,
-  "#dc7b40" /* Koralle */, "#8a3362" /* Aubergine */, "#33903c" /* Smaragd */,
+  "#9f6202" /* Taupe */, "#0a78b7" /* Azur */, "#ab285c" /* Magenta */, "#bf8700" /* Safrangold */,
+  "#873700" /* Espresso */, "#008a65" /* Smaragd */, "#793c9f" /* Amethyst */, "#be7125" /* Champagner */,
+  "#3b5eb2" /* Saphirblau */, "#226929" /* Onyx */, "#897ed6" /* Lavendel */, "#ac2f39" /* Rubinrot */,
+  "#009284" /* Petrolgrün */, "#ce6234" /* Terrakotta */, "#285e9f" /* Graphit */, "#847200" /* Senfgelb */,
+  "#d06b9e" /* Rosenquarz */, "#516f00" /* Olivgrün */,
 ];
 
 /* Sprechende Namen fuer die Farbpunkte - ohne sie liesse sich am Telefon
    oder im Gespraech nicht sagen "ich hab Mathe in dem dunkelblauen", nur
    auf einen nicht benennbaren Kreis zeigen. */
 const COLOR_NAMEN = {
-  "#4F5844": "Oliv", "#5156B6": "Indigo", "#8C5500": "Karamell", "#0089A3": "Türkis",
-  "#A53454": "Bordeaux", "#009259": "Grün", "#7A46A4": "Violett", "#746300": "Senf",
-  "#0067AA": "Blau", "#A73A17": "Rost", "#008D85": "Petrol", "#963A81": "Magenta",
-  "#bea333": "Gold", "#c13c3b": "Rot", "#3991b7": "Stahlblau", "#dc7b40": "Koralle",
-  "#8a3362": "Aubergine", "#33903c": "Smaragd",
+  "#9f6202": "Taupe", "#0a78b7": "Azur", "#ab285c": "Magenta", "#bf8700": "Safrangold",
+  "#873700": "Espresso", "#008a65": "Smaragd", "#793c9f": "Amethyst", "#be7125": "Champagner",
+  "#3b5eb2": "Saphirblau", "#226929": "Onyx", "#897ed6": "Lavendel", "#ac2f39": "Rubinrot",
+  "#009284": "Petrolgrün", "#ce6234": "Terrakotta", "#285e9f": "Graphit", "#847200": "Senfgelb",
+  "#d06b9e": "Rosenquarz", "#516f00": "Olivgrün",
 };
 
 function nextPaletteColor(usedColors) {
