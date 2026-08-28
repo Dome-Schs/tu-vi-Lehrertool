@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Papa from "papaparse";
 import { createClient } from "@supabase/supabase-js";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+/* Als Roh-Text importiert statt vom Netz geladen - Vite bettet den String
+   direkt ins Bundle ein (Single-File-Build), zur Laufzeit wird daraus ein
+   Blob-Worker gebaut. So bleibt es bei "Tu-vi sendet nichts nach aussen":
+   kein separater Worker-Request, kein CDN. */
+import pdfWorkerSrc from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?raw";
+pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([pdfWorkerSrc], { type: "text/javascript" }));
 
 const supabase = createClient(
   "https://jroaqcucjczmbqyjfsie.supabase.co",
@@ -559,6 +566,53 @@ function parseFlexibleDate(str) {
     return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
   return null;
+}
+
+/* Klassenlisten aus Schulverwaltungsprogrammen sind fast immer eine
+   nummerierte Tabelle "Nr. Nachname, Vorname" - eine PDF speichert dabei
+   pro Textblock nur Zeichenkette + Position, keine Tabellenstruktur. Der
+   Trick: alle Textstuecke einer Seite nach Y-Position (Zeile) gruppieren,
+   innerhalb der Zeile nach X sortieren (Leserichtung), dann nur Zeilen
+   behalten, die dem Zeilennummer+Name-Muster entsprechen - Kopf-/Fusszeilen
+   ("Schülerliste der Klasse 5c", "Seite 1") haben weder Nummer noch Komma
+   und fallen so von selbst raus, ganz ohne die Datei layoutspezifisch zu
+   kennen.
+   Rueckgabe: eine synthetische CSV-Zeichenkette ("Nachname,Vorname\n...")
+   fuer denselben Papa.parse-Weg wie ein echter CSV-Import, oder null wenn
+   nichts Passendes gefunden wurde (z. B. eine gescannte/fotografierte
+   Liste ohne auslesbaren Text - dafuer braeuchte es Texterkennung/OCR,
+   die dieser einfache Weg bewusst nicht leistet). */
+async function extractStudentCsvFromPdf(arrayBuffer) {
+  const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+  const zeilen = [];
+  for (let seite = 1; seite <= doc.numPages; seite++) {
+    const page = await doc.getPage(seite);
+    const content = await page.getTextContent();
+    const proZeile = new Map();
+    for (const item of content.items) {
+      const y = Math.round(item.transform[5]);
+      if (!proZeile.has(y)) proZeile.set(y, []);
+      proZeile.get(y).push(item);
+    }
+    const sortiert = [...proZeile.entries()].sort((a, b) => b[0] - a[0]);
+    for (const [, teile] of sortiert) {
+      const text = teile
+        .sort((a, b) => a.transform[4] - b.transform[4])
+        .map((t) => t.str)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (text) zeilen.push(text);
+    }
+  }
+  const namen = zeilen
+    .map((z) => z.match(/^(\d{1,3})[.)​:]?\s+(.+?),\s*(.+)$/))
+    .filter(Boolean)
+    .map((m) => [m[2].trim().slice(0, 80), m[3].trim().slice(0, 80)])
+    .filter(([nach, vor]) => nach && vor);
+  if (!namen.length) return null;
+  const zeile = (nach, vor) => `"${nach.replace(/"/g, '""')}","${vor.replace(/"/g, '""')}"`;
+  return ["Nachname,Vorname", ...namen.map(([nach, vor]) => zeile(nach, vor))].join("\n");
 }
 
 function tendencyInfo(avg) {
@@ -3038,7 +3092,7 @@ const HELP_DATA = [
     category: "Erste Schritte",
     items: [
       { q: "Wie lege ich eine neue Klasse an?", a: `Tippe unten auf „Klassen" → Reiter „Klassen". Ganz unten unter der Klassenliste steht der Knopf „Neue Klasse" – Namen eingeben, speichern, fertig.` },
-      { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Klassenliste als CSV-Datei (.csv) einlesen – kein PDF und kein Excel/Word direkt, in Excel oder der Schulverwaltung über „Exportieren" bzw. „Speichern unter" als CSV erzeugen. Erkannt werden eine Spalte „Name" oder getrennt „Vorname"/„Nachname" sowie optional „Geburtsdatum".` },
+      { q: "Wie füge ich Schüler:innen hinzu?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen". Oben rechts in der Liste sitzt „Hinzufügen": entweder einen Namen eintippen oder eine Klassenliste hochladen – als CSV-Datei (.csv, z. B. aus Excel oder der Schulverwaltung über „Exportieren" bzw. „Speichern unter" erzeugt) oder direkt als PDF, z. B. eine ausgedruckte Klassenliste aus der Schulverwaltungssoftware. Bei CSV werden eine Spalte „Name" oder getrennt „Vorname"/„Nachname" sowie optional „Geburtsdatum" erkannt. Bei PDF sucht Tu-vi nach einer Zeile pro Kind im Format „Nr. Nachname, Vorname" – das klappt nur bei PDFs mit echtem Text, nicht bei eingescannten/fotografierten Listen; in dem Fall hilft nur der CSV-Weg.` },
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi beginnt leer – keine Klassen, keine Kinder, keine Termine. Zuerst fragt die App nach deinem Bundesland und trägt die Schulferien ein; das lässt sich mit „Später einrichten" überspringen und in den Einstellungen nachholen. Danach steht auf der Übersicht eine Willkommenskarte mit dem einzigen sinnvollen ersten Schritt: eine Klasse anlegen. Sind Klasse und Kinder da, kommen Fächer und Stundenplan dazu – alles Weitere entsteht im Alltag. Wenn du dich lieber erst umsehen möchtest, kannst du unter „Einstellungen" → „Daten & Sicherung" → „Erweiterte Einstellungen" Beispieldaten laden: zwei erfundene Klassen mit Noten und Terminen. Der Knopf erscheint nur, solange du noch keine eigene Klasse angelegt hast – so kann er nichts überschreiben.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
@@ -10280,40 +10334,65 @@ function ImportCsvModal({ className, onImport, onClose }) {
   const [lastCol, setLastCol] = useState("");
   const [birthdayCol, setBirthdayCol] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   function guessColumn(cols, patterns) {
     return cols.find((c) => patterns.some((p) => p.test(c))) || "";
   }
 
+  function processCsvText(text) {
+    const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+    if (!result.data.length) { setError("Konnte keine Zeilen in dieser Datei finden."); return; }
+    const cols = result.meta.fields || [];
+    setHeaders(cols);
+    setRows(result.data);
+    const guessFirst = guessColumn(cols, [/vorname/i, /^first/i]);
+    const guessLast = guessColumn(cols, [/nachname/i, /^last/i, /^surname/i]);
+    const guessName = guessColumn(cols, [/^name$/i, /vollständig/i, /full.?name/i]);
+    const guessBday = guessColumn(cols, [/geburt/i, /birthday/i, /geb\./i]);
+    if (guessFirst && guessLast) {
+      setNameMode("combo"); setFirstCol(guessFirst); setLastCol(guessLast);
+    } else if (guessName) {
+      setNameMode("single"); setNameCol(guessName);
+    } else {
+      setNameMode("single"); setNameCol(cols[0] || "");
+    }
+    setBirthdayCol(guessBday);
+  }
+
   function handleFile(file) {
     setError("");
-    if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
-      setError(`„${file.name}" ist keine CSV-Datei. Tu-vi kann nur CSV-Dateien (.csv) einlesen – exportiere die Klassenliste z. B. aus Excel oder der Schulverwaltung als CSV und lade diese Datei hoch.`);
+    const isCsv = /\.csv$/i.test(file.name) || file.type === "text/csv";
+    const isPdf = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
+    if (!isCsv && !isPdf) {
+      setError(`„${file.name}" ist weder eine CSV- noch eine PDF-Datei. Tu-vi kann Klassenlisten als CSV oder als PDF einlesen – exportiere die Liste z. B. aus Excel, der Schulverwaltung oder als PDF-Ausdruck und lade diese Datei hoch.`);
       return;
     }
-    if (file.size > 5 * 1024 * 1024) { setError("Diese Datei ist zu groß (max. 5 MB). Bitte wähle eine CSV-Exportdatei."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Diese Datei ist zu groß (max. 5 MB)."); return; }
+    if (isPdf) {
+      setLoading(true);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const csvText = await extractStudentCsvFromPdf(reader.result);
+          setLoading(false);
+          if (!csvText) {
+            setError(`In diesem PDF konnte keine Namensliste erkannt werden. Das klappt nur bei PDFs mit echtem Text (keine eingescannte/fotografierte Liste) und je einer Zeile pro Kind, z. B. „1. Nachname, Vorname". Alternativ die Liste als CSV exportieren.`);
+            return;
+          }
+          processCsvText(csvText);
+        } catch (e) {
+          setLoading(false);
+          setError("Das PDF konnte nicht gelesen werden. Bitte prüfe die Datei oder exportiere die Liste stattdessen als CSV.");
+        }
+      };
+      reader.onerror = () => { setLoading(false); setError("Datei konnte nicht gelesen werden."); };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = () => {
-      const text = String(reader.result);
-      const result = Papa.parse(text, { header: true, skipEmptyLines: true });
-      if (!result.data.length) { setError("Konnte keine Zeilen in dieser Datei finden."); return; }
-      const cols = result.meta.fields || [];
-      setHeaders(cols);
-      setRows(result.data);
-      const guessFirst = guessColumn(cols, [/vorname/i, /^first/i]);
-      const guessLast = guessColumn(cols, [/nachname/i, /^last/i, /^surname/i]);
-      const guessName = guessColumn(cols, [/^name$/i, /vollständig/i, /full.?name/i]);
-      const guessBday = guessColumn(cols, [/geburt/i, /birthday/i, /geb\./i]);
-      if (guessFirst && guessLast) {
-        setNameMode("combo"); setFirstCol(guessFirst); setLastCol(guessLast);
-      } else if (guessName) {
-        setNameMode("single"); setNameCol(guessName);
-      } else {
-        setNameMode("single"); setNameCol(cols[0] || "");
-      }
-      setBirthdayCol(guessBday);
-    };
+    reader.onload = () => processCsvText(String(reader.result));
     reader.onerror = () => setError("Datei konnte nicht gelesen werden.");
     reader.readAsText(file, "utf-8");
   }
@@ -10347,17 +10426,18 @@ function ImportCsvModal({ className, onImport, onClose }) {
         {!rows && (
           <div>
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-stone-300 rounded-xl py-8 text-center text-sm text-stone-500 hover:akzent-rand hover:akzent-text"
+              onClick={() => !loading && fileInputRef.current?.click()}
+              disabled={loading}
+              className="w-full border-2 border-dashed border-stone-300 rounded-xl py-8 text-center text-sm text-stone-500 hover:akzent-rand hover:akzent-text disabled:opacity-60"
             >
-              CSV-Datei hochladen
+              {loading ? "PDF wird gelesen …" : "CSV- oder PDF-Datei hochladen"}
             </button>
             <input
-              ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden"
+              ref={fileInputRef} type="file" accept=".csv,text/csv,.pdf,application/pdf" className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
             <p className="text-xs text-stone-400 mt-3">
-              Nur CSV-Dateien (.csv) – kein PDF, kein Excel/Word direkt. In Excel oder der Schulverwaltung über „Exportieren" / „Speichern unter" als CSV erzeugen. Erwartet eine Kopfzeile, z. B. „Name" oder getrennt „Vorname"/„Nachname". Eine optionale Spalte „Geburtsdatum" (TT.MM.JJJJ) wird automatisch erkannt.
+              CSV-Dateien (.csv) oder PDF-Klassenlisten (.pdf, mit echtem Text, keine eingescannte Liste) werden erkannt. Bei CSV erwartet Tu-vi eine Kopfzeile, z. B. „Name" oder getrennt „Vorname"/„Nachname" – eine optionale Spalte „Geburtsdatum" (TT.MM.JJJJ) wird automatisch erkannt. Bei PDF wird eine Namensliste im Format „Nr. Nachname, Vorname" gesucht.
             </p>
           </div>
         )}

@@ -13,6 +13,10 @@ export default defineConfig({
       strategies: "generateSW",
       workbox: {
         globPatterns: ["**/*.{html,js,css,png,json}"],
+        // Single-File-Build bettet alles (inkl. pdfjs-dist fuer den PDF-Import)
+        // in die eine index.html ein - die liegt inzwischen ueber dem
+        // Workbox-Standardlimit von 2 MiB.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.origin === self.location.origin,
