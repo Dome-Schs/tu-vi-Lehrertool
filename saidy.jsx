@@ -3166,6 +3166,7 @@ const HELP_DATA = [
     items: [
       { q: "Wie sehe ich, wie eine Klassenarbeit ausgefallen ist?", a: `Öffne die Klasse → Reiter „Noten" → das Fach. Unter den Wissensgebieten steht „Notentermine": jeder Tag, an dem du in diesem Fach benotet hast, mit Bezeichnung, Anzahl der Noten und Durchschnitt. Tippe einen Termin an, und du siehst alle Kinder mit ihrer Note nebeneinander – statt sie einzeln aufrufen zu müssen. Die Liste entsteht automatisch aus den vorhandenen Noten, du musst dafür nichts zusätzlich erfassen.` },
       { q: "Wie erzeuge ich einen Klassenspiegel für die Abteilungsleitung?", a: `Öffne den Termin der Klassenarbeit (Klasse → „Noten" → Fach → „Notentermine" → Termin antippen). Bei schriftlichen Terminen steht dort der Knopf „Klassenspiegel erzeugen". Tu-vi füllt Klasse, Fach, Datum, Notenspiegel (Verteilung der Noten 1–6, Anzahl der Kinder, Durchschnitt) und die Nachschreiber-Liste automatisch aus – letztere aus den Kindern, die bei diesem Termin noch keine Note haben. Nr. der Arbeit wird als Vorschlag vorausgefüllt (zählt schriftliche Arbeiten je Fach und Halbjahr, startet jedes Halbjahr wieder bei 1) und lässt sich wie Thema und Lehrer*in noch von Hand anpassen, bevor du über „Als PDF drucken" den Druckdialog öffnest und dort „Als PDF speichern" wählst. Dein Name/Kürzel für das Feld „Lehrer*in" trägst du einmalig unter „Mehr" → „Einstellungen" → „Schuljahr & Schule" ein, dann erscheint er bei jedem Klassenspiegel automatisch. Datum der Vorlage und beide Unterschriften bleiben bewusst leer, weil sie erst beim Einreichen entstehen.` },
+      { q: "Wie erzeuge ich die fortlaufende Klassenliste mit allen Klassenarbeiten des Schuljahres?", a: `Klasse → „Noten" → Fach öffnen. Über der Notenübersicht steht neben „Sammelbewertung" und „PDF" der Knopf „Klassenliste (Schuljahr)". Er erzeugt eine Tabelle mit einer Zeile pro Kind und einer Spalte pro schriftlicher Arbeit dieses Fachs – über beide Halbjahre hinweg, nicht nur das aktuelle –, dazu eine Ø-Spalte mit dem Durchschnitt über alle Arbeiten. So lässt sich die Entwicklung eines Kindes über das ganze Schuljahr auf einen Blick ablesen, genau die Liste, die viele Schulen als Anlage zum Klassenspiegel verlangen. „Als PDF drucken" öffnet den Druckdialog im Querformat, da bei 6–8 Arbeiten die Tabelle breiter wird.` },
       { q: "Kann ich eine Note nachträglich ändern oder nachtragen?", a: `Ja. Öffne den Termin unter „Notentermine" (Klasse → „Noten" → Fach). Dort änderst du jede Note direkt über das Auswahlfeld daneben; das Papierkorb-Symbol rechts löscht genau diese eine Note. Kinder, die an dem Tag gefehlt haben, stehen unten unter „Ohne Note an diesem Termin" – ein Tipp auf „Note ergänzen" trägt sie nach und übernimmt dabei Datum, Bezeichnung, Gewichtung und Thema der Arbeit. So bleibt es ein einziger Termin und zerfällt nicht in zwei.` },
       { q: "Wie benenne ich eine Klassenarbeit um oder korrigiere das Datum?", a: `Im geöffneten Termin stehen unten die Felder für Bezeichnung und Datum unter dem Hinweis „Gilt für alle Noten dieses Termins". Eine Änderung dort wirkt auf alle Noten des Termins gleichzeitig – wichtig, weil Tu-vi Noten anhand von Fach, Datum und Bezeichnung zusammenfasst. Änderst du das nur bei einem Kind, rutscht dessen Note in einen eigenen Termin. Über „Ganzen Termin löschen" verschwinden alle Noten dieses Tages auf einmal.` },
       { q: `Wie trage ich eine Note im Bereich „Noten & Berichte" ein?`, a: `Gehe zu „Noten & Berichte", wähle Klasse und Fach. Tippe auf eine:n Schüler:in – in der Karte „Neue Note" Kategorie und Note wählen und auf „+" tippen. Oder tippe direkt in der Notenübersicht auf die Mündl.-Spalte eines Kindes – ein Popover öffnet sich mit den fünf Schnellbewertungen ++, +, o, –, – –. Ein Tipp, fertig.` },
@@ -18506,6 +18507,124 @@ function KlassenspiegelModal({ termin, fach, cls, nachschreiber, lehrerName, num
   );
 }
 
+/* Klassenliste: die fortlaufende Notenliste ueber das ganze Schuljahr, die
+   viele Schulen als Anlage zum Klassenspiegel verlangen (siehe die
+   Anlagen-Liste dort) - eine Zeile pro Kind, eine Spalte pro schriftlicher
+   Arbeit dieses Fachs, damit die Entwicklung uebers Jahr auf einen Blick
+   sichtbar wird. Bewusst ueber BEIDE Halbjahre hinweg (nicht wie die
+   Nr.-der-Arbeit-Zaehlung im Klassenspiegel, die pro Halbjahr neu zaehlt) -
+   das ist hier eine andere, eigene Zaehlung fuer den Ueberblick. */
+function KlassenlisteModal({ fach, cls, students, grades, onClose }) {
+  const arbeiten = (() => {
+    const map = new Map();
+    (grades || []).forEach((g) => {
+      if (g.fachId !== fach.id || g.category !== "schriftlich") return;
+      const key = `${g.date}|${g.title || ""}`;
+      if (!map.has(key)) map.set(key, { date: g.date, title: g.title || "", noten: new Map() });
+      map.get(key).noten.set(g.studentId, g);
+    });
+    return [...map.values()].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  })();
+
+  const sortierteKinder = [...students].sort((a, b) => a.name.localeCompare(b.name, "de"));
+
+  function schnittFuer(studentId) {
+    const eigene = arbeiten.map((a) => a.noten.get(studentId)).filter(Boolean);
+    if (!eigene.length) return null;
+    const gewicht = eigene.reduce((s, g) => s + (g.factor || 1), 0);
+    return eigene.reduce((s, g) => s + g.value * (g.factor || 1), 0) / gewicht;
+  }
+
+  function drucken() {
+    window.print();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-stone-900/50 z-[70] flex flex-col print:static print:bg-white" onClick={onClose}>
+      <style>{`
+        @media print {
+          @page { size: A4 landscape; margin: 14mm 12mm; }
+          body { background: white !important; }
+          .print-hide { display: none !important; }
+          .print-liste { box-shadow: none !important; margin: 0 !important; max-width: none !important; padding: 0 !important; }
+        }
+      `}</style>
+
+      <div className="print-hide bg-white border-b border-stone-200 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none mb-0.5 truncate">Anlage zum Klassenspiegel</div>
+            <div className="font-semibold text-stone-800 truncate">Klassenliste{cls?.name ? ` – ${cls.name}` : ""} · {fach.subject}</div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button onClick={drucken}><Printer size={14} /> Als PDF drucken</Button>
+            <button onClick={onClose} className="w-11 h-11 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+        <p className="px-4 pb-3 text-xs text-stone-500">
+          Alle schriftlichen Arbeiten dieses Fachs über das ganze Schuljahr, eine Zeile pro Kind. Querformat, damit auch 6–8 Arbeiten nebeneinander passen.
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-auto flex justify-center py-6 print:py-0 print:block" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="print-liste bg-white mx-auto shadow-md p-8 text-stone-800 text-sm"
+          style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}
+        >
+          <h1 className="text-xl font-bold mb-1 text-stone-900">Klassenliste</h1>
+          <p className="text-stone-500 mb-4">{cls?.name || "—"} · {fach.subject}</p>
+
+          {!arbeiten.length ? (
+            <p className="text-stone-500">Noch keine schriftlichen Arbeiten in diesem Fach eingetragen.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border border-stone-400 px-2 py-1.5 font-medium text-left sticky left-0 bg-white">Name</th>
+                    {arbeiten.map((a, i) => (
+                      <th key={i} className="border border-stone-400 px-2 py-1.5 font-medium text-center whitespace-nowrap">
+                        {localDate(a.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}
+                        {a.title && <div className="text-[10px] font-normal text-stone-500 max-w-[26mm] truncate" title={a.title}>{a.title}</div>}
+                      </th>
+                    ))}
+                    <th className="border border-stone-400 px-2 py-1.5 font-medium text-center">Ø</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortierteKinder.map((s) => {
+                    const schnitt = schnittFuer(s.id);
+                    return (
+                      <tr key={s.id}>
+                        <td className="border border-stone-400 px-2 py-1 whitespace-nowrap sticky left-0 bg-white">{s.name}</td>
+                        {arbeiten.map((a, i) => {
+                          const g = a.noten.get(s.id);
+                          return (
+                            <td key={i} className="border border-stone-400 px-2 py-1 text-center tabular-nums">
+                              {g ? gradeLabel(g.value) : "–"}
+                            </td>
+                          );
+                        })}
+                        <td className="border border-stone-400 px-2 py-1 text-center tabular-nums font-medium">
+                          {schnitt != null ? gradeLabel(schnitt) : "–"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="text-[10px] text-stone-500 mt-6">Stand: {new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })} · erzeugt mit Tu-vi</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* lockedClassId: eingebettet in die Klassenansicht. Dann faellt Schritt 1
    (Klasse waehlen) weg - die Klasse steht ja schon fest - und die
    Ueberschrift entfaellt, weil das Fenster bereits einen Kopf hat. */
@@ -18547,6 +18666,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
   const [copied, setCopied] = useState(false);
   const [confirmCopySprechtag, setConfirmCopySprechtag] = useState(false);
   const [printMode, setPrintMode] = useState(null); // { type: "class" } | { type: "student", studentId }
+  const [showKlassenliste, setShowKlassenliste] = useState(false);
   const [showIncidents, setShowIncidents] = useState(false);
   const [showGradesList, setShowGradesList] = useState(false);
   const [editingGrade, setEditingGrade] = useState(null);
@@ -18904,6 +19024,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
               <Button variant="subtle" onClick={() => setShowIncidents(true)}><AlertTriangle size={15} /> Material vergessen</Button>
               <Button variant="subtle" onClick={() => setShowSprechtagPicker(true)}>💬 Elternsprechtag</Button>
               <Button variant="subtle" onClick={() => setPrintMode({ type: "class" })}><Printer size={15} /> PDF</Button>
+              <Button variant="subtle" onClick={() => setShowKlassenliste(true)}><Printer size={15} /> Klassenliste (Schuljahr)</Button>
             </div>
           )}
 
@@ -19610,6 +19731,16 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
           data={data}
           halbjahr={halbjahr}
           onClose={() => setPrintMode(null)}
+        />
+      )}
+
+      {showKlassenliste && fach && (
+        <KlassenlisteModal
+          fach={fach}
+          cls={cls}
+          students={students}
+          grades={data.grades}
+          onClose={() => setShowKlassenliste(false)}
         />
       )}
 
