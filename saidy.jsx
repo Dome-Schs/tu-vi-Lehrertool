@@ -872,7 +872,7 @@ function sanitizeImport(imported) {
   };
 
   const raus = {
-    classes: map("classes", (c) => ({ ...c, name: S_TEXT(c.name, 100), deletedAt: S_DATUM(c.deletedAt) })),
+    classes: map("classes", (c) => ({ ...c, name: S_TEXT(c.name, 100), deletedAt: S_DATUM(c.deletedAt), letzteVersetzung: S_DATUM(c.letzteVersetzung) })),
     notes: map("notes", (n) => ({
       ...n, text: S_TEXT(n.text, 5000), date: S_DATUM(n.date),
       type: S_TEXT(n.type, 30), mood: S_TEXT(n.mood, 30), gesprTyp: S_TEXT(n.gesprTyp, 30),
@@ -1683,7 +1683,15 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
   function promoteClasses(ids) {
     update((d) => {
       d.classes.forEach((c) => {
-        if (ids.includes(c.id)) c.name = promotedName(c.name);
+        if (ids.includes(c.id)) {
+          c.name = promotedName(c.name);
+          /* Fach und Noten bleiben bewusst dieselben (Lehrkraft unterrichtet
+             i. d. R. dasselbe Fach in der versetzten Klasse weiter) - aber
+             die Klassenliste und die Nr.-der-Arbeit-Zaehlung im Klassenspiegel
+             sollen ab hier neu anfangen statt Arbeiten mehrerer Schuljahre
+             zu vermischen. Der Stempel ist der einzige Marker dafuer. */
+          c.letzteVersetzung = isoDate(new Date());
+        }
       });
       return d;
     });
@@ -3166,7 +3174,7 @@ const HELP_DATA = [
     items: [
       { q: "Wie sehe ich, wie eine Klassenarbeit ausgefallen ist?", a: `Öffne die Klasse → Reiter „Noten" → das Fach. Unter den Wissensgebieten steht „Notentermine": jeder Tag, an dem du in diesem Fach benotet hast, mit Bezeichnung, Anzahl der Noten und Durchschnitt. Tippe einen Termin an, und du siehst alle Kinder mit ihrer Note nebeneinander – statt sie einzeln aufrufen zu müssen. Die Liste entsteht automatisch aus den vorhandenen Noten, du musst dafür nichts zusätzlich erfassen.` },
       { q: "Wie erzeuge ich einen Klassenspiegel für die Abteilungsleitung?", a: `Öffne den Termin der Klassenarbeit (Klasse → „Noten" → Fach → „Notentermine" → Termin antippen). Bei schriftlichen Terminen steht dort der Knopf „Klassenspiegel erzeugen". Tu-vi füllt Klasse, Fach, Datum, Notenspiegel (Verteilung der Noten 1–6, Anzahl der Kinder, Durchschnitt) und die Nachschreiber-Liste automatisch aus – letztere aus den Kindern, die bei diesem Termin noch keine Note haben. Nr. der Arbeit wird als Vorschlag vorausgefüllt (zählt schriftliche Arbeiten je Fach und Halbjahr, startet jedes Halbjahr wieder bei 1) und lässt sich wie Thema und Lehrer*in noch von Hand anpassen, bevor du über „Als PDF drucken" den Druckdialog öffnest und dort „Als PDF speichern" wählst. Dein Name/Kürzel für das Feld „Lehrer*in" trägst du einmalig unter „Mehr" → „Einstellungen" → „Schuljahr & Schule" ein, dann erscheint er bei jedem Klassenspiegel automatisch. Datum der Vorlage und beide Unterschriften bleiben bewusst leer, weil sie erst beim Einreichen entstehen.` },
-      { q: "Wie erzeuge ich die fortlaufende Klassenliste mit allen Klassenarbeiten des Schuljahres?", a: `Klasse → „Noten" → Fach öffnen. Über der Notenübersicht steht neben „Sammelbewertung" und „PDF" der Knopf „Klassenliste (Schuljahr)". Er erzeugt eine Tabelle mit einer Zeile pro Kind und einer Spalte pro schriftlicher Arbeit dieses Fachs – über beide Halbjahre hinweg, nicht nur das aktuelle –, dazu eine Ø-Spalte mit dem Durchschnitt über alle Arbeiten. So lässt sich die Entwicklung eines Kindes über das ganze Schuljahr auf einen Blick ablesen, genau die Liste, die viele Schulen als Anlage zum Klassenspiegel verlangen. „Als PDF drucken" öffnet den Druckdialog im Querformat, da bei 6–8 Arbeiten die Tabelle breiter wird.` },
+      { q: "Wie erzeuge ich die fortlaufende Klassenliste mit allen Klassenarbeiten des Schuljahres?", a: `Klasse → „Noten" → Fach öffnen. Über der Notenübersicht steht neben „Sammelbewertung" und „PDF" der Knopf „Klassenliste (Schuljahr)". Er erzeugt eine Tabelle mit einer Zeile pro Kind und einer Spalte pro schriftlicher Arbeit dieses Fachs – über beide Halbjahre hinweg, nicht nur das aktuelle –, dazu eine Ø-Spalte mit dem Durchschnitt über alle Arbeiten. So lässt sich die Entwicklung eines Kindes über das ganze Schuljahr auf einen Blick ablesen, genau die Liste, die viele Schulen als Anlage zum Klassenspiegel verlangen. „Als PDF drucken" öffnet den Druckdialog im Querformat, da bei 6–8 Arbeiten die Tabelle breiter wird. Nach einem Schuljahreswechsel („Klassen versetzen" in den Einstellungen) zeigt die Klassenliste automatisch nur noch die Arbeiten des neuen Schuljahres – ältere Arbeiten bleiben in den Daten erhalten, tauchen hier aber nicht mehr auf.` },
       { q: "Kann ich eine Note nachträglich ändern oder nachtragen?", a: `Ja. Öffne den Termin unter „Notentermine" (Klasse → „Noten" → Fach). Dort änderst du jede Note direkt über das Auswahlfeld daneben; das Papierkorb-Symbol rechts löscht genau diese eine Note. Kinder, die an dem Tag gefehlt haben, stehen unten unter „Ohne Note an diesem Termin" – ein Tipp auf „Note ergänzen" trägt sie nach und übernimmt dabei Datum, Bezeichnung, Gewichtung und Thema der Arbeit. So bleibt es ein einziger Termin und zerfällt nicht in zwei.` },
       { q: "Wie benenne ich eine Klassenarbeit um oder korrigiere das Datum?", a: `Im geöffneten Termin stehen unten die Felder für Bezeichnung und Datum unter dem Hinweis „Gilt für alle Noten dieses Termins". Eine Änderung dort wirkt auf alle Noten des Termins gleichzeitig – wichtig, weil Tu-vi Noten anhand von Fach, Datum und Bezeichnung zusammenfasst. Änderst du das nur bei einem Kind, rutscht dessen Note in einen eigenen Termin. Über „Ganzen Termin löschen" verschwinden alle Noten dieses Tages auf einmal.` },
       { q: `Wie trage ich eine Note im Bereich „Noten & Berichte" ein?`, a: `Gehe zu „Noten & Berichte", wähle Klasse und Fach. Tippe auf eine:n Schüler:in – in der Karte „Neue Note" Kategorie und Note wählen und auf „+" tippen. Oder tippe direkt in der Notenübersicht auf die Mündl.-Spalte eines Kindes – ein Popover öffnet sich mit den fünf Schnellbewertungen ++, +, o, –, – –. Ein Tipp, fertig.` },
@@ -12881,7 +12889,7 @@ function PromoteModal({ classes, promotedName, onPromote, onClose }) {
           <div className="font-semibold text-stone-800">Schuljahreswechsel: Klassen versetzen</div>
           <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><X size={18} /></button>
         </div>
-        <p className="text-xs text-stone-400 mb-4">Zum neuen Schuljahr: Die führende Zahl im Klassennamen wird um eins erhöht. Schüler:innen, Fächer und Noten bleiben erhalten.</p>
+        <p className="text-xs text-stone-400 mb-4">Zum neuen Schuljahr: Die führende Zahl im Klassennamen wird um eins erhöht. Schüler:innen, Fächer und Noten bleiben erhalten – die Klassenliste und die Zählung der Klassenarbeiten im Klassenspiegel starten ab hier neu.</p>
 
         <ul className="space-y-1.5 mb-4">
           {classes.map((c) => {
@@ -18168,10 +18176,13 @@ function NotenTerminSheet({ termin, students, fach, cls, data, halbjahr, colored
      - Vorschlag fuer "Nr. der Arbeit" im Klassenspiegel, faengt jedes
      Halbjahr wieder bei 1 an. Nur ein Vorschlag: die Lehrkraft kann die Zahl
      im Formular selbst noch aendern, z.B. wenn eine Arbeit ausserplanmaessig
-     nicht mitgezaehlt werden soll. */
+     nicht mitgezaehlt werden soll. Nach einem "Klassen versetzen" (Fach und
+     Noten bleiben dabei bewusst erhalten) zaehlt nur ab dem Versetzungsdatum,
+     sonst wuerden Arbeiten aus dem vorigen Schuljahr mitgezaehlt. */
+  const kaSeit = cls?.letzteVersetzung || null;
   const kaNummerVorschlag = termin.category === "schriftlich"
     ? notenTermineFuerFach(data.grades, fach.id, halbjahr, students)
-        .filter((t) => t.category === "schriftlich")
+        .filter((t) => t.category === "schriftlich" && (!kaSeit || t.date >= kaSeit))
         .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
         .findIndex((t) => t.key === termin.key) + 1
     : null;
@@ -18515,10 +18526,18 @@ function KlassenspiegelModal({ termin, fach, cls, nachschreiber, lehrerName, num
    Nr.-der-Arbeit-Zaehlung im Klassenspiegel, die pro Halbjahr neu zaehlt) -
    das ist hier eine andere, eigene Zaehlung fuer den Ueberblick. */
 function KlassenlisteModal({ fach, cls, students, grades, onClose }) {
+  /* Fach und Noten bleiben beim "Klassen versetzen" bewusst erhalten (die
+     Lehrkraft unterrichtet i.d.R. dasselbe Fach in der versetzten Klasse
+     weiter) - ohne diesen Stempel wuerde die Klassenliste sonst Arbeiten
+     mehrerer Schuljahre vermischen, statt wie gewuenscht pro Schuljahr neu
+     zu zaehlen. Vor der ersten Versetzung (letzteVersetzung fehlt) zaehlt
+     alles seit Fach-Anlage. */
+  const seit = cls?.letzteVersetzung || null;
   const arbeiten = (() => {
     const map = new Map();
     (grades || []).forEach((g) => {
       if (g.fachId !== fach.id || g.category !== "schriftlich") return;
+      if (seit && g.date < seit) return;
       const key = `${g.date}|${g.title || ""}`;
       if (!map.has(key)) map.set(key, { date: g.date, title: g.title || "", noten: new Map() });
       map.get(key).noten.set(g.studentId, g);
@@ -18565,6 +18584,7 @@ function KlassenlisteModal({ fach, cls, students, grades, onClose }) {
         </div>
         <p className="px-4 pb-3 text-xs text-stone-500">
           Alle schriftlichen Arbeiten dieses Fachs über das ganze Schuljahr, eine Zeile pro Kind. Querformat, damit auch 6–8 Arbeiten nebeneinander passen.
+          {seit && ` Gezählt wird seit der letzten Versetzung am ${localDate(seit).toLocaleDateString("de-DE")} – ältere Arbeiten aus dem vorigen Schuljahr bleiben außen vor.`}
         </p>
       </div>
 
