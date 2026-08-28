@@ -1695,7 +1695,7 @@ function LegalModal({ onClose }) {
 const SEITEN = [
   { key: "schuljahr",   icon: CalendarDays, titel: "Schuljahr & Schule",  sub: "Halbjahr, Bundesland, Ferien" },
   { key: "darstellung", icon: LayoutGrid,   titel: "Darstellung",         sub: "Startseite, Profilkarte, Tipps" },
-  { key: "sicherheit",  icon: Lock,         titel: "Sicherheit & Konto",  sub: "App-Sperre, Abmelden" },
+  { key: "sicherheit",  icon: Lock,         titel: "Sicherheit & Konto",  sub: "E-Mail, Passwort, App-Sperre" },
   { key: "daten",       icon: Download,     titel: "Daten & Sicherung",   sub: "Sichern, iCloud, Import, Löschen" },
   { key: "ueber",       icon: FileText,     titel: "Über Tu-vi",          sub: "Impressum, Datenschutz" },
   /* Bewusst eine eigene Zeile statt eines Hinweises, der ueberall
@@ -2061,11 +2061,8 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
 
         {seite === "sicherheit" && (
           <div>
-            <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Angemeldet als</div>
-            <p className="text-sm text-stone-700 mb-1 break-all">{user?.email || "unbekannt"}</p>
-            <p className="text-xs text-stone-500 mb-4">
-              Dein Passwort ist der eigentliche Schutz deines Kontos. Die App-Sperre darunter kommt zusätzlich dazu – sie ersetzt es nicht.
-            </p>
+            <EmailAendernEinstellung user={user} />
+            <PasswortAendernEinstellung />
             <AppSperreEinstellung user={user} />
             <AutoSperreEinstellung />
             <div className="pt-5 border-t border-stone-100">
@@ -3196,7 +3193,8 @@ const HELP_DATA = [
       { q: "Sperrt sich Tu-vi, wenn ich es liegen lasse?", a: `Ja. Unter „Mehr" → „Einstellungen" → „Sicherheit & Konto" → „Automatisch sperren" wählst du zwischen Aus, 5, 15 und 30 Minuten; voreingestellt sind 15 Minuten. Passiert in dieser Zeit nichts – kein Tippen, kein Scrollen –, greift die Sperre. Was dann geschieht, hängt davon ab, was auf dem Gerät eingerichtet ist: Mit Face ID oder Touch ID wird nur gesperrt, und du bist mit einem Blick wieder da, genau an der Stelle, an der du warst. Ohne eingerichtete Sperre wirst du abgemeldet, weil eine wegwischbare Sperre kein Schutz wäre – zurück brauchst du dann E-Mail und Passwort. Gedacht ist das für den Fall, dass das iPad aufgeklappt auf dem Pult liegen bleibt. Die Einstellung gilt nur auf dem Gerät, an dem du sie triffst, und deine Daten gehen dabei nie verloren.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
-      { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
+      { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (E-Mail-Adresse und Passwort ändern, App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
+      { q: "Wie ändere ich meine E-Mail-Adresse oder mein Passwort?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto". Dort stehen ganz oben „E-Mail-Adresse ändern" und „Passwort ändern" – beide mit einem Tipp aufklappbar. Bei der E-Mail-Adresse verschickt Tu-vi eine Bestätigungs-Mail an die neue Adresse; die Änderung gilt erst, wenn du den Link darin öffnest, bis dahin bleibt die alte Adresse aktiv. Beim Passwort reicht die Eingabe (mindestens 6 Zeichen, zweimal zur Bestätigung) – ohne das alte Passwort erneut einzugeben, da du bereits angemeldet bist. Dein Anzeigename für Ausdrucke wie den Klassenspiegel steht separat unter „Schuljahr & Schule" → „Deine Angaben".` },
       { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen, Kinder und Fächer bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder und Fächer mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
       { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder und Fächer mit sämtlichen zugehörigen Daten (Noten, Notizen, Förderziele, Dokumente, Sitzplan-Einträge, Stundenplan-Einträge) sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
       { q: "Wie lösche ich ein einzelnes Fach, ohne die ganze Klasse zu löschen?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen, dann auf das ···-Symbol rechts in der Fach-Zeile → „Fach löschen". Genau wie bei Klassen und Kindern landet das Fach für 30 Tage im Papierkorb (Reiter „Klassen", ganz unten) und lässt sich dort wiederherstellen – seine Noten, Zeugnisnoten, Stundenplan-Einträge und Stundenthemen bleiben verknüpft und kommen beim Wiederherstellen automatisch zurück. Solange das Fach im Papierkorb liegt, verschwindet es aus Stundenplan, Notenübersicht und der Übersicht-Seite, so als gäbe es die Stunde gerade nicht.` },
@@ -4222,6 +4220,120 @@ function LockScreen({ onEntsperrt, onAbmelden }) {
    Haelt seinen Zustand selbst aus localStorage, nicht aus data.settings -
    die Sperre gilt pro Geraet, nicht pro Konto. */
 /* Wie lange darf Tu-vi unbenutzt offen liegen? */
+/* Kontaktadresse fuer die Anmeldung aendern. supabase.auth.updateUser({email})
+   verschickt eine Bestaetigungs-Mail an die neue Adresse - die Aenderung
+   greift erst, wenn dieser Link geoeffnet wird, deshalb hier bewusst keine
+   sofortige Erfolgsmeldung, sondern der Hinweis auf die Mail. */
+function EmailAendernEinstellung({ user }) {
+  const [bearbeiten, setBearbeiten] = useState(false);
+  const [neueEmail, setNeueEmail] = useState("");
+  const [laeuft, setLaeuft] = useState(false);
+  const [fehler, setFehler] = useState(null);
+  const [erfolg, setErfolg] = useState(null);
+
+  async function speichern() {
+    setFehler(null);
+    const wert = neueEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(wert)) { setFehler("Bitte eine gültige E-Mail-Adresse eingeben."); return; }
+    if (wert.toLowerCase() === (user?.email || "").toLowerCase()) { setFehler("Das ist bereits deine aktuelle E-Mail-Adresse."); return; }
+    setLaeuft(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: wert });
+      if (error) throw error;
+      setErfolg(`Bestätigungs-Mail an ${wert} gesendet. Die Änderung gilt erst, sobald du den Link darin öffnest.`);
+      setBearbeiten(false);
+      setNeueEmail("");
+    } catch (e) {
+      console.warn("E-Mail-Aenderung fehlgeschlagen:", e.message);
+      setFehler("E-Mail-Adresse konnte nicht geändert werden. Bitte versuche es erneut.");
+    } finally {
+      setLaeuft(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">E-Mail-Adresse</div>
+      <p className="text-sm text-stone-700 mb-1 break-all">{user?.email || "unbekannt"}</p>
+      {!bearbeiten ? (
+        <button
+          onClick={() => { setBearbeiten(true); setErfolg(null); setFehler(null); }}
+          className="text-xs akzent-text hover:underline"
+        >
+          E-Mail-Adresse ändern
+        </button>
+      ) : (
+        <div className="mt-2 space-y-2">
+          <input
+            type="email" className={inputCls} placeholder="neue@adresse.de" maxLength={200}
+            value={neueEmail} onChange={(e) => setNeueEmail(e.target.value)} autoFocus
+          />
+          <div className="flex gap-2">
+            <Button onClick={speichern} disabled={laeuft} className="flex-1 justify-center">{laeuft ? "…" : "Bestätigungs-Mail senden"}</Button>
+            <Button variant="ghost" onClick={() => { setBearbeiten(false); setNeueEmail(""); setFehler(null); }} className="flex-1 justify-center">Abbrechen</Button>
+          </div>
+        </div>
+      )}
+      {fehler && <p className="text-xs text-red-600 mt-2">{fehler}</p>}
+      {erfolg && <p className="text-xs akzent-text mt-2">{erfolg}</p>}
+    </div>
+  );
+}
+
+function PasswortAendernEinstellung() {
+  const [bearbeiten, setBearbeiten] = useState(false);
+  const [neu, setNeu] = useState("");
+  const [bestaetigen, setBestaetigen] = useState("");
+  const [laeuft, setLaeuft] = useState(false);
+  const [fehler, setFehler] = useState(null);
+  const [erfolg, setErfolg] = useState(false);
+
+  async function speichern() {
+    setFehler(null);
+    if (neu.length < 6) { setFehler("Passwort muss mindestens 6 Zeichen lang sein."); return; }
+    if (neu !== bestaetigen) { setFehler("Passwörter stimmen nicht überein."); return; }
+    setLaeuft(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: neu });
+      if (error) throw error;
+      setErfolg(true);
+      setBearbeiten(false);
+      setNeu(""); setBestaetigen("");
+    } catch (e) {
+      console.warn("Passwort-Aenderung fehlgeschlagen:", e.message);
+      setFehler("Passwort konnte nicht geändert werden. Bitte versuche es erneut.");
+    } finally {
+      setLaeuft(false);
+    }
+  }
+
+  return (
+    <div className="pt-5 border-t border-stone-100">
+      <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Passwort</div>
+      <p className="text-xs text-stone-500 mb-3">Dein Passwort ist der eigentliche Schutz deines Kontos. Wähle es sicher und gib es nicht weiter.</p>
+      {!bearbeiten ? (
+        <button
+          onClick={() => { setBearbeiten(true); setErfolg(false); setFehler(null); }}
+          className="text-xs akzent-text hover:underline"
+        >
+          Passwort ändern
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <input type="password" className={inputCls} placeholder="Neues Passwort" value={neu} onChange={(e) => setNeu(e.target.value)} autoFocus />
+          <input type="password" className={inputCls} placeholder="Neues Passwort bestätigen" value={bestaetigen} onChange={(e) => setBestaetigen(e.target.value)} />
+          <div className="flex gap-2">
+            <Button onClick={speichern} disabled={laeuft} className="flex-1 justify-center">{laeuft ? "…" : "Passwort ändern"}</Button>
+            <Button variant="ghost" onClick={() => { setBearbeiten(false); setNeu(""); setBestaetigen(""); setFehler(null); }} className="flex-1 justify-center">Abbrechen</Button>
+          </div>
+        </div>
+      )}
+      {fehler && <p className="text-xs text-red-600 mt-2">{fehler}</p>}
+      {erfolg && <p className="text-xs akzent-text mt-2">Passwort geändert.</p>}
+    </div>
+  );
+}
+
 function AutoSperreEinstellung() {
   const [minuten, setMinuten] = useState(leseAutoSperre);
   const mitFaceId = appLockAktiv();
