@@ -68,6 +68,16 @@ function stundenplanZeilen(settings) {
   return Array.from({ length: n }, (_, i) => i + 1);
 }
 
+/* "08:35" -> 515 (Minuten seit Mitternacht), fuer die zeitproportionale
+   Stundenplan-Ansicht - Position und Hoehe einer Stunde richten sich nach
+   der echten Uhrzeit statt nach gleich hohen Zeilen. */
+function hmZuMin(hm) {
+  if (typeof hm !== "string") return null;
+  const [h, m] = hm.split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+}
+const STUNDENPLAN_PX_PRO_MIN = 2;
+
 const CATS = [
   { key: "muendlich", label: "Mündlich" },
   { key: "schriftlich", label: "Schriftlich" },
@@ -3228,7 +3238,7 @@ const HELP_DATA = [
       { q: "Wie lege ich einen Termin an?", a: `Tippe auf „Mehr" in der Navigation und dann auf „Kalender". Tippe dort auf „Neuen Termin anlegen" und gib Titel, Datum, Uhrzeit und Art ein. Schneller geht es über das grüne Plus → „Termin".` },
       { q: "Wie lege ich einen wiederkehrenden Termin an?", a: `Beim Anlegen eines Termins gibt es das Feld „Wiederholung" – dort kannst du Wöchentlich, Alle 2 Wochen oder Monatlich wählen. Der Termin erscheint dann automatisch an allen folgenden Termintagen im Kalender.` },
       { q: "Wie trage ich Schulferien ein?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule". Wähle dort zuerst dein Bundesland, danach erscheint „Schulferien eintragen" – Tu-vi übernimmt alle Ferien automatisch.` },
-      { q: "Wie stelle ich meine Stundenlänge ein (45 oder 60 Minuten)?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule" → „Stundenlänge". Bei 60 Minuten bietet der Stundenplan 8 Stunden-Zeilen pro Tag an, bei 45 Minuten 12 – so passt ein voller Schultag mit mehr, kürzeren Einheiten hinein. Die Uhrzeiten je Stunde trägst du im Stundenplan weiterhin selbst ein (auf die Stundennummer tippen), die Einstellung ändert nur, wie viele Zeilen zur Auswahl stehen.` },
+      { q: "Wie stelle ich meine Stundenlänge ein (45 oder 60 Minuten)?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule" → „Stundenlänge". Bei 60 Minuten bietet der Stundenplan 8 Stunden pro Tag an, bei 45 Minuten 12 – so passt ein voller Schultag mit mehr, kürzeren Einheiten hinein. Die Uhrzeiten je Stunde trägst du im Stundenplan über den aufklappbaren Bereich „Uhrzeiten der Stunden" ein, die Einstellung ändert nur, wie viele Stunden zur Auswahl stehen.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
     ],
   },
@@ -16186,6 +16196,7 @@ function StundenplanTab({ data, update }) {
   const periods = stundenplanZeilen(data.settings);
   const [editingCell, setEditingCell] = useState(null); // {day, period}
   const [editingTime, setEditingTime] = useState(null); // period
+  const [zeitenOffen, setZeitenOffen] = useState(false);
 
   function cellData(day, period) {
     return data.timetable.find((t) => t.day === day && t.period === period);
@@ -16208,80 +16219,198 @@ function StundenplanTab({ data, update }) {
     setEditingTime(null);
   }
 
+  /* Nur Stunden mit gueltiger Uhrzeit lassen sich zeitproportional
+     einordnen - Position und Hoehe im Raster ergeben sich direkt aus
+     Start/Ende, "Luecken" (Freistunden) entstehen dadurch von selbst, ganz
+     ohne eigene Erkennung. Stunden ohne gesetzte Uhrzeit landen unten in
+     der einfachen Liste, bis eine Zeit eingetragen ist. */
+  const zeitStunden = periods
+    .map((p) => ({ p, pt: data.periodTimes?.[p] }))
+    .filter((x) => {
+      const s = hmZuMin(x.pt?.start), e = hmZuMin(x.pt?.end);
+      return s != null && e != null && e > s;
+    })
+    .sort((a, b) => hmZuMin(a.pt.start) - hmZuMin(b.pt.start));
+  const periodsOhneZeit = periods.filter((p) => !zeitStunden.some((z) => z.p === p));
+
+  const tagStart = zeitStunden.length ? Math.min(...zeitStunden.map((z) => hmZuMin(z.pt.start))) : 0;
+  const tagEnde = zeitStunden.length ? Math.max(...zeitStunden.map((z) => hmZuMin(z.pt.end))) : 0;
+  const gridHoehe = Math.max(0, (tagEnde - tagStart) * STUNDENPLAN_PX_PRO_MIN);
+
+  // Jede Start-/Endzeit einmal auf der linken Achse beschriften - an den
+  // Uebergaengen, nicht pro Stunden-Zeile (wie im Vorbild).
+  const grenzzeiten = [...new Set(zeitStunden.flatMap((z) => [z.pt.start, z.pt.end]))].sort((a, b) => hmZuMin(a) - hmZuMin(b));
+
+  /* Aufeinanderfolgende Stunden mit demselben Fach zu einem einzigen Kasten
+     zusammenfassen ("Doppelstunde" als ein Block statt zwei). Zwei leere
+     Nachbarstunden verschmelzen bewusst NICHT - jede bleibt einzeln antippbar. */
+  function bloeckeFuerTag(day) {
+    const bloecke = [];
+    zeitStunden.forEach(({ p, pt }) => {
+      const cell = cellData(day, p);
+      const fachId = cell?.fachId || null;
+      const letzter = bloecke[bloecke.length - 1];
+      if (fachId && letzter && letzter.fachId === fachId && letzter.endPeriod === p - 1) {
+        letzter.endPeriod = p;
+        letzter.endTime = pt.end;
+      } else {
+        bloecke.push({ day, startPeriod: p, endPeriod: p, fachId, startTime: pt.start, endTime: pt.end });
+      }
+    });
+    return bloecke;
+  }
+
+  function BlockBox({ block }) {
+    const fach = block.fachId ? data.faecher.find((f) => f.id === block.fachId) : null;
+    const cls = fach ? data.classes.find((c) => c.id === fach.classId) : null;
+    const top = (hmZuMin(block.startTime) - tagStart) * STUNDENPLAN_PX_PRO_MIN;
+    const hoehe = (hmZuMin(block.endTime) - hmZuMin(block.startTime)) * STUNDENPLAN_PX_PRO_MIN;
+    const istDoppelt = block.startPeriod !== block.endPeriod;
+    const haelfte = hoehe / 2;
+
+    return (
+      <div
+        className="absolute left-0.5 right-0.5 rounded-md text-[10px] leading-tight border overflow-hidden"
+        style={{
+          top, height: Math.max(hoehe - 2, 16),
+          ...(fach
+            ? isColor
+              ? { backgroundColor: fach.color + "1f", borderColor: fach.color + "40", color: fach.color }
+              : { backgroundColor: "var(--oliv-hell)", borderColor: "var(--linie)", color: "var(--oliv)" }
+            : { backgroundColor: "#FAFAF9", borderColor: "#F0EEE8", color: "#D6D3D1" }),
+        }}
+      >
+        {fach && isColor && <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: fach.color }} />}
+        {/* Bei einer Doppelstunde bleibt es EIN Kasten (Vorbild), aber innen
+            liegen zwei Klickflaechen uebereinander, damit sich jede Haelfte
+            weiterhin einzeln bearbeiten laesst - z.B. wenn nur die zweite
+            Stunde ein anderes Fach bekommen soll. */}
+        <button
+          onClick={() => setEditingCell({ day: block.day, period: block.startPeriod })}
+          className="absolute left-0 right-0 top-0 flex flex-col items-start justify-center px-1.5 pl-2"
+          style={{ height: istDoppelt ? haelfte : hoehe }}
+          aria-label={fach ? `${DAY_LABELS[block.day]}, Stunde ${block.startPeriod}: ${cls?.name} ${fach.subject} bearbeiten` : `${DAY_LABELS[block.day]}, Stunde ${block.startPeriod}: Fach eintragen`}
+        >
+          {fach ? (
+            <>
+              <span className="font-semibold truncate w-full">{cls?.name}</span>
+              <span className="truncate w-full opacity-80">{fach.subject}</span>
+              {!!fach.room && hoehe > 50 && <span className="truncate w-full opacity-60">{fach.room}</span>}
+            </>
+          ) : <span className="opacity-50">+</span>}
+        </button>
+        {istDoppelt && (
+          <button
+            onClick={() => setEditingCell({ day: block.day, period: block.endPeriod })}
+            className="absolute left-0 right-0 bottom-0"
+            style={{ height: haelfte }}
+            aria-label={`${cls?.name || ""} ${fach?.subject || ""} - zweite Stunde bearbeiten`}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold tracking-tight">Stundenplan</h1>
-      <Card className="p-2">
-        <table className="w-full table-fixed border-separate border-spacing-1">
-          <thead>
-            <tr>
-              <th className="w-8"></th>
+
+      {!data.classes.length ? (
+        <p className="text-sm text-stone-400">Lege zunächst unter „Klassen & Schüler" mindestens eine Klasse an, um sie im Stundenplan einzutragen.</p>
+      ) : !zeitStunden.length ? (
+        <p className="text-sm text-stone-400">Trage unten bei „Uhrzeiten der Stunden" mindestens eine Stunde mit Start- und Endzeit ein, damit der Stundenplan sie einordnen kann.</p>
+      ) : (
+        <Card className="p-3 overflow-x-auto">
+          <div className="min-w-[420px]">
+            {/* Kopfzeile: Wochentage, exakt auf die Spalten unten ausgerichtet */}
+            <div className="flex mb-1.5">
+              <div style={{ width: "10%" }} />
               {DAYS.map((d) => (
-                <th key={d} className="text-stone-500 font-medium text-[11px] pb-1">{DAY_LABELS[d].slice(0, 2)}</th>
+                <div key={d} className="text-stone-500 font-medium text-[11px] text-center" style={{ width: "18%" }}>
+                  {DAY_LABELS[d].slice(0, 2)}
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {periods.map((p) => {
-              const pt = data.periodTimes?.[p];
-              return (
-              <tr key={p}>
-                <td className="align-middle">
-                  {editingTime === p ? (
-                    <PeriodTimeEditor initial={pt} onSave={(start, end) => setPeriodTime(p, start, end)} onCancel={() => setEditingTime(null)} />
-                  ) : (
-                    <button onClick={() => setEditingTime(p)} className="w-full text-center rounded-md hover:bg-stone-50 py-1">
-                      <div className="text-stone-600 text-xs font-semibold tnum">{p}</div>
-                      <div className="text-stone-400 text-[8px] leading-tight tnum">{pt ? pt.start : "+"}</div>
-                    </button>
-                  )}
-                </td>
-                {DAYS.map((day) => {
-                  const cell = cellData(day, p);
-                  const fach = cell ? data.faecher.find((f) => f.id === cell.fachId) : null;
-                  const cls = fach ? data.classes.find((c) => c.id === fach.classId) : null;
-                  const isEditing = editingCell?.day === day && editingCell?.period === p;
-                  return (
-                    <td key={day} className="align-top">
-                      {isEditing ? (
-                        <CellEditor
-                          faecher={data.faecher}
-                          classes={data.classes}
-                          initial={cell}
-                          onSave={(fachId) => setCell(day, p, fachId)}
-                          onCancel={() => setEditingCell(null)}
-                        />
-                      ) : (
-                        <button
-                          onClick={() => setEditingCell({ day, period: p })}
-                          className="w-full h-12 rounded-md text-[10px] px-1 py-1 text-center leading-tight flex flex-col items-center justify-center transition-colors border overflow-hidden"
-                          style={
-                            fach
-                              ? isColor
-                                ? { backgroundColor: fach.color + "1f", borderColor: fach.color + "40", color: fach.color }
-                                : { backgroundColor: "var(--oliv-hell)", borderColor: "var(--linie)", color: "var(--oliv)" }
-                              : { backgroundColor: "#FAFAF9", borderColor: "#F0EEE8", color: "#D6D3D1" }
-                          }
-                        >
-                          {fach ? (
-                            <>
-                              <span className="font-semibold truncate w-full">{cls?.name}</span>
-                              <span className="truncate w-full opacity-80">{fach.subject}</span>
-                            </>
-                          ) : "·"}
-                        </button>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </Card>
-      <p className="text-xs text-stone-400 px-1">Tippe auf eine Stunde, um Klasse und Fach einzutragen, oder auf die Stundennummer, um die Uhrzeit zu setzen.</p>
-      {!data.classes.length && <p className="text-sm text-stone-400">Lege zunächst unter „Klassen & Schüler" mindestens eine Klasse an, um sie im Stundenplan einzutragen.</p>}
+            </div>
+            <div className="relative" style={{ height: gridHoehe }}>
+              {grenzzeiten.map((zeit) => {
+                const top = (hmZuMin(zeit) - tagStart) * STUNDENPLAN_PX_PRO_MIN;
+                return (
+                  <div key={zeit} className="absolute left-0 right-0 border-t border-stone-100" style={{ top }}>
+                    <span className="absolute -top-[7px] left-0 text-[10px] text-stone-400 tabular-nums bg-white pr-1" style={{ width: "10%" }}>
+                      {zeit}
+                    </span>
+                  </div>
+                );
+              })}
+              {DAYS.map((day, i) => (
+                <div key={day} className="absolute top-0 bottom-0" style={{ left: `${10 + i * 18}%`, width: "18%" }}>
+                  {bloeckeFuerTag(day).map((block) => (
+                    <BlockBox key={`${block.startPeriod}-${block.endPeriod}`} block={block} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Als eigenes zentriertes Overlay statt eingebettet in einen
+          schmalen Tages-Kasten - der (fuer schmale Handys noetige)
+          horizontale Scroll-Container oben wuerde einen dort eingebetteten
+          Editor sonst abschneiden. */}
+      {editingCell && (
+        <div className="fixed inset-0 bg-stone-900/40 flex items-center justify-center p-4 z-50" onClick={() => setEditingCell(null)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <CellEditor
+              faecher={data.faecher}
+              classes={data.classes}
+              initial={cellData(editingCell.day, editingCell.period)}
+              onSave={(fachId) => setCell(editingCell.day, editingCell.period, fachId)}
+              onCancel={() => setEditingCell(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      <div>
+        <button
+          onClick={() => setZeitenOffen((o) => !o)}
+          className="w-full flex items-center justify-between gap-2 min-h-[44px] press-scale"
+        >
+          <span className="text-xs font-semibold text-stone-400 uppercase tracking-wide flex items-center gap-1.5">
+            Uhrzeiten der Stunden
+            {!!periodsOhneZeit.length && (
+              <span className="text-[10px] normal-case font-medium bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5">
+                {periodsOhneZeit.length} ohne Uhrzeit
+              </span>
+            )}
+          </span>
+          <ChevronDown size={14} className={`text-stone-400 transition-transform ${zeitenOffen ? "rotate-180" : ""}`} />
+        </button>
+        {zeitenOffen && (
+          <Card className="p-2 mt-2">
+            <ul className="divide-y divide-stone-100">
+              {periods.map((p) => {
+                const pt = data.periodTimes?.[p];
+                return (
+                  <li key={p} className="flex items-center gap-3 px-2 py-1.5">
+                    <span className="text-xs font-semibold text-stone-500 tabular-nums w-5">{p}.</span>
+                    {editingTime === p ? (
+                      <PeriodTimeEditor initial={pt} onSave={(start, end) => setPeriodTime(p, start, end)} onCancel={() => setEditingTime(null)} />
+                    ) : (
+                      <button onClick={() => setEditingTime(p)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text py-1">
+                        {pt ? `${pt.start} – ${pt.end}` : <span className="text-stone-400">Uhrzeit eintragen</span>}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
+      </div>
+
+      <p className="text-xs text-stone-400 px-1">Tippe auf eine Stunde, um Klasse und Fach einzutragen. Zwei aufeinanderfolgende Stunden mit demselben Fach erscheinen als ein Kasten (Doppelstunde).</p>
     </div>
   );
 }
@@ -16308,22 +16437,18 @@ function CellEditor({ faecher, classes, initial, onSave, onCancel }) {
   const [fachId, setFachId] = useState(initial?.fachId || "");
 
   return (
-    <div className="relative">
-      {/* Platzhalter in Zellengröße, Editor schwebt darüber */}
-      <div className="h-12" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-50 bg-white border akzent-rand rounded-lg p-1.5 space-y-1 shadow-lg w-40">
-        <select className="w-full text-xs rounded border border-stone-200 px-1 py-1" value={fachId} onChange={(e) => setFachId(e.target.value)} autoFocus>
-          <option value="">frei</option>
-          {faecher.map((f) => {
-            const cls = classes.find((c) => c.id === f.classId);
-            return <option key={f.id} value={f.id}>{cls?.name} · {f.subject}</option>;
-          })}
-        </select>
-        {!faecher.length && <p className="text-[10px] text-stone-400 px-0.5">Erst unter „Fächer" anlegen.</p>}
-        <div className="flex gap-1">
-          <button onClick={() => onSave(fachId)} className="flex-1 text-xs akzent-flaeche rounded py-1"><Check size={12} className="inline" /></button>
-          <button onClick={onCancel} className="flex-1 text-xs bg-stone-100 text-stone-500 rounded py-1"><X size={12} className="inline" /></button>
-        </div>
+    <div className="bg-white border akzent-rand rounded-xl p-3 space-y-2 shadow-xl w-52">
+      <select className="w-full text-sm rounded border border-stone-200 px-2 py-1.5" value={fachId} onChange={(e) => setFachId(e.target.value)} autoFocus>
+        <option value="">frei</option>
+        {faecher.map((f) => {
+          const cls = classes.find((c) => c.id === f.classId);
+          return <option key={f.id} value={f.id}>{cls?.name} · {f.subject}</option>;
+        })}
+      </select>
+      {!faecher.length && <p className="text-xs text-stone-400 px-0.5">Erst unter „Fächer" anlegen.</p>}
+      <div className="flex gap-1.5">
+        <button onClick={() => onSave(fachId)} className="flex-1 text-sm akzent-flaeche rounded-lg py-1.5"><Check size={14} className="inline" /></button>
+        <button onClick={onCancel} className="flex-1 text-sm bg-stone-100 text-stone-500 rounded-lg py-1.5"><X size={14} className="inline" /></button>
       </div>
     </div>
   );
