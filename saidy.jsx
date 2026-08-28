@@ -22,7 +22,7 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
-  Sun, Moon, SunMoon,
+  Sun, Moon, SunMoon, Coffee, Eye,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
@@ -107,7 +107,7 @@ const QUICK_SYMBOLS = [
    Dateien selbst liegen in IndexedDB. So bleibt die normale Datensicherung
    klein, und nach dem Wiederherstellen auf einem neuen Geraet ist wenigstens
    sichtbar, welche Unterlagen es gab. */
-const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "", stundenlaenge: 60 } };
+const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], aufsichten: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "", stundenlaenge: 60, mittagspause: null } };
 
 /* Sortierbar sind nur die Karten im unteren Raster.
    Fest sitzen: „Unterricht" als Hauptkarte sowie die Dreierreihe aus Terminen,
@@ -434,7 +434,8 @@ const LIST_ICON_MAP = {
 };
 const LIST_ICON_KEYS = Object.keys(LIST_ICON_MAP);
 
-/* Zwoelf Fach-Farben, per OKLCH-Farbrad konstruiert statt frei Hand
+/* Achtzehn Fach-Farben (urspruenglich zwoelf, siehe Erweiterung weiter
+   unten), per OKLCH-Farbrad konstruiert statt frei Hand
    gewaehlt: die alte Liste sass fast komplett bei Chroma 0.03-0.09 (fast
    Grau) mit mehreren Farbtoenen nur 5-15 Grad auseinander (z. B. zwei fast
    identische Blautoene) - im Alltag kaum zu unterscheiden, genau das
@@ -453,10 +454,31 @@ const LIST_ICON_KEYS = Object.keys(LIST_ICON_MAP);
    Simulation): Normalsicht-Mindestabstand 18.7 (Ziel >=15, bestanden),
    Rotgruen-Sehschwaeche 7.4 (Zielband 6-8, zulaessig weil jede Fach-Farbe
    in der App immer zusammen mit dem Fachnamen als Text steht - nie allein
-   Traeger der Bedeutung ist). */
+   Traeger der Bedeutung ist).
+
+   2026-08 auf 18 erweitert: Lehrkraft-Feedback, dass "echte" Grundfarben
+   (Rot, Gelb/Gold) in den ersten 12 fehlten und mehr Auswahl gewuenscht
+   war. Die ersten 12 Slots bleiben unveraendert (bereits vergebene Fach-
+   Farben speichern den Hex-Wert direkt, keine Migration noetig). Die
+   sechs neuen (Slot 13-18: Gold, Rot, Stahlblau, Koralle, Aubergine,
+   Smaragd) haengen weiterhin an denselben Farbfamilien, aber bewusst mit
+   angehobener/gesenkter Helligkeit statt engerer Farbton-Schritte, weil
+   ein 18. Farbton bei 20-Grad-Abstand am selben Chroma/Helligkeits-Niveau
+   unter Rotgruen-Simulation nicht mehr sicher zu unterscheiden war (mit
+   dem Validator gegengeprueft) - "Gold" z. B. liegt auf demselben
+   Farbton wie das bestehende Senf-Oliv, aber deutlich heller, statt einen
+   fast identischen Farbton danebenzusetzen. Erneut mit dem Validator
+   geprueft (18 Farben, direkt aneinandergrenzend): Normalsicht-
+   Mindestabstand weiterhin 18.7 (unveraendert, weil das schwaechste Paar
+   innerhalb der ersten 12 liegt), Rotgruen-Sehschwaeche 7.4 (gleiches
+   Paar wie zuvor, selbe Begruendung). Slot 1 (Marken-Oliv) faellt bei der
+   Chroma-Untergrenze bewusst durch - Markenfarbe, unveraendert seit der
+   ersten Fassung dieser Palette. */
 const COLOR_PALETTE = [
   "#4F5844", "#5156B6", "#8C5500", "#0089A3", "#A53454", "#009259",
   "#7A46A4", "#746300", "#0067AA", "#A73A17", "#008D85", "#963A81",
+  "#bea333" /* Gold */, "#c13c3b" /* Rot */, "#3991b7" /* Stahlblau */,
+  "#dc7b40" /* Koralle */, "#8a3362" /* Aubergine */, "#33903c" /* Smaragd */,
 ];
 
 function nextPaletteColor(usedColors) {
@@ -918,6 +940,14 @@ function sanitizeImport(imported) {
       log: S_LISTE(d.log).slice(0, 5000),
       slots: Number.isInteger(d.slots) && d.slots > 0 && d.slots <= 40 ? d.slots : 1,
     })),
+    /* Pausenaufsichten - eigene Zeiten statt Stundenraster, weil eine
+       Aufsicht auch nur eine Haelfte der Mittagspause oder zwei halbe
+       Pausen lang gehen kann. */
+    aufsichten: map("aufsichten", (a) => ({
+      ...a, day: WEEKDAY_KURZ.includes(a.day) ? a.day : null,
+      start: S_ZEIT(a.start), end: S_ZEIT(a.end),
+      label: S_TEXT(a.label, 60),
+    })).filter((a) => a.day && a.start && a.end && a.end > a.start),
     finalGrades: map("finalGrades", (f) => ({ ...f, value: typeof f.value === "number" ? f.value : null })),
     /* Nur die Eintraege - die Dateien kommen aus der getrennten Dokument-
        Sicherung. `scope` steuert, wo ein Dokument auftaucht; ein fremder Wert
@@ -990,6 +1020,9 @@ function sanitizeVollstaendig(imported) {
       : (EMPTY_DATA.settings || {}).dashboardOrder,
     lehrerName: typeof impSettings.lehrerName === "string" ? impSettings.lehrerName.slice(0, 80) : "",
     stundenlaenge: impSettings.stundenlaenge === 45 ? 45 : 60,
+    mittagspause: S_ZEIT(impSettings.mittagspause?.start) && S_ZEIT(impSettings.mittagspause?.end) && impSettings.mittagspause.end > impSettings.mittagspause.start
+      ? { start: impSettings.mittagspause.start, end: impSettings.mittagspause.end }
+      : null,
   };
 
   merged.grades = (Array.isArray(merged.grades) ? merged.grades : []).map((g) => ({
@@ -3154,6 +3187,7 @@ const HELP_DATA = [
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi beginnt leer – keine Klassen, keine Kinder, keine Termine. Zuerst fragt die App nach deinem Bundesland und trägt die Schulferien ein; das lässt sich mit „Später einrichten" überspringen und in den Einstellungen nachholen. Danach steht auf der Übersicht eine Willkommenskarte mit dem einzigen sinnvollen ersten Schritt: eine Klasse anlegen. Sind Klasse und Kinder da, kommen Fächer und Stundenplan dazu – alles Weitere entsteht im Alltag. Wenn du dich lieber erst umsehen möchtest, kannst du unter „Einstellungen" → „Daten & Sicherung" → „Erweiterte Einstellungen" Beispieldaten laden: zwei erfundene Klassen mit Noten und Terminen. Der Knopf erscheint nur, solange du noch keine eigene Klasse angelegt hast – so kann er nichts überschreiben.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
+      { q: "Wie ändere ich die Farbe eines Fachs?", a: `Klasse antippen → Reiter „Unterricht" → bei dem Fach auf das ···-Symbol rechts tippen → „Fach bearbeiten". Im Bearbeiten-Dialog steht unter „Farbe" eine Auswahl aus 18 Farbtönen zum direkten Antippen. Neu angelegte Fächer bekommen automatisch eine noch unbenutzte Farbe zugewiesen; hier lässt sich das jederzeit ändern, etwa wenn zwei Fächer sich zu ähnlich sehen.` },
       { q: "Wie bekomme ich Tu-vi als App auf den Home-Bildschirm?", a: `Das hängt vom Gerät ab. Auf Android und am Computer (Chrome, Edge) genügt ein Tipp: Der Knopf „Auf dem Home-Bildschirm ablegen" steht auf dem Anmeldebildschirm und später im Menü. Auf iPhone und iPad geht es nur über zwei Schritte, weil Apple keinen anderen Weg zulässt: unten in der Mitte (am iPad oben rechts) auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm" wählen. Tu-vi zeigt dir diese zwei Schritte automatisch an, solange sie noch nicht als App läuft. Wichtig auf iPhone und iPad: Mach das möglichst VOR der ersten Anmeldung. Die App auf dem Home-Bildschirm bekommt bei iOS einen eigenen Speicher – meldest du dich erst in Safari an und legst sie danach ab, musst du dich dort noch einmal anmelden, und auch die Face-ID-Sperre wäre dort zunächst wieder aus. Deine Daten sind dabei nicht weg, sie liegen auf dem Server und sind nach der Anmeldung sofort wieder da.` },
       { q: "Wo finde ich das Ablegen auf dem Home-Bildschirm später wieder?", a: `Unter „Mehr" → „Einstellungen" → „Als App ablegen". Auf dem Anmeldebildschirm erscheint der Hinweis nur beim ersten Mal – danach würde er im Alltag nur Platz kosten, deshalb wandert er in die Einstellungen. Läuft Tu-vi auf dem Gerät bereits als App, sagt die Seite dir das; kann dein Browser es gar nicht, steht dort, was stattdessen geht.` },
       { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast dich auf diesem Gerät schon einmal angemeldet oder auf „Später" getippt – dann steht der Weg unter „Einstellungen" → „Als App ablegen". Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
@@ -3239,6 +3273,8 @@ const HELP_DATA = [
       { q: "Wie lege ich einen wiederkehrenden Termin an?", a: `Beim Anlegen eines Termins gibt es das Feld „Wiederholung" – dort kannst du Wöchentlich, Alle 2 Wochen oder Monatlich wählen. Der Termin erscheint dann automatisch an allen folgenden Termintagen im Kalender.` },
       { q: "Wie trage ich Schulferien ein?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule". Wähle dort zuerst dein Bundesland, danach erscheint „Schulferien eintragen" – Tu-vi übernimmt alle Ferien automatisch.` },
       { q: "Wie stelle ich meine Stundenlänge ein (45 oder 60 Minuten)?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule" → „Stundenlänge". Bei 60 Minuten bietet der Stundenplan 8 Stunden pro Tag an, bei 45 Minuten 12 – so passt ein voller Schultag mit mehr, kürzeren Einheiten hinein. Die Uhrzeiten je Stunde trägst du im Stundenplan über den aufklappbaren Bereich „Uhrzeiten der Stunden" ein, die Einstellung ändert nur, wie viele Stunden zur Auswahl stehen.` },
+      { q: "Wie trage ich meine Mittagspause im Stundenplan ein?", a: `Im Stundenplan ganz unten den Bereich „Uhrzeiten der Stunden" aufklappen – dort steht die Mittagspause als erste Zeile, oberhalb der einzelnen Stunden. Start- und Endzeit eintragen, fertig: Die Pause erscheint danach als eigenes Band quer über alle Wochentage im Raster. Ein Tipp auf das ×-Symbol daneben entfernt sie wieder. Da Tu-vi nur eine schulweite Mittagszeit kennt (wie auch die Stunden-Uhrzeiten selbst gilt sie für alle Wochentage gleich), lässt sich pro Tag keine abweichende Zeit hinterlegen.` },
+      { q: "Wie trage ich Pausenaufsichten ein?", a: `Im Stundenplan ganz unten den Bereich „Aufsichten" aufklappen und auf „Aufsicht eintragen" tippen. Wochentag, Start- und Endzeit sowie ein kurzer Ort (z. B. „Schulhof" oder „Pausenhalle") reichen – die Zeiten sind frei wählbar und nicht an die Stundenraster-Zeiten gebunden, eine Aufsicht kann also auch nur eine Hälfte der Mittagspause oder zwei halbe Pausen lang gehen. Eingetragene Aufsichten erscheinen als eigene, gestrichelte Kästchen im Stundenplan-Raster und lassen sich dort direkt antippen, um sie zu bearbeiten oder zu löschen.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
     ],
   },
@@ -16196,7 +16232,13 @@ function StundenplanTab({ data, update }) {
   const periods = stundenplanZeilen(data.settings);
   const [editingCell, setEditingCell] = useState(null); // {day, period}
   const [editingTime, setEditingTime] = useState(null); // period
+  const [editingMittagspause, setEditingMittagspause] = useState(false);
+  const [editingAufsicht, setEditingAufsicht] = useState(null); // Aufsicht-Objekt oder {} fuer neu
   const [zeitenOffen, setZeitenOffen] = useState(false);
+  const [aufsichtenOffen, setAufsichtenOffen] = useState(false);
+
+  const mittagspause = data.settings?.mittagspause || null;
+  const aufsichten = data.aufsichten || [];
 
   function cellData(day, period) {
     return data.timetable.find((t) => t.day === day && t.period === period);
@@ -16219,6 +16261,32 @@ function StundenplanTab({ data, update }) {
     setEditingTime(null);
   }
 
+  function setMittagspauseZeit(start, end) {
+    update((d) => {
+      d.settings = { ...d.settings, mittagspause: start && end ? { start, end } : null };
+      return d;
+    });
+    setEditingMittagspause(false);
+  }
+
+  function saveAufsicht(aufsicht) {
+    update((d) => {
+      d.aufsichten = d.aufsichten || [];
+      if (aufsicht.id) {
+        d.aufsichten = d.aufsichten.map((a) => (a.id === aufsicht.id ? { ...a, ...aufsicht } : a));
+      } else {
+        d.aufsichten.push({ ...aufsicht, id: uid() });
+      }
+      return d;
+    });
+    setEditingAufsicht(null);
+  }
+
+  function removeAufsicht(id) {
+    update((d) => { d.aufsichten = (d.aufsichten || []).filter((a) => a.id !== id); return d; });
+    setEditingAufsicht(null);
+  }
+
   /* Nur Stunden mit gueltiger Uhrzeit lassen sich zeitproportional
      einordnen - Position und Hoehe im Raster ergeben sich direkt aus
      Start/Ende, "Luecken" (Freistunden) entstehen dadurch von selbst, ganz
@@ -16233,13 +16301,22 @@ function StundenplanTab({ data, update }) {
     .sort((a, b) => hmZuMin(a.pt.start) - hmZuMin(b.pt.start));
   const periodsOhneZeit = periods.filter((p) => !zeitStunden.some((z) => z.p === p));
 
-  const tagStart = zeitStunden.length ? Math.min(...zeitStunden.map((z) => hmZuMin(z.pt.start))) : 0;
-  const tagEnde = zeitStunden.length ? Math.max(...zeitStunden.map((z) => hmZuMin(z.pt.end))) : 0;
+  // Mittagspause und Aufsichten haben eigene, freie Uhrzeiten (nicht an
+  // Stunden gebunden) - sie fliessen mit in Rasterhoehe und Randlinien ein,
+  // damit z.B. eine Aufsicht ausserhalb der Unterrichtszeit nicht abgeschnitten wird.
+  const randZeiten = [
+    ...zeitStunden.flatMap((z) => [z.pt.start, z.pt.end]),
+    ...(mittagspause ? [mittagspause.start, mittagspause.end] : []),
+    ...aufsichten.flatMap((a) => [a.start, a.end]),
+  ];
+
+  const tagStart = randZeiten.length ? Math.min(...randZeiten.map(hmZuMin)) : 0;
+  const tagEnde = randZeiten.length ? Math.max(...randZeiten.map(hmZuMin)) : 0;
   const gridHoehe = Math.max(0, (tagEnde - tagStart) * STUNDENPLAN_PX_PRO_MIN);
 
   // Jede Start-/Endzeit einmal auf der linken Achse beschriften - an den
   // Uebergaengen, nicht pro Stunden-Zeile (wie im Vorbild).
-  const grenzzeiten = [...new Set(zeitStunden.flatMap((z) => [z.pt.start, z.pt.end]))].sort((a, b) => hmZuMin(a) - hmZuMin(b));
+  const grenzzeiten = [...new Set(randZeiten)].sort((a, b) => hmZuMin(a) - hmZuMin(b));
 
   /* Aufeinanderfolgende Stunden mit demselben Fach zu einem einzigen Kasten
      zusammenfassen ("Doppelstunde" als ein Block statt zwei). Zwei leere
@@ -16311,13 +16388,61 @@ function StundenplanTab({ data, update }) {
     );
   }
 
+  function aufsichtenFuerTag(day) {
+    return aufsichten.filter((a) => a.day === day);
+  }
+
+  /* Eigener Kasten-Typ statt BlockBox mit Sonderfall - eine Aufsicht ist
+     kein Fach, hat keine Fach-Farbe und immer nur eine Klickflaeche (keine
+     Doppelstunden-Halbierung), dafuer bewusst andere Optik (gestrichelt,
+     Bernstein statt Fach-Farbe), damit sie im Raster sofort als "kein
+     Unterricht" erkennbar ist. */
+  function AufsichtBox({ aufsicht }) {
+    const top = (hmZuMin(aufsicht.start) - tagStart) * STUNDENPLAN_PX_PRO_MIN;
+    const hoehe = (hmZuMin(aufsicht.end) - hmZuMin(aufsicht.start)) * STUNDENPLAN_PX_PRO_MIN;
+    return (
+      <button
+        onClick={() => setEditingAufsicht(aufsicht)}
+        className="absolute left-0.5 right-0.5 rounded-md text-[10px] leading-tight border border-dashed border-amber-400 bg-amber-50 text-amber-800 flex flex-col items-start justify-center px-1.5 pl-2 overflow-hidden text-left"
+        style={{ top, height: Math.max(hoehe - 2, 16) }}
+        aria-label={`${DAY_LABELS[aufsicht.day]}, Aufsicht ${aufsicht.start}–${aufsicht.end}${aufsicht.label ? ": " + aufsicht.label : ""} bearbeiten`}
+      >
+        <span className="flex items-center gap-1 font-semibold truncate w-full">
+          <Eye size={9} className="shrink-0" />
+          {aufsicht.label || "Aufsicht"}
+        </span>
+        {hoehe > 30 && <span className="truncate w-full opacity-80">{aufsicht.start}–{aufsicht.end}</span>}
+      </button>
+    );
+  }
+
+  /* Einmal ueber die volle Breite statt pro Tag, weil eine Mittagspause
+     schulweit zu einer festen Uhrzeit stattfindet (wie die Stunden-
+     Uhrzeiten selbst - ein Raster fuer alle Wochentage). Aufsichten
+     liegen als eigene Kaesten pro Tag darueber, weil sie oft nur einen
+     Teil der Pause abdecken. */
+  function MittagspauseBand() {
+    const top = (hmZuMin(mittagspause.start) - tagStart) * STUNDENPLAN_PX_PRO_MIN;
+    const hoehe = (hmZuMin(mittagspause.end) - hmZuMin(mittagspause.start)) * STUNDENPLAN_PX_PRO_MIN;
+    return (
+      <div
+        className="absolute akzent-ton rounded-md flex items-center justify-center opacity-70 pointer-events-none"
+        style={{ top, height: hoehe, left: "10%", right: 0 }}
+      >
+        <span className="text-[10px] font-medium akzent-text flex items-center gap-1">
+          <Coffee size={10} /> Mittagspause · {mittagspause.start}–{mittagspause.end}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold tracking-tight">Stundenplan</h1>
 
       {!data.classes.length ? (
         <p className="text-sm text-stone-400">Lege zunächst unter „Klassen & Schüler" mindestens eine Klasse an, um sie im Stundenplan einzutragen.</p>
-      ) : !zeitStunden.length ? (
+      ) : !randZeiten.length ? (
         <p className="text-sm text-stone-400">Trage unten bei „Uhrzeiten der Stunden" mindestens eine Stunde mit Start- und Endzeit ein, damit der Stundenplan sie einordnen kann.</p>
       ) : (
         <Card className="p-3 overflow-x-auto">
@@ -16342,10 +16467,14 @@ function StundenplanTab({ data, update }) {
                   </div>
                 );
               })}
+              {mittagspause && hmZuMin(mittagspause.end) > hmZuMin(mittagspause.start) && <MittagspauseBand />}
               {DAYS.map((day, i) => (
                 <div key={day} className="absolute top-0 bottom-0" style={{ left: `${10 + i * 18}%`, width: "18%" }}>
                   {bloeckeFuerTag(day).map((block) => (
                     <BlockBox key={`${block.startPeriod}-${block.endPeriod}`} block={block} />
+                  ))}
+                  {aufsichtenFuerTag(day).map((a) => (
+                    <AufsichtBox key={a.id} aufsicht={a} />
                   ))}
                 </div>
               ))}
@@ -16372,6 +16501,19 @@ function StundenplanTab({ data, update }) {
         </div>
       )}
 
+      {editingAufsicht && (
+        <div className="fixed inset-0 bg-stone-900/40 flex items-center justify-center p-4 z-50" onClick={() => setEditingAufsicht(null)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <AufsichtEditor
+              initial={editingAufsicht}
+              onSave={saveAufsicht}
+              onDelete={removeAufsicht}
+              onCancel={() => setEditingAufsicht(null)}
+            />
+          </div>
+        </div>
+      )}
+
       <div>
         <button
           onClick={() => setZeitenOffen((o) => !o)}
@@ -16390,6 +16532,22 @@ function StundenplanTab({ data, update }) {
         {zeitenOffen && (
           <Card className="p-2 mt-2">
             <ul className="divide-y divide-stone-100">
+              <li className="flex items-center gap-3 px-2 py-1.5">
+                <Coffee size={13} className="text-stone-400 shrink-0" />
+                {editingMittagspause ? (
+                  <PeriodTimeEditor initial={mittagspause} onSave={(start, end) => setMittagspauseZeit(start, end)} onCancel={() => setEditingMittagspause(false)} />
+                ) : (
+                  <button onClick={() => setEditingMittagspause(true)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text py-1">
+                    <span className="font-medium">Mittagspause</span>{" "}
+                    {mittagspause ? <span className="tabular-nums text-stone-500">{mittagspause.start} – {mittagspause.end}</span> : <span className="text-stone-400">Uhrzeit eintragen</span>}
+                  </button>
+                )}
+                {mittagspause && !editingMittagspause && (
+                  <button onClick={() => setMittagspauseZeit(null, null)} className="text-stone-300 hover:text-red-500 p-1" aria-label="Mittagspause entfernen">
+                    <X size={14} />
+                  </button>
+                )}
+              </li>
               {periods.map((p) => {
                 const pt = data.periodTimes?.[p];
                 return (
@@ -16410,7 +16568,98 @@ function StundenplanTab({ data, update }) {
         )}
       </div>
 
-      <p className="text-xs text-stone-400 px-1">Tippe auf eine Stunde, um Klasse und Fach einzutragen. Zwei aufeinanderfolgende Stunden mit demselben Fach erscheinen als ein Kasten (Doppelstunde).</p>
+      <div>
+        <button
+          onClick={() => setAufsichtenOffen((o) => !o)}
+          className="w-full flex items-center justify-between gap-2 min-h-[44px] press-scale"
+        >
+          <span className="text-xs font-semibold text-stone-400 uppercase tracking-wide flex items-center gap-1.5">
+            Aufsichten
+            {!!aufsichten.length && (
+              <span className="text-[10px] normal-case font-medium bg-stone-100 text-stone-500 rounded-full px-1.5 py-0.5">
+                {aufsichten.length}
+              </span>
+            )}
+          </span>
+          <ChevronDown size={14} className={`text-stone-400 transition-transform ${aufsichtenOffen ? "rotate-180" : ""}`} />
+        </button>
+        {aufsichtenOffen && (
+          <Card className="p-2 mt-2 space-y-1">
+            {!aufsichten.length && <p className="text-xs text-stone-400 px-2 py-1.5">Noch keine Aufsicht eingetragen.</p>}
+            <ul className="divide-y divide-stone-100">
+              {[...aufsichten]
+                .sort((a, b) => DAYS.indexOf(a.day) - DAYS.indexOf(b.day) || a.start.localeCompare(b.start))
+                .map((a) => (
+                  <li key={a.id} className="flex items-center gap-3 px-2 py-1.5">
+                    <Eye size={13} className="text-amber-600 shrink-0" />
+                    <button onClick={() => setEditingAufsicht(a)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text py-1">
+                      <span className="font-medium">{DAY_LABELS[a.day]}</span>{" "}
+                      <span className="tabular-nums text-stone-500">{a.start}–{a.end}</span>
+                      {!!a.label && <span className="text-stone-400"> · {a.label}</span>}
+                    </button>
+                  </li>
+                ))}
+            </ul>
+            <button
+              onClick={() => setEditingAufsicht({})}
+              className="w-full flex items-center justify-center gap-1.5 text-sm akzent-text py-2 press-scale"
+            >
+              <Plus size={14} /> Aufsicht eintragen
+            </button>
+          </Card>
+        )}
+      </div>
+
+      <p className="text-xs text-stone-400 px-1">Tippe auf eine Stunde, um Klasse und Fach einzutragen. Zwei aufeinanderfolgende Stunden mit demselben Fach erscheinen als ein Kasten (Doppelstunde). Mittagspause und Aufsichten trägst du weiter unten ein.</p>
+    </div>
+  );
+}
+
+function AufsichtEditor({ initial, onSave, onDelete, onCancel }) {
+  const [day, setDay] = useState(initial?.day || "Mo");
+  const [start, setStart] = useState(initial?.start || "");
+  const [end, setEnd] = useState(initial?.end || "");
+  const [label, setLabel] = useState(initial?.label || "");
+  const gueltig = /^\d{2}:\d{2}$/.test(start) && /^\d{2}:\d{2}$/.test(end) && end > start;
+
+  return (
+    <div className="bg-white border akzent-rand rounded-xl p-3 space-y-2 shadow-xl w-64">
+      <div className="text-sm font-medium text-stone-800">{initial?.id ? "Aufsicht bearbeiten" : "Aufsicht eintragen"}</div>
+      <select className="w-full text-sm rounded border border-stone-200 px-2 py-1.5" value={day} onChange={(e) => setDay(e.target.value)}>
+        {DAYS.map((d) => (
+          <option key={d} value={d}>{DAY_LABELS[d]}</option>
+        ))}
+      </select>
+      <div className="flex gap-2">
+        <input type="time" className="flex-1 text-sm rounded border border-stone-200 px-2 py-1.5" value={start} onChange={(e) => setStart(e.target.value)} />
+        <input type="time" className="flex-1 text-sm rounded border border-stone-200 px-2 py-1.5" value={end} onChange={(e) => setEnd(e.target.value)} />
+      </div>
+      <input
+        type="text"
+        placeholder="z. B. Schulhof, Pausenhalle"
+        value={label}
+        maxLength={60}
+        onChange={(e) => setLabel(e.target.value)}
+        className="w-full text-sm rounded border border-stone-200 px-2 py-1.5"
+      />
+      {!gueltig && !!(start || end) && <p className="text-xs text-red-500 px-0.5">Ende muss nach dem Start liegen.</p>}
+      <div className="flex gap-1.5">
+        <button
+          onClick={() => gueltig && onSave({ id: initial?.id, day, start, end, label: label.trim() })}
+          disabled={!gueltig}
+          className="flex-1 text-sm akzent-flaeche rounded-lg py-1.5 disabled:opacity-40"
+        >
+          <Check size={14} className="inline" />
+        </button>
+        <button onClick={onCancel} className="flex-1 text-sm bg-stone-100 text-stone-500 rounded-lg py-1.5">
+          <X size={14} className="inline" />
+        </button>
+      </div>
+      {!!initial?.id && (
+        <button onClick={() => onDelete(initial.id)} className="w-full text-xs text-red-500 hover:underline py-1">
+          Aufsicht löschen
+        </button>
+      )}
     </div>
   );
 }
