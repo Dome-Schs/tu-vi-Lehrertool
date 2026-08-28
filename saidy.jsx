@@ -5106,6 +5106,41 @@ export default function App() {
               parsed.finalGrades = (parsed.finalGrades || []).filter((g) => !demoSIds.has(g.studentId));
             }
           }
+          /* Migration: Beispiel-Termine/-Aufgaben im Kalender entfernen. Die
+             Bereinigung oben erfasst nur Klassen/Kinder - Termine und Aufgaben
+             haengen an keiner Klasse und blieben deshalb liegen, wenn jemand
+             die Demo-Klassen geloescht, den Kalender aber nicht angefasst hat.
+             Ausserdem greift die Bereinigung oben nur, solange die Demo-Kinder
+             noch existieren - nach deren Loeschung wuerde dieser Zweig sonst
+             nie wieder laufen. Nur entfernen, wenn ein Titel mit dem
+             erfundenen Klassennamen "5c"/"7a" (kein realer Klassenname, den
+             eine Lehrkraft zufaellig genauso waehlen wuerde) noch unveraendert
+             vorhanden ist - erst dann ist sicher, dass es sich wirklich um den
+             unveraenderten Demo-Batch handelt, und nur dann werden auch die
+             generischeren Titel aus demselben Batch (z. B. "Elternabend") mit
+             entfernt, die sonst faelschlich echte Lehrkraft-Termine treffen
+             könnten. */
+          const demoBatchMarker = ["Klassenarbeit Nr. 2 (5c Mathe)", "Wandertag 7a", "Klassenarbeit 5c korrigieren"];
+          const hatDemoBatch =
+            (parsed.events || []).some((e) => demoBatchMarker.includes(e.title)) ||
+            (parsed.tasks || []).some((t) => demoBatchMarker.includes(t.title));
+          if (hatDemoBatch) {
+            const demoEventTitel = new Set([
+              "Elternabend", "Teamsitzung Jahrgang 5", "Klassenarbeit Nr. 2 (5c Mathe)",
+              "Zeugniskonferenz", "Wandertag 7a", "Sportzeug einsammeln nicht vergessen",
+            ]);
+            const demoTaskTitel = new Set([
+              "Klassenarbeit 5c korrigieren", "Sporthalle für Bundesjugendspiele reservieren",
+              "Material für Bruchrechnung kopieren", "Elterngespräch Leon vorbereiten",
+              "Fortbildung anmelden", "Zeugnisvorlagen sichten",
+            ]);
+            parsed.events = (parsed.events || []).filter((e) => !demoEventTitel.has(e.title));
+            // Nur anfassen, wenn parsed.tasks schon existiert - sonst wuerde
+            // hier faelschlich [] gesetzt und die weiter unten folgende
+            // "alte todo-Kalendereintraege -> Aufgaben"-Migration (die auf
+            // !parsed.tasks prueft) faelschlich uebersprungen.
+            if (parsed.tasks) parsed.tasks = parsed.tasks.filter((t) => !demoTaskTitel.has(t.title));
+          }
           // Migration: frühere "todo"-Kalendereinträge werden zu eigenständigen Aufgaben
           if (!parsed.tasks) {
             const oldTodos = (parsed.events || []).filter((e) => e.type === "todo");
