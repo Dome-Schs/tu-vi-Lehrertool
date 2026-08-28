@@ -481,6 +481,17 @@ const COLOR_PALETTE = [
   "#dc7b40" /* Koralle */, "#8a3362" /* Aubergine */, "#33903c" /* Smaragd */,
 ];
 
+/* Sprechende Namen fuer die Farbpunkte - ohne sie liesse sich am Telefon
+   oder im Gespraech nicht sagen "ich hab Mathe in dem dunkelblauen", nur
+   auf einen nicht benennbaren Kreis zeigen. */
+const COLOR_NAMEN = {
+  "#4F5844": "Oliv", "#5156B6": "Indigo", "#8C5500": "Karamell", "#0089A3": "Türkis",
+  "#A53454": "Bordeaux", "#009259": "Grün", "#7A46A4": "Violett", "#746300": "Senf",
+  "#0067AA": "Blau", "#A73A17": "Rost", "#008D85": "Petrol", "#963A81": "Magenta",
+  "#bea333": "Gold", "#c13c3b": "Rot", "#3991b7": "Stahlblau", "#dc7b40": "Koralle",
+  "#8a3362": "Aubergine", "#33903c": "Smaragd",
+};
+
 function nextPaletteColor(usedColors) {
   const used = Object.values(usedColors || {});
   const free = COLOR_PALETTE.find((c) => !used.includes(c));
@@ -2062,7 +2073,7 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
         {seite === "sicherheit" && (
           <div>
             <EmailAendernEinstellung user={user} />
-            <PasswortAendernEinstellung />
+            <PasswortAendernEinstellung user={user} />
             <AppSperreEinstellung user={user} />
             <AutoSperreEinstellung />
             <div className="pt-5 border-t border-stone-100">
@@ -3194,7 +3205,7 @@ const HELP_DATA = [
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
       { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (E-Mail-Adresse und Passwort ändern, App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
-      { q: "Wie ändere ich meine E-Mail-Adresse oder mein Passwort?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto". Dort stehen ganz oben „E-Mail-Adresse ändern" und „Passwort ändern" – beide mit einem Tipp aufklappbar. Bei der E-Mail-Adresse verschickt Tu-vi eine Bestätigungs-Mail an die neue Adresse; die Änderung gilt erst, wenn du den Link darin öffnest, bis dahin bleibt die alte Adresse aktiv. Beim Passwort reicht die Eingabe (mindestens 6 Zeichen, zweimal zur Bestätigung) – ohne das alte Passwort erneut einzugeben, da du bereits angemeldet bist. Dein Anzeigename für Ausdrucke wie den Klassenspiegel steht separat unter „Schuljahr & Schule" → „Deine Angaben".` },
+      { q: "Wie ändere ich meine E-Mail-Adresse oder mein Passwort?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto". Dort stehen ganz oben „E-Mail-Adresse ändern" und „Passwort ändern" – beide mit einem Tipp aufklappbar. Bei der E-Mail-Adresse verschickt Tu-vi eine Bestätigungs-Mail an die neue Adresse; die Änderung gilt erst, wenn du den Link darin öffnest, bis dahin bleibt die alte Adresse aktiv und du meldest dich normal weiter mit ihr an. Beim Passwort trägst du zur Sicherheit zuerst dein aktuelles Passwort ein, danach zweimal das neue (mindestens 6 Zeichen) – so kann niemand an einem kurz unbeaufsichtigten, entsperrten Gerät dein Passwort ändern und dich aussperren. Dein Anzeigename für Ausdrucke wie den Klassenspiegel steht separat unter „Schuljahr & Schule" → „Deine Angaben".` },
       { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen, Kinder und Fächer bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder und Fächer mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
       { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder und Fächer mit sämtlichen zugehörigen Daten (Noten, Notizen, Förderziele, Dokumente, Sitzplan-Einträge, Stundenplan-Einträge) sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
       { q: "Wie lösche ich ein einzelnes Fach, ohne die ganze Klasse zu löschen?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen, dann auf das ···-Symbol rechts in der Fach-Zeile → „Fach löschen". Genau wie bei Klassen und Kindern landet das Fach für 30 Tage im Papierkorb (Reiter „Klassen", ganz unten) und lässt sich dort wiederherstellen – seine Noten, Zeugnisnoten, Stundenplan-Einträge und Stundenthemen bleiben verknüpft und kommen beim Wiederherstellen automatisch zurück. Solange das Fach im Papierkorb liegt, verschwindet es aus Stundenplan, Notenübersicht und der Übersicht-Seite, so als gäbe es die Stunde gerade nicht.` },
@@ -4240,7 +4251,7 @@ function EmailAendernEinstellung({ user }) {
     try {
       const { error } = await supabase.auth.updateUser({ email: wert });
       if (error) throw error;
-      setErfolg(`Bestätigungs-Mail an ${wert} gesendet. Die Änderung gilt erst, sobald du den Link darin öffnest.`);
+      setErfolg(`Bestätigungs-Mail an ${wert} gesendet. Bis du den Link darin öffnest, gilt weiterhin deine bisherige Adresse – du kannst dich also normal weiter anmelden.`);
       setBearbeiten(false);
       setNeueEmail("");
     } catch (e) {
@@ -4254,6 +4265,7 @@ function EmailAendernEinstellung({ user }) {
   return (
     <div>
       <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">E-Mail-Adresse</div>
+      <p className="text-xs text-stone-500 mb-3">Damit meldest du dich an. Eine Änderung wird erst nach Bestätigung per Link wirksam.</p>
       <p className="text-sm text-stone-700 mb-1 break-all">{user?.email || "unbekannt"}</p>
       {!bearbeiten ? (
         <button
@@ -4280,8 +4292,9 @@ function EmailAendernEinstellung({ user }) {
   );
 }
 
-function PasswortAendernEinstellung() {
+function PasswortAendernEinstellung({ user }) {
   const [bearbeiten, setBearbeiten] = useState(false);
+  const [aktuelles, setAktuelles] = useState("");
   const [neu, setNeu] = useState("");
   const [bestaetigen, setBestaetigen] = useState("");
   const [laeuft, setLaeuft] = useState(false);
@@ -4290,15 +4303,22 @@ function PasswortAendernEinstellung() {
 
   async function speichern() {
     setFehler(null);
-    if (neu.length < 6) { setFehler("Passwort muss mindestens 6 Zeichen lang sein."); return; }
+    if (!aktuelles) { setFehler("Bitte dein aktuelles Passwort eingeben."); return; }
+    if (neu.length < 6) { setFehler("Neues Passwort muss mindestens 6 Zeichen lang sein."); return; }
     if (neu !== bestaetigen) { setFehler("Passwörter stimmen nicht überein."); return; }
     setLaeuft(true);
     try {
+      /* supabase.auth.updateUser() verlangt fuer sich selbst keine erneute
+         Anmeldung - ohne diese Pruefung koennte auf einem kurz unbeaufsichtigten,
+         entsperrten Geraet (Tablet auf dem Pult) jede:r das Passwort aendern
+         und die Lehrkraft aus dem eigenen Konto aussperren. */
+      const { error: pruefFehler } = await supabase.auth.signInWithPassword({ email: user?.email, password: aktuelles });
+      if (pruefFehler) { setFehler("Aktuelles Passwort ist nicht korrekt."); setLaeuft(false); return; }
       const { error } = await supabase.auth.updateUser({ password: neu });
       if (error) throw error;
       setErfolg(true);
       setBearbeiten(false);
-      setNeu(""); setBestaetigen("");
+      setAktuelles(""); setNeu(""); setBestaetigen("");
     } catch (e) {
       console.warn("Passwort-Aenderung fehlgeschlagen:", e.message);
       setFehler("Passwort konnte nicht geändert werden. Bitte versuche es erneut.");
@@ -4320,11 +4340,12 @@ function PasswortAendernEinstellung() {
         </button>
       ) : (
         <div className="space-y-2">
-          <input type="password" className={inputCls} placeholder="Neues Passwort" value={neu} onChange={(e) => setNeu(e.target.value)} autoFocus />
+          <input type="password" className={inputCls} placeholder="Aktuelles Passwort" value={aktuelles} onChange={(e) => setAktuelles(e.target.value)} autoFocus />
+          <input type="password" className={inputCls} placeholder="Neues Passwort" value={neu} onChange={(e) => setNeu(e.target.value)} />
           <input type="password" className={inputCls} placeholder="Neues Passwort bestätigen" value={bestaetigen} onChange={(e) => setBestaetigen(e.target.value)} />
           <div className="flex gap-2">
             <Button onClick={speichern} disabled={laeuft} className="flex-1 justify-center">{laeuft ? "…" : "Passwort ändern"}</Button>
-            <Button variant="ghost" onClick={() => { setBearbeiten(false); setNeu(""); setBestaetigen(""); setFehler(null); }} className="flex-1 justify-center">Abbrechen</Button>
+            <Button variant="ghost" onClick={() => { setBearbeiten(false); setAktuelles(""); setNeu(""); setBestaetigen(""); setFehler(null); }} className="flex-1 justify-center">Abbrechen</Button>
           </div>
         </div>
       )}
@@ -10332,16 +10353,27 @@ function FachModal({ data, initial, onSave, onClose }) {
           </Field>
 
           <Field label="Farbe">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               {COLOR_PALETTE.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className="w-7 h-7 rounded-full"
-                  style={{ backgroundColor: c, boxShadow: c === color ? "0 0 0 2px white, 0 0 0 3.5px #292524" : "0 0 0 2px white" }}
-                />
+                  /* Sichtbarer Punkt bleibt klein (w-6/24px), die Klickflaeche
+                     drumherum (w-9/36px) kommt naeher an die 44px-Fingerzielgroesse
+                     heran, ohne die Palette optisch aufzublaehen. */
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                  title={COLOR_NAMEN[c] || undefined}
+                  aria-label={COLOR_NAMEN[c] ? `Farbe ${COLOR_NAMEN[c]}` : "Farbe wählen"}
+                  aria-pressed={c === color}
+                >
+                  <span
+                    className="w-6 h-6 rounded-full block"
+                    style={{ backgroundColor: c, boxShadow: c === color ? "0 0 0 2px white, 0 0 0 3.5px #292524" : "0 0 0 2px white" }}
+                  />
+                </button>
               ))}
             </div>
+            <p className="text-xs text-stone-500 mt-1">Gewählt: {COLOR_NAMEN[color] || color}</p>
             {/* Die Fach-Farbe erscheint im Stundenplan und in den Fach-Kacheln
                 nur, wenn der Farb-Modus (Sternchen oben auf der Übersicht)
                 eingeschaltet ist - im Standard-Modus bleibt dort bewusst
@@ -13626,14 +13658,21 @@ function DutyModal({ onSave, onClose }) {
           </div>
 
           <Field label="Farbe">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               {COLOR_PALETTE.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className="w-7 h-7 rounded-full"
-                  style={{ backgroundColor: c, boxShadow: c === color ? "0 0 0 2px white, 0 0 0 3.5px #292524" : "0 0 0 2px white" }}
-                />
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                  title={COLOR_NAMEN[c] || undefined}
+                  aria-label={COLOR_NAMEN[c] ? `Farbe ${COLOR_NAMEN[c]}` : "Farbe wählen"}
+                  aria-pressed={c === color}
+                >
+                  <span
+                    className="w-6 h-6 rounded-full block"
+                    style={{ backgroundColor: c, boxShadow: c === color ? "0 0 0 2px white, 0 0 0 3.5px #292524" : "0 0 0 2px white" }}
+                  />
+                </button>
               ))}
             </div>
           </Field>
@@ -16466,7 +16505,10 @@ function StundenplanTab({ data, update }) {
             ? isColor
               ? { backgroundColor: fach.color + "1f", borderColor: fach.color + "40", color: fach.color }
               : { backgroundColor: "var(--oliv-hell)", borderColor: "var(--linie)", color: "var(--oliv)" }
-            : { backgroundColor: "#FAFAF9", borderColor: "#F0EEE8", color: "#D6D3D1" }),
+            /* CSS-Variablen statt fester Hex-Werte - sonst bleibt eine leere
+               Stunde im Dunkelmodus ein heller Fleck, waehrend alles drumherum
+               (Card, Rasterlinien, Fach-Kacheln) mitzieht. */
+            : { backgroundColor: "var(--n-50)", borderColor: "var(--n-100)", color: "var(--n-300)" }),
         }}
       >
         {fach && isColor && <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: fach.color }} />}
@@ -16489,12 +16531,18 @@ function StundenplanTab({ data, update }) {
           ) : <span className="opacity-50">+</span>}
         </button>
         {istDoppelt && (
-          <button
-            onClick={() => setEditingCell({ day: block.day, period: block.endPeriod })}
-            className="absolute left-0 right-0 bottom-0"
-            style={{ height: haelfte }}
-            aria-label={`${cls?.name || ""} ${fach?.subject || ""} - zweite Stunde bearbeiten`}
-          />
+          <>
+            {/* Duenne Trennlinie auf halber Hoehe - ohne sie war nicht zu
+                erkennen, dass obere und untere Haelfte getrennt antippbar
+                sind (z.B. um nur die zweite Stunde zu vertreten). */}
+            <div className="absolute left-1 right-1 pointer-events-none border-t border-dashed" style={{ top: haelfte, borderColor: "currentColor", opacity: 0.35 }} />
+            <button
+              onClick={() => setEditingCell({ day: block.day, period: block.endPeriod })}
+              className="absolute left-0 right-0 bottom-0"
+              style={{ height: haelfte }}
+              aria-label={`${cls?.name || ""} ${fach?.subject || ""} - zweite Stunde bearbeiten`}
+            />
+          </>
         )}
       </div>
     );
@@ -16557,6 +16605,15 @@ function StundenplanTab({ data, update }) {
       ) : !randZeiten.length ? (
         <p className="text-sm text-stone-400">Trage unten bei „Uhrzeiten der Stunden" mindestens eine Stunde mit Start- und Endzeit ein, damit der Stundenplan sie einordnen kann.</p>
       ) : (
+        <div className="relative">
+          {/* Auf schmalen Handys passen nicht alle fuenf Tage nebeneinander -
+              das Blaettern nach rechts (Freitag) faellt sonst niemandem auf.
+              Das Ausblenden am rechten Rand signalisiert "hier geht's weiter",
+              ohne selbst antippbar zu sein (pointer-events-none). */}
+          <div
+            className="md:hidden absolute top-3 bottom-3 right-3 w-8 rounded-r-xl pointer-events-none z-10"
+            style={{ background: "linear-gradient(to right, transparent, var(--karte))" }}
+          />
         <Card className="p-3 overflow-x-auto">
           <div className="min-w-[420px]">
             {/* Kopfzeile: Wochentage, exakt auf die Spalten unten ausgerichtet */}
@@ -16593,6 +16650,7 @@ function StundenplanTab({ data, update }) {
             </div>
           </div>
         </Card>
+        </div>
       )}
 
       {/* Als eigenes zentriertes Overlay statt eingebettet in einen
@@ -16732,6 +16790,7 @@ function AufsichtEditor({ initial, onSave, onDelete, onCancel }) {
   const [start, setStart] = useState(initial?.start || "");
   const [end, setEnd] = useState(initial?.end || "");
   const [label, setLabel] = useState(initial?.label || "");
+  const [loeschenBestaetigen, setLoeschenBestaetigen] = useState(false);
   const gueltig = /^\d{2}:\d{2}$/.test(start) && /^\d{2}:\d{2}$/.test(end) && end > start;
 
   return (
@@ -16768,9 +16827,20 @@ function AufsichtEditor({ initial, onSave, onDelete, onCancel }) {
         </button>
       </div>
       {!!initial?.id && (
-        <button onClick={() => onDelete(initial.id)} className="w-full text-xs text-red-500 hover:underline py-1">
-          Aufsicht löschen
-        </button>
+        loeschenBestaetigen ? (
+          <div className="flex gap-1.5">
+            <button onClick={() => onDelete(initial.id)} className="flex-1 text-xs text-white bg-red-600 hover:bg-red-700 rounded-lg py-1.5">
+              Wirklich löschen
+            </button>
+            <button onClick={() => setLoeschenBestaetigen(false)} className="flex-1 text-xs bg-stone-100 text-stone-500 rounded-lg py-1.5">
+              Abbrechen
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setLoeschenBestaetigen(true)} className="w-full text-xs text-red-500 hover:underline py-1">
+            Aufsicht löschen
+          </button>
+        )
       )}
     </div>
   );
