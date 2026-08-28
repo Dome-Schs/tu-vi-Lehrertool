@@ -59,7 +59,14 @@ function wendeThemeAn(wahl) {
 
 const DAYS = ["Mo", "Di", "Mi", "Do", "Fr"];
 const DAY_LABELS = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag" };
-const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
+/* Bei 45-Minuten-Stunden passen in denselben Schultag deutlich mehr Einheiten
+   als bei 60-Minuten-Stunden - der Stundenplan braucht dafuer mehr Zeilen.
+   Die Uhrzeiten selbst bleiben ohnehin frei editierbar (PeriodTimeEditor);
+   das hier steuert nur, wie viele Stunden-Zeilen angeboten werden. */
+function stundenplanZeilen(settings) {
+  const n = settings?.stundenlaenge === 45 ? 12 : 8;
+  return Array.from({ length: n }, (_, i) => i + 1);
+}
 
 const CATS = [
   { key: "muendlich", label: "Mündlich" },
@@ -90,7 +97,7 @@ const QUICK_SYMBOLS = [
    Dateien selbst liegen in IndexedDB. So bleibt die normale Datensicherung
    klein, und nach dem Wiederherstellen auf einem neuen Geraet ist wenigstens
    sichtbar, welche Unterlagen es gab. */
-const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "" } };
+const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "", stundenlaenge: 60 } };
 
 /* Sortierbar sind nur die Karten im unteren Raster.
    Fest sitzen: „Unterricht" als Hauptkarte sowie die Dreierreihe aus Terminen,
@@ -972,6 +979,7 @@ function sanitizeVollstaendig(imported) {
       ? impSettings.dashboardOrder.filter((k) => typeof k === "string")
       : (EMPTY_DATA.settings || {}).dashboardOrder,
     lehrerName: typeof impSettings.lehrerName === "string" ? impSettings.lehrerName.slice(0, 80) : "",
+    stundenlaenge: impSettings.stundenlaenge === 45 ? 45 : 60,
   };
 
   merged.grades = (Array.isArray(merged.grades) ? merged.grades : []).map((g) => ({
@@ -1850,6 +1858,25 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
                 </button>
               ))}
             </div>
+
+            <div className="border-t border-stone-100 pt-3 mt-1" />
+            <div className="text-xs font-medium text-stone-500 mb-2">Stundenlänge</div>
+            <div className="flex gap-1.5 mb-1">
+              {[45, 60].map((min) => (
+                <button
+                  key={min}
+                  onClick={() => setSetting("stundenlaenge", min)}
+                  className={`flex-1 text-sm py-2 rounded-lg border ${
+                    (data.settings?.stundenlaenge === 45 ? 45 : 60) === min ? "akzent-flaeche akzent-rand" : "border-stone-200 text-stone-500 hover:bg-stone-50"
+                  }`}
+                >
+                  {min} Minuten
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-stone-500 mb-4">
+              Bestimmt, wie viele Stunden-Zeilen der Stundenplan anbietet: 8 bei 60-Minuten-Stunden, 12 bei 45-Minuten-Stunden. Die Uhrzeiten je Stunde bleiben frei einstellbar.
+            </p>
 
             <div className="border-t border-stone-100 pt-3 mt-1" />
             <div className="text-xs font-medium text-stone-500 mb-1">Neues Schuljahr</div>
@@ -3201,6 +3228,7 @@ const HELP_DATA = [
       { q: "Wie lege ich einen Termin an?", a: `Tippe auf „Mehr" in der Navigation und dann auf „Kalender". Tippe dort auf „Neuen Termin anlegen" und gib Titel, Datum, Uhrzeit und Art ein. Schneller geht es über das grüne Plus → „Termin".` },
       { q: "Wie lege ich einen wiederkehrenden Termin an?", a: `Beim Anlegen eines Termins gibt es das Feld „Wiederholung" – dort kannst du Wöchentlich, Alle 2 Wochen oder Monatlich wählen. Der Termin erscheint dann automatisch an allen folgenden Termintagen im Kalender.` },
       { q: "Wie trage ich Schulferien ein?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule". Wähle dort zuerst dein Bundesland, danach erscheint „Schulferien eintragen" – Tu-vi übernimmt alle Ferien automatisch.` },
+      { q: "Wie stelle ich meine Stundenlänge ein (45 oder 60 Minuten)?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule" → „Stundenlänge". Bei 60 Minuten bietet der Stundenplan 8 Stunden-Zeilen pro Tag an, bei 45 Minuten 12 – so passt ein voller Schultag mit mehr, kürzeren Einheiten hinein. Die Uhrzeiten je Stunde trägst du im Stundenplan weiterhin selbst ein (auf die Stundennummer tippen), die Einstellung ändert nur, wie viele Zeilen zur Auswahl stehen.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
     ],
   },
@@ -16155,6 +16183,7 @@ function FaecherTab({ data, update, onOpenFach }) {
 
 function StundenplanTab({ data, update }) {
   const isColor = data.settings?.colorMode === true;
+  const periods = stundenplanZeilen(data.settings);
   const [editingCell, setEditingCell] = useState(null); // {day, period}
   const [editingTime, setEditingTime] = useState(null); // period
 
@@ -16193,7 +16222,7 @@ function StundenplanTab({ data, update }) {
             </tr>
           </thead>
           <tbody>
-            {PERIODS.map((p) => {
+            {periods.map((p) => {
               const pt = data.periodTimes?.[p];
               return (
               <tr key={p}>
