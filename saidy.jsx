@@ -934,6 +934,7 @@ function sanitizeVollstaendig(imported) {
       /* S_DATUM statt Mustervergleich: ein Jahr wie 9999 hat frueher die
          App eingefroren und wuerde die reine Formpruefung passieren. */
       nextTestDate: S_DATUM(f.nextTestDate),
+      deletedAt: S_DATUM(f.deletedAt),
     }));
 
   /* foerderZiele und sitzplaene liefen bisher an keiner Sanitize-Stelle
@@ -3050,8 +3051,9 @@ const HELP_DATA = [
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
       { q: "Ersetzt die App-Sperre mein Passwort?", a: `Nein, und das ist wichtig zu verstehen. Die Sperre ist ein zusätzlicher Riegel vor der App auf diesem einen Gerät. Sie löst den Fall, der im Schulalltag wirklich vorkommt: Das entsperrte iPhone liegt auf dem Pult und jemand tippt Tu-vi an – ohne dein Gesicht sind dann keine Schülerdaten zu sehen. Sie ist aber kein zweiter Anmeldefaktor und verschlüsselt die Daten nicht zusätzlich. Dein Passwort bleibt der eigentliche Schutz deines Kontos: Wähle es sicher und gib es nicht weiter.` },
       { q: "Wie sind die Einstellungen aufgebaut?", a: `Die Einstellungen führen zu sechs Bereichen statt zu einer langen Liste: „Schuljahr & Schule" (Halbjahr, Bundesland, Schulferien, Klassen versetzen), „Darstellung" (Hell / Dunkel / Automatisch, welche Blöcke auf der Übersicht erscheinen und in welcher Reihenfolge, die Karte im Schülerprofil, Unterrichtstipps), „Sicherheit & Konto" (App-Sperre mit Face ID, automatisches Sperren nach Inaktivität, angemeldete E-Mail, Abmelden), „Daten & Sicherung" (Sichern, Wiederherstellen, Freitags-Erinnerung, iCloud, WebUntis-Import und hinter „Erweiterte Einstellungen" die Beispieldaten sowie das Löschen aller Daten), „Über Tu-vi" (Impressum und Datenschutz) und ganz unten „Als App ablegen". Ein Pfeil oben links führt aus jedem Bereich zurück.` },
-      { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen und Kinder bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
-      { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder mit sämtlichen zugehörigen Daten (Noten, Notizen, Förderziele, Dokumente, Sitzplan-Einträge) sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
+      { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen, Kinder und Fächer bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder und Fächer mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
+      { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder und Fächer mit sämtlichen zugehörigen Daten (Noten, Notizen, Förderziele, Dokumente, Sitzplan-Einträge, Stundenplan-Einträge) sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
+      { q: "Wie lösche ich ein einzelnes Fach, ohne die ganze Klasse zu löschen?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen, dann auf das ···-Symbol rechts in der Fach-Zeile → „Fach löschen". Genau wie bei Klassen und Kindern landet das Fach für 30 Tage im Papierkorb (Reiter „Klassen", ganz unten) und lässt sich dort wiederherstellen – seine Noten, Zeugnisnoten, Stundenplan-Einträge und Stundenthemen bleiben verknüpft und kommen beim Wiederherstellen automatisch zurück. Solange das Fach im Papierkorb liegt, verschwindet es aus Stundenplan, Notenübersicht und der Übersicht-Seite, so als gäbe es die Stunde gerade nicht.` },
       { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten". „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
       { q: `Was steht im Reiter „Listen" bei den Klassen?`, a: `Drei Übersichten über alle Klassen hinweg: Entschuldigungen, Förderziele und Geburtstage. Der Unterschied zu den Kacheln auf der Startseite: Die Listen lassen sich auch dann öffnen, wenn gerade nichts offen ist – etwa um im Elterngespräch nachzusehen, wann ein Kind zuletzt eine Entschuldigung abgegeben hat.` },
@@ -5332,12 +5334,21 @@ export default function App() {
   }, []);
 
   // Gefilterte Sicht: gelöschte Elemente ausblenden (noch innerhalb der 30-Tage-Frist)
-  const activeData = useMemo(() => ({
-    ...data,
-    classes: data.classes.filter((c) => !c.deletedAt),
-    students: data.students.filter((s) => !s.deletedAt),
-    notes: data.notes.filter((n) => !n.deletedAt),
-  }), [data]);
+  const activeData = useMemo(() => {
+    const deletedClassIds = new Set(data.classes.filter((c) => c.deletedAt).map((c) => c.id));
+    return {
+      ...data,
+      classes: data.classes.filter((c) => !c.deletedAt),
+      students: data.students.filter((s) => !s.deletedAt),
+      notes: data.notes.filter((n) => !n.deletedAt),
+      /* Ein Fach kann eigenstaendig geloescht sein (eigenes deletedAt) oder
+         weil seine Klasse geloescht wurde - beides muss es aus Stundenplan,
+         Notenuebersicht und Dashboard verschwinden lassen, sonst taucht das
+         "geloeschte" Fach dort weiter auf, solange es noch die 30 Tage im
+         Papierkorb liegt. */
+      faecher: data.faecher.filter((f) => !f.deletedAt && !deletedClassIds.has(f.classId)),
+    };
+  }, [data]);
 
   // Beim Start: Elemente endgültig entfernen, die älter als 30 Tage im Papierkorb sind
   useEffect(() => {
@@ -5349,7 +5360,8 @@ export default function App() {
       snapshotExpired ||
       data.students.some((s) => s.deletedAt && new Date(s.deletedAt).getTime() < cutoff) ||
       data.classes.some((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff) ||
-      data.notes.some((n) => n.deletedAt && new Date(n.deletedAt).getTime() < cutoff);
+      data.notes.some((n) => n.deletedAt && new Date(n.deletedAt).getTime() < cutoff) ||
+      (data.faecher || []).some((f) => f.deletedAt && new Date(f.deletedAt).getTime() < cutoff);
     if (!hasStaleDeletions) return;
     /* Derselbe Vollstaendigkeits-Anspruch wie bei "Jetzt endgueltig loeschen":
        auch die automatische 30-Tage-Bereinigung muss wirklich alles raeumen,
@@ -5358,7 +5370,9 @@ export default function App() {
        werden - bestmoeglich, der Metadaten-Eintrag verschwindet in jedem Fall. */
     const expiredStudentIdsVorab = data.students.filter((s) => s.deletedAt && new Date(s.deletedAt).getTime() < cutoff).map((s) => s.id);
     const expiredClassIdsVorab = data.classes.filter((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff).map((c) => c.id);
-    const expiredFachIdsVorab = (data.faecher || []).filter((f) => expiredClassIdsVorab.includes(f.classId)).map((f) => f.id);
+    const expiredFachIdsVorab = (data.faecher || [])
+      .filter((f) => expiredClassIdsVorab.includes(f.classId) || (f.deletedAt && new Date(f.deletedAt).getTime() < cutoff))
+      .map((f) => f.id);
     const expiredDokIds = (data.documents || [])
       .filter((doc) => (doc.scope === "student" && expiredStudentIdsVorab.includes(doc.scopeId)) || (doc.scope === "class" && expiredClassIdsVorab.includes(doc.scopeId)) || (doc.scope === "fach" && expiredFachIdsVorab.includes(doc.scopeId)))
       .map((doc) => doc.id);
@@ -5369,21 +5383,26 @@ export default function App() {
       }
       const expiredStudentIds = d.students.filter((s) => s.deletedAt && new Date(s.deletedAt).getTime() < cutoff).map((s) => s.id);
       const expiredClassIds = d.classes.filter((c) => c.deletedAt && new Date(c.deletedAt).getTime() < cutoff).map((c) => c.id);
-      const expiredFachIds = (d.faecher || []).filter((f) => expiredClassIds.includes(f.classId)).map((f) => f.id);
+      const expiredFachIds = (d.faecher || [])
+        .filter((f) => expiredClassIds.includes(f.classId) || (f.deletedAt && new Date(f.deletedAt).getTime() < cutoff))
+        .map((f) => f.id);
       d.students = d.students.filter((s) => !s.deletedAt || new Date(s.deletedAt).getTime() >= cutoff);
       d.classes = d.classes.filter((c) => !c.deletedAt || new Date(c.deletedAt).getTime() >= cutoff);
       d.notes = d.notes.filter((n) => {
         if (expiredStudentIds.includes(n.studentId)) return false;
         return !n.deletedAt || new Date(n.deletedAt).getTime() >= cutoff;
       });
-      d.grades = d.grades.filter((g) => !expiredStudentIds.includes(g.studentId) && !expiredClassIds.includes(g.classId));
-      d.incidents = (d.incidents || []).filter((i) => !expiredStudentIds.includes(i.studentId));
+      /* fachId-Pruefung noetig, weil ein Fach jetzt auch eigenstaendig (ohne
+         geloeschte Klasse/geloeschtes Kind) im Papierkorb liegen kann - vorher
+         reichten Student/Klasse als Kaskade-Ankerpunkte, jetzt nicht mehr. */
+      d.grades = d.grades.filter((g) => !expiredStudentIds.includes(g.studentId) && !expiredClassIds.includes(g.classId) && !expiredFachIds.includes(g.fachId));
+      d.incidents = (d.incidents || []).filter((i) => !expiredStudentIds.includes(i.studentId) && !expiredFachIds.includes(i.fachId));
       d.absences = (d.absences || []).filter((a) => !expiredStudentIds.includes(a.studentId));
-      d.finalGrades = (d.finalGrades || []).filter((fg) => !expiredStudentIds.includes(fg.studentId));
+      d.finalGrades = (d.finalGrades || []).filter((fg) => !expiredStudentIds.includes(fg.studentId) && !expiredFachIds.includes(fg.fachId));
       d.foerderZiele = (d.foerderZiele || []).filter((z) => !expiredStudentIds.includes(z.studentId));
       d.documents = (d.documents || []).filter((doc) => !expiredDokIds.includes(doc.id));
       d.graduierungVerlauf = (d.graduierungVerlauf || []).filter((e) => !expiredStudentIds.includes(e.studentId));
-      d.faecher = (d.faecher || []).filter((f) => !expiredClassIds.includes(f.classId));
+      d.faecher = (d.faecher || []).filter((f) => !expiredFachIds.includes(f.id) && !expiredClassIds.includes(f.classId));
       d.timetable = (d.timetable || []).filter((t) => !expiredFachIds.includes(t.fachId) && !expiredClassIds.includes(t.classId));
       d.lessonTopics = (d.lessonTopics || []).filter((t) => !expiredFachIds.includes(t.fachId));
       expiredClassIds.forEach((cid) => { if (d.sitzplaene) delete d.sitzplaene[cid]; });
@@ -14787,12 +14806,32 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       return d;
     });
   }
+  /* Dieselbe Vollstaendigkeit wie bei Klasse/Kind: Noten, Zeugnisnoten,
+     Vorfaelle, Stundenthemen, Stundenplan-Slots und fachgebundene
+     Dokumente haengen am fachId und muessen mit weg, sonst bleiben sie als
+     Karteileiche liegen, obwohl das Fach laengst "unwiderruflich geloescht"
+     gemeldet wurde. */
+  async function hardDeleteFach(id) {
+    const dokIds = (data.documents || []).filter((doc) => doc.scope === "fach" && doc.scopeId === id).map((doc) => doc.id);
+    await Promise.all(dokIds.map((did) => docLoeschen(did).catch(() => {})));
+    update((d) => {
+      d.faecher = d.faecher.filter((f) => f.id !== id);
+      d.timetable = (d.timetable || []).filter((t) => t.fachId !== id);
+      d.grades = d.grades.filter((g) => g.fachId !== id);
+      d.finalGrades = (d.finalGrades || []).filter((fg) => fg.fachId !== id);
+      d.incidents = (d.incidents || []).filter((i) => i.fachId !== id);
+      d.lessonTopics = (d.lessonTopics || []).filter((t) => t.fachId !== id);
+      d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
+      return d;
+    });
+  }
 
   return (
     <>
       {(() => {
         const deletedStudents = (data.students || []).filter((s) => s.deletedAt);
         const deletedClasses = (data.classes || []).filter((c) => c.deletedAt);
+        const deletedFaecher = (data.faecher || []).filter((f) => f.deletedAt);
         const snapshot = data.deletedSnapshot;
         const snapshotValid = snapshot && (Date.now() - new Date(snapshot.deletedAt).getTime()) < 30 * 86400000;
         const daysLeftSnapshot = snapshotValid
@@ -14805,7 +14844,12 @@ function KlassenFusszeile({ rohdaten: data, update }) {
            deshalb nur noch zur Klassenzeile, auch in der Kopfzeilen-Zahl. */
         const deletedClassIds = new Set(deletedClasses.map((c) => c.id));
         const standaloneStudents = deletedStudents.filter((s) => !deletedClassIds.has(s.classId));
-        const total = standaloneStudents.length + deletedClasses.length + (snapshotValid ? 1 : 0);
+        /* Faecher einer bereits geloeschten Klasse zaehlen zu deren Zeile
+           (Wiederherstellen der Klasse bringt sie automatisch mit zurueck) -
+           eigene Zeilen nur fuer eigenstaendig geloeschte Faecher aktiver
+           Klassen, sonst verdoppeln sich die Papierkorb-Eintraege. */
+        const standaloneFaecher = deletedFaecher.filter((f) => !deletedClassIds.has(f.classId));
+        const total = standaloneStudents.length + deletedClasses.length + standaloneFaecher.length + (snapshotValid ? 1 : 0);
         if (total === 0) return null;
         function restoreStudent(id) {
           update((d) => { const s = d.students.find((s) => s.id === id); if (s) delete s.deletedAt; return d; });
@@ -14817,6 +14861,9 @@ function KlassenFusszeile({ rohdaten: data, update }) {
             d.students.filter((s) => s.classId === id && s.deletedAt).forEach((s) => { delete s.deletedAt; });
             return d;
           });
+        }
+        function restoreFach(id) {
+          update((d) => { const f = d.faecher.find((f) => f.id === id); if (f) delete f.deletedAt; return d; });
         }
         function restoreAllData() {
           update((d) => { const saved = d.deletedSnapshot?.data; return saved ? { ...saved, deletedSnapshot: null } : d; });
@@ -14891,6 +14938,23 @@ function KlassenFusszeile({ rohdaten: data, update }) {
                       </li>
                     );
                   })}
+                  {standaloneFaecher.map((f) => {
+                    const cls = (data.classes || []).find((c) => c.id === f.classId);
+                    return (
+                      <li key={f.id} className="flex-col gap-1 bg-stone-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex-1 text-sm text-stone-600 truncate">Fach: {f.subject}{cls ? ` (${cls.name})` : ""}</span>
+                          <button onClick={() => restoreFach(f.id)} className="text-xs text-green-700 font-medium hover:underline shrink-0">Wiederherstellen</button>
+                        </div>
+                        <button
+                          onClick={() => setConfirmHardDelete({ type: "fach", id: f.id, label: f.subject })}
+                          className="text-[11px] text-red-500 hover:underline"
+                        >
+                          Jetzt endgültig löschen
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </>
             )}
@@ -14939,6 +15003,8 @@ function KlassenFusszeile({ rohdaten: data, update }) {
                 <strong>Diese Aktion kann nicht rückgängig gemacht werden.</strong>{" "}
                 {confirmHardDelete.type === "class"
                   ? <>„{confirmHardDelete.label}" wird mit {confirmHardDelete.kinderZahl > 0 ? `allen ${confirmHardDelete.kinderZahl} Kindern und deren ` : "allen "}Noten, Notizen, Förderzielen, Dokumenten und Sitzplan-Einträgen sofort und unwiederbringlich gelöscht.</>
+                  : confirmHardDelete.type === "fach"
+                  ? <>„{confirmHardDelete.label}" wird mit allen Noten, Zeugnisnoten, Vorfällen, Stundenplan-Einträgen, Stundenthemen und Dokumenten sofort und unwiederbringlich gelöscht.</>
                   : <>„{confirmHardDelete.label}" wird mit allen Noten, Notizen, Förderzielen, Dokumenten und Sitzplan-Einträgen sofort und unwiederbringlich gelöscht.</>}
                 {" "}Die verbleibenden Tage im Papierkorb entfallen damit.
               </p>
@@ -14949,6 +15015,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
                 variant="danger"
                 onClick={() => {
                   if (confirmHardDelete.type === "class") hardDeleteClass(confirmHardDelete.id);
+                  else if (confirmHardDelete.type === "fach") hardDeleteFach(confirmHardDelete.id);
                   else hardDeleteStudent(confirmHardDelete.id);
                   setConfirmHardDelete(null);
                 }}
@@ -15159,6 +15226,23 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
     // Ohne Toast bleibt die Klasse einfach aus der Liste - das wirkt wie ein
     // Absturz oder ein versehentliches Wegtippen. Bewusst Bestaetigung geben.
     showToast?.(`Klasse ${name} gelöscht.`);
+  }
+
+  /* Faecher folgen demselben weichen Papierkorb-Muster wie Klassen/Kinder -
+     nur deletedAt setzen, Noten/Stundenplan/Stundenthemen bleiben verknuepft
+     und kommen beim Wiederherstellen zurueck. activeData blendet das Fach
+     ueberall aus (Stundenplan, Noten, Dashboard), solange es im Papierkorb
+     liegt; nach 30 Tagen raeumt derselbe Sweep auf, der auch Klassen
+     endgueltig entfernt. */
+  function deleteFach(id) {
+    const f = data.faecher.find((x) => x.id === id);
+    const name = f?.subject || "Fach";
+    update((d) => {
+      const fach = d.faecher.find((x) => x.id === id);
+      if (fach) fach.deletedAt = isoDate(new Date());
+      return d;
+    });
+    showToast?.(`Fach ${name} gelöscht.`);
   }
 
   function addStudent(name) {
@@ -15588,6 +15672,23 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
                 <div className="min-w-0">
                   <div className="text-sm text-stone-800">Noten anzeigen</div>
                   <div className="text-[11px] text-stone-500">Schülerliste dieses Fachs</div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setFachActions(null);
+                  setConfirmState({
+                    title: `Fach ${f.subject} löschen?`,
+                    message: "Das Fach wird in den Papierkorb verschoben und kann dort 30 Tage wiederhergestellt werden – im Tab Klassen & Schüler ganz unten. Noten, Stundenplan-Einträge und Stundenthemen bleiben verknüpft und kommen beim Wiederherstellen zurück.",
+                    onConfirm: () => { deleteFach(f.id); setConfirmState(null); },
+                  });
+                }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-red-50 text-left text-red-600"
+              >
+                <Trash2 size={16} className="shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm">Fach löschen</div>
+                  <div className="text-[11px] text-red-400">Wandert in den Papierkorb</div>
                 </div>
               </button>
               <button onClick={() => setFachActions(null)} className="w-full mt-2 text-sm text-stone-500 py-2">Abbrechen</button>
