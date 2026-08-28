@@ -3182,7 +3182,7 @@ const HELP_DATA = [
       { q: "Wie sehe ich alle Noten eines Kindes auf einen Blick?", a: `Kind-Profil öffnen und oben rechts auf das Balken-Symbol „Notenübersicht" tippen. Dort siehst du den aktuellen Schnitt in jedem Fach sowie die Zeugnisnote, falls schon eingetragen.` },
       { q: "Was ist der Stunden-Abschluss (30 Sekunden)?", a: `Sind heute Stunden noch nicht erfasst, sitzt oben rechts auf der Übersicht ein Klemmbrett-Symbol mit gelbem Punkt. Ein Tipp öffnet „Noch nicht erfasst", daneben steht pro Stunde „Erfassen" – und damit der 30-Sekunden-Abschluss, die Standard-Erfassung nach einer Stunde. Kein Formular mit leerem Notenfeld, sondern eine Liste aller Kinder mit vier One-Tap-Aktionen pro Zeile: + (positive Mitarbeit) · − (zurückhaltend) · ⚠︎ (Sportzeug bzw. Hausaufgabe vergessen) · Notiz (kurzes Textfeld). Ein Tipp pro Kind, alles wird am Ende auf einmal gespeichert. + und − werden als Beobachtungs-Notiz gespeichert (nicht als automatische Note, damit der Durchschnitt nicht verwässert wird); das Vergessen als Vorfall (bei Sport als „Sportzeug", sonst als „Hausaufgabe"). Wer eine echte Note vergeben will, wechselt unten über „Auch Noten vergeben →" in die ausführliche Schnellerfassung. Bei Sport-Stunden erscheint zusätzlich ein Drucker-Symbol pro Kind – dahinter liegen zwei druckbare Vorlagen: „Stundenprotokoll" (für Kinder die z.B. Sportzeug vergessen haben und mitschreiben statt teilnehmen) und „Regelbruch-Arbeitsauftrag" (Regeln abschreiben, Verhaltensplan, Elternunterschrift). Kindnamen und Klasse werden automatisch eingetragen.` },
       { q: "Wie ändere ich Material, Raum oder Gewichtung eines Fachs?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen, damit es aufklappt. Unter der Reihenplanung stehen zwei Knöpfe: „Material, Raum & Gewichtung" öffnet den Fach-Editor (dort auch der Termin der nächsten Klassenarbeit), „Noten eintragen" springt in die Notenübersicht dieses Fachs. Dieselben zwei Wege liegen auch hinter dem ···-Symbol rechts in der Fach-Zeile.` },
-      { q: "Wo finde ich die Sport-Druckvorlagen ohne Kind-Kontext?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter „Vorlagen zum Drucken": „Stundenprotokoll" und „Regelbruch-Auftrag". Das öffnet eine leere Vorlage zum Ausdrucken – nützlich für die Ersatzkopien in der Schublade oder wenn du sie spontan brauchst. Auch hier steht oben „Teilen", falls du den Vordruck lieber als PDF weitergibst.` },
+      { q: "Wo finde ich die Sport-Druckvorlagen ohne Kind-Kontext?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter „Vorlagen zum Drucken" (zum Aufklappen antippen): „Stundenprotokoll" und „Regelbruch-Auftrag". Das öffnet eine leere Vorlage zum Ausdrucken – nützlich für die Ersatzkopien in der Schublade oder wenn du sie spontan brauchst. Auch hier steht oben „Teilen", falls du den Vordruck lieber als PDF weitergibst. Dort steht außerdem „Klassenliste (Klassenarbeiten)" – fragt kurz nach Klasse und Fach und öffnet dieselbe fortlaufende Klassenliste wie in „Noten & Berichte", nur ohne erst durch die Notenübersicht navigieren zu müssen.` },
       { q: "Kann ich die Sport-Vorlagen verschicken statt drucken?", a: `Ja. Im Fenster der Vorlage steht neben „Drucken" der Knopf „Teilen". Steht ein Kindname auf dem Blatt, fragt Tu-vi einmal nach – wie bei jedem anderen Export auch. Danach entsteht aus derselben Vorlage ein PDF, das an das Teilen-Menü deines Geräts übergeben wird – auf iPhone und iPad landest du so direkt bei AirDrop, Mail oder Nachrichten. Am Computer, wo die meisten Browser kein Teilen von Dateien können, wird das PDF stattdessen heruntergeladen und liegt im Download-Ordner. Denk daran: Das PDF enthält den Namen des Kindes – gib es nur über schulisch genehmigte Wege weiter, nicht über private Messenger.` },
       { q: "Warum steht beim Teilen kein Kindname im Dateinamen?", a: `Weil der Dateiname bei AirDrop schon in der Annahme-Abfrage auf dem anderen Gerät erscheint – also bevor die Datei überhaupt geöffnet wird. Ein Name wie „Störungen-Sport_Max-Mustermann.pdf" wäre dort eine Verhaltensbewertung im Klartext, sichtbar auch dann, wenn das Gerät versehentlich das falsche war. Beim Teilen heißt die Datei deshalb nur nach Vorlage und Datum. Lädst du sie stattdessen herunter, bleibt sie auf deinem eigenen Gerät – dann steht der volle Name drin, damit du sie wiederfindest. Auf Seite 1 steht der Name in beiden Fällen.` },
       { q: "Was ist der Schnellerfassungs-Modus?", a: `Die ausführliche Erfassung wird aus dem Stunden-Abschluss über den Link „Auch Noten vergeben" erreicht. Dort kannst du für alle Schüler:innen einer Klasse Noten (mündlich / schriftlich), ausführliche Notizen und Gespräche eintragen. Eine Doppelstunde wird einmal erfasst, nicht zweimal. Die Notenbuttons sind immer sichtbar. Neben dem Namen liegt das ⚠︎-Symbol für „Vergessen"; Notiz und Gespräch öffnen sich über das ···-Symbol.` },
@@ -14878,6 +14878,12 @@ function KlassenFusszeile({ rohdaten: data, update }) {
      aktiven Klassenliste. */
   const [papierkorbOffen, setPapierkorbOffen] = useState(false);
   const [confirmHardDelete, setConfirmHardDelete] = useState(null); // { type: "class" | "student", id, label }
+  /* Aus demselben Grund zugeklappt wie der Papierkorb: mit der Klassenliste
+     als drittem Eintrag wuerde der Abschnitt sonst permanent Platz unter der
+     eigentlichen Klassenliste beanspruchen. */
+  const [vorlagenOffen, setVorlagenOffen] = useState(false);
+  const [klassenlisteAuswahl, setKlassenlisteAuswahl] = useState(false); // Klasse/Fach-Auswahl offen?
+  const [klassenlisteZiel, setKlassenlisteZiel] = useState(null); // { classId, fachId } | null
 
   /* "Unwiderruflich" muss auch stimmen: eine erste Fassung raeumte nur Noten,
      Notizen, Fehlzeiten, Vorfaelle und Zeugnisnoten auf und liess Foerderziele,
@@ -15101,18 +15107,31 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       })()}
 
       <div className="pt-5 border-t border-stone-100">
-        <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Vorlagen zum Drucken</div>
-        <p className="text-xs text-stone-500 mb-3">
-          Leere Vordrucke für die Schublade. Mit bereits eingetragenem Kind gibt es sie direkt im Stundenabschluss.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="subtle" onClick={() => setDruckSportVorlage("protokoll")}>
-            <Printer size={14} /> Stundenprotokoll
-          </Button>
-          <Button variant="subtle" onClick={() => setDruckSportVorlage("regelbruch")}>
-            <Printer size={14} /> Regelbruch-Auftrag
-          </Button>
-        </div>
+        <button
+          onClick={() => setVorlagenOffen((o) => !o)}
+          className="w-full flex items-center justify-between gap-2 min-h-[44px] -my-1 press-scale"
+        >
+          <span className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Vorlagen zum Drucken</span>
+          <ChevronDown size={14} className={`text-stone-400 transition-transform ${vorlagenOffen ? "rotate-180" : ""}`} />
+        </button>
+        {vorlagenOffen && (
+          <>
+            <p className="text-xs text-stone-500 mt-2 mb-3">
+              Leere Vordrucke für die Schublade. Mit bereits eingetragenem Kind gibt es sie direkt im Stundenabschluss.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="subtle" onClick={() => setDruckSportVorlage("protokoll")}>
+                <Printer size={14} /> Stundenprotokoll
+              </Button>
+              <Button variant="subtle" onClick={() => setDruckSportVorlage("regelbruch")}>
+                <Printer size={14} /> Regelbruch-Auftrag
+              </Button>
+              <Button variant="subtle" onClick={() => setKlassenlisteAuswahl(true)}>
+                <Printer size={14} /> Klassenliste (Klassenarbeiten)
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       {confirmDeleteSnapshot && (
@@ -15175,7 +15194,89 @@ function KlassenFusszeile({ rohdaten: data, update }) {
           onClose={() => setDruckSportVorlage(null)}
         />
       )}
+
+      {klassenlisteAuswahl && (
+        <KlassenlisteAuswahlModal
+          data={data}
+          onOpen={(classId, fachId) => { setKlassenlisteZiel({ classId, fachId }); setKlassenlisteAuswahl(false); }}
+          onClose={() => setKlassenlisteAuswahl(false)}
+        />
+      )}
+
+      {klassenlisteZiel && (() => {
+        const fach = (data.faecher || []).find((f) => f.id === klassenlisteZiel.fachId);
+        if (!fach) return null;
+        const cls = (data.classes || []).find((c) => c.id === klassenlisteZiel.classId);
+        const students = (data.students || []).filter((s) => s.classId === klassenlisteZiel.classId && !s.deletedAt);
+        return (
+          <KlassenlisteModal
+            fach={fach}
+            cls={cls}
+            students={students}
+            grades={data.grades}
+            onClose={() => setKlassenlisteZiel(null)}
+          />
+        );
+      })()}
     </>
+  );
+}
+
+/* Klasse-dann-Fach-Auswahl, damit "Klassenliste (Klassenarbeiten)" auch aus
+   den kontextfreien Druckvorlagen erreichbar ist, nicht nur ueber Klasse ->
+   Noten -> Fach. Nur aktive (nicht geloeschte) Klassen/Faecher zur Auswahl -
+   ein Ausdruck aus dem Papierkorb heraus ergibt keinen Sinn. */
+function KlassenlisteAuswahlModal({ data, onOpen, onClose }) {
+  const [classId, setClassId] = useState(null);
+  const klassen = (data.classes || []).filter((c) => !c.deletedAt).sort((a, b) => a.name.localeCompare(b.name, "de"));
+  const faecher = classId ? (data.faecher || []).filter((f) => f.classId === classId && !f.deletedAt) : [];
+
+  return (
+    <div className="fixed inset-0 bg-stone-900/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 overflow-y-auto dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-semibold text-stone-800">
+            {classId ? "Fach wählen" : "Klasse wählen"}
+          </div>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><X size={18} /></button>
+        </div>
+
+        {!classId ? (
+          <ul className="space-y-1.5">
+            {klassen.map((c) => (
+              <li key={c.id}>
+                <button
+                  onClick={() => setClassId(c.id)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-stone-200 hover:akzent-rand text-left text-sm text-stone-700"
+                >
+                  {c.name}
+                  <ChevronRight size={15} className="text-stone-300" />
+                </button>
+              </li>
+            ))}
+            {!klassen.length && <p className="text-sm text-stone-400 py-3">Noch keine Klasse angelegt.</p>}
+          </ul>
+        ) : (
+          <>
+            <button onClick={() => setClassId(null)} className="text-xs text-stone-400 hover:text-stone-600 mb-2">← Andere Klasse</button>
+            <ul className="space-y-1.5">
+              {faecher.map((f) => (
+                <li key={f.id}>
+                  <button
+                    onClick={() => onOpen(classId, f.id)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-stone-200 hover:akzent-rand text-left text-sm text-stone-700"
+                  >
+                    {f.subject}
+                    <ChevronRight size={15} className="text-stone-300" />
+                  </button>
+                </li>
+              ))}
+              {!faecher.length && <p className="text-sm text-stone-400 py-3">Für diese Klasse ist noch kein Fach angelegt.</p>}
+            </ul>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
