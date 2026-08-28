@@ -90,7 +90,7 @@ const QUICK_SYMBOLS = [
    Dateien selbst liegen in IndexedDB. So bleibt die normale Datensicherung
    klein, und nach dem Wiederherstellen auf einem neuen Geraet ist wenigstens
    sichtbar, welche Unterlagen es gab. */
-const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false } };
+const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "" } };
 
 /* Sortierbar sind nur die Karten im unteren Raster.
    Fest sitzen: „Unterricht" als Hauptkarte sowie die Dreierreihe aus Terminen,
@@ -971,6 +971,7 @@ function sanitizeVollstaendig(imported) {
     dashboardOrder: Array.isArray(impSettings.dashboardOrder)
       ? impSettings.dashboardOrder.filter((k) => typeof k === "string")
       : (EMPTY_DATA.settings || {}).dashboardOrder,
+    lehrerName: typeof impSettings.lehrerName === "string" ? impSettings.lehrerName.slice(0, 80) : "",
   };
 
   merged.grades = (Array.isArray(merged.grades) ? merged.grades : []).map((g) => ({
@@ -1798,6 +1799,18 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
         {seite === "schuljahr" && (
           <div>
             <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Schuljahr</div>
+            <div className="text-xs font-medium text-stone-500 mb-2">Deine Angaben</div>
+            <input
+              className={`${inputCls} mb-1`}
+              placeholder="Name oder Kürzel, z. B. K. Laubenstein"
+              value={data.settings?.lehrerName || ""}
+              maxLength={80}
+              onChange={(e) => setSetting("lehrerName", e.target.value)}
+            />
+            <p className="text-[11px] text-stone-500 mb-4">
+              Erscheint automatisch im Feld „Lehrer*in", wenn du einen Klassenspiegel für die Abteilungsleitung erzeugst.
+            </p>
+            <div className="border-t border-stone-100 pt-3 mt-1" />
             <div className="text-xs font-medium text-stone-500 mb-2">Bundesland & Schulferien</div>
             <select className={`${inputCls} mb-2`} value={currentBundesland} onChange={(e) => setBundesland(e.target.value)}>
               <option value="">Bundesland wählen …</option>
@@ -3152,6 +3165,7 @@ const HELP_DATA = [
     category: "Noten & Berichte",
     items: [
       { q: "Wie sehe ich, wie eine Klassenarbeit ausgefallen ist?", a: `Öffne die Klasse → Reiter „Noten" → das Fach. Unter den Wissensgebieten steht „Notentermine": jeder Tag, an dem du in diesem Fach benotet hast, mit Bezeichnung, Anzahl der Noten und Durchschnitt. Tippe einen Termin an, und du siehst alle Kinder mit ihrer Note nebeneinander – statt sie einzeln aufrufen zu müssen. Die Liste entsteht automatisch aus den vorhandenen Noten, du musst dafür nichts zusätzlich erfassen.` },
+      { q: "Wie erzeuge ich einen Klassenspiegel für die Abteilungsleitung?", a: `Öffne den Termin der Klassenarbeit (Klasse → „Noten" → Fach → „Notentermine" → Termin antippen). Bei schriftlichen Terminen steht dort der Knopf „Klassenspiegel erzeugen". Tu-vi füllt Klasse, Fach, Datum, Notenspiegel (Verteilung der Noten 1–6, Anzahl der Kinder, Durchschnitt) und die Nachschreiber-Liste automatisch aus – letztere aus den Kindern, die bei diesem Termin noch keine Note haben. Nr. der Arbeit wird als Vorschlag vorausgefüllt (zählt schriftliche Arbeiten je Fach und Halbjahr, startet jedes Halbjahr wieder bei 1) und lässt sich wie Thema und Lehrer*in noch von Hand anpassen, bevor du über „Als PDF drucken" den Druckdialog öffnest und dort „Als PDF speichern" wählst. Dein Name/Kürzel für das Feld „Lehrer*in" trägst du einmalig unter „Mehr" → „Einstellungen" → „Schuljahr & Schule" ein, dann erscheint er bei jedem Klassenspiegel automatisch. Datum der Vorlage und beide Unterschriften bleiben bewusst leer, weil sie erst beim Einreichen entstehen.` },
       { q: "Kann ich eine Note nachträglich ändern oder nachtragen?", a: `Ja. Öffne den Termin unter „Notentermine" (Klasse → „Noten" → Fach). Dort änderst du jede Note direkt über das Auswahlfeld daneben; das Papierkorb-Symbol rechts löscht genau diese eine Note. Kinder, die an dem Tag gefehlt haben, stehen unten unter „Ohne Note an diesem Termin" – ein Tipp auf „Note ergänzen" trägt sie nach und übernimmt dabei Datum, Bezeichnung, Gewichtung und Thema der Arbeit. So bleibt es ein einziger Termin und zerfällt nicht in zwei.` },
       { q: "Wie benenne ich eine Klassenarbeit um oder korrigiere das Datum?", a: `Im geöffneten Termin stehen unten die Felder für Bezeichnung und Datum unter dem Hinweis „Gilt für alle Noten dieses Termins". Eine Änderung dort wirkt auf alle Noten des Termins gleichzeitig – wichtig, weil Tu-vi Noten anhand von Fach, Datum und Bezeichnung zusammenfasst. Änderst du das nur bei einem Kind, rutscht dessen Note in einen eigenen Termin. Über „Ganzen Termin löschen" verschwinden alle Noten dieses Tages auf einmal.` },
       { q: `Wie trage ich eine Note im Bereich „Noten & Berichte" ein?`, a: `Gehe zu „Noten & Berichte", wähle Klasse und Fach. Tippe auf eine:n Schüler:in – in der Karte „Neue Note" Kategorie und Note wählen und auf „+" tippen. Oder tippe direkt in der Notenübersicht auf die Mündl.-Spalte eines Kindes – ein Popover öffnet sich mit den fünf Schnellbewertungen ++, +, o, –, – –. Ein Tipp, fertig.` },
@@ -18138,15 +18152,28 @@ function terminName(t) {
    aenderbar. Bewusst eine eigene Komponente statt eines Blocks im NotenTab -
    Bezeichnung und Datum brauchen einen Entwurfszustand, damit beim Tippen
    nicht nach jedem Buchstaben alle Noten umgeschrieben werden. */
-function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, onClose, onSchluesselWechsel, onOpenStudent }) {
+function NotenTerminSheet({ termin, students, fach, cls, data, halbjahr, colored, update, onClose, onSchluesselWechsel, onOpenStudent }) {
   const [titel, setTitel] = useState(termin.title);
   const [datum, setDatum] = useState(termin.date);
   const [loeschen, setLoeschen] = useState(false);
   const [confirmDeleteGradeId, setConfirmDeleteGradeId] = useState(null);
+  const [showKlassenspiegel, setShowKlassenspiegel] = useState(false);
 
   const notenNachKind = Object.fromEntries(termin.noten.map((g) => [g.studentId, g]));
   const mitNote = students.filter((s) => notenNachKind[s.id]);
   const ohneNote = students.filter((s) => !notenNachKind[s.id]);
+
+  /* Die wievielte schriftliche Arbeit dieses Fachs in diesem Halbjahr ist das
+     - Vorschlag fuer "Nr. der Arbeit" im Klassenspiegel, faengt jedes
+     Halbjahr wieder bei 1 an. Nur ein Vorschlag: die Lehrkraft kann die Zahl
+     im Formular selbst noch aendern, z.B. wenn eine Arbeit ausserplanmaessig
+     nicht mitgezaehlt werden soll. */
+  const kaNummerVorschlag = termin.category === "schriftlich"
+    ? notenTermineFuerFach(data.grades, fach.id, halbjahr, students)
+        .filter((t) => t.category === "schriftlich")
+        .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
+        .findIndex((t) => t.key === termin.key) + 1
+    : null;
 
   /* Aendert Bezeichnung oder Datum fuer ALLE Noten des Termins auf einmal -
      sonst zerfaellt der Termin in zwei. Der Schluessel aendert sich dabei,
@@ -18223,6 +18250,12 @@ function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, o
               </div>
             )}
           </div>
+
+          {termin.category === "schriftlich" && mitNote.length > 0 && (
+            <Button variant="subtle" onClick={() => setShowKlassenspiegel(true)} className="w-full justify-center">
+              <FileText size={15} /> Klassenspiegel erzeugen
+            </Button>
+          )}
 
           <ul className="divide-y divide-stone-100">
             {mitNote.map((s) => {
@@ -18317,6 +18350,158 @@ function NotenTerminSheet({ termin, students, fach, halbjahr, colored, update, o
         onConfirm={() => { entferneNote(confirmDeleteGradeId); setConfirmDeleteGradeId(null); }}
         onCancel={() => setConfirmDeleteGradeId(null)}
       />
+
+      {showKlassenspiegel && (
+        <KlassenspiegelModal
+          termin={termin}
+          fach={fach}
+          cls={cls}
+          nachschreiber={ohneNote}
+          lehrerName={data.settings?.lehrerName || ""}
+          nummerVorschlag={kaNummerVorschlag}
+          onClose={() => setShowKlassenspiegel(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* Klassenspiegel: das Formular, mit dem viele Schulen die Ergebnisse einer
+   Klassenarbeit an die Abteilungsleitung melden. Tu-vi kennt Notenverteilung,
+   Thema und Nachschreiber schon aus den eingetragenen Noten - hier wird
+   daraus automatisch die Uebersicht, die sonst von Hand aus der Notenliste
+   abgetippt werden muesste. window.print() statt eigenem PDF-Writer, aus
+   demselben Grund wie beim Schuelerakte-Export (siehe dort): echtes CSS
+   ergibt eine Tabelle, die dem Original-Formular nahekommt. */
+function KlassenspiegelModal({ termin, fach, cls, nachschreiber, lehrerName, nummerVorschlag, onClose }) {
+  const [nummer, setNummer] = useState(nummerVorschlag ? String(nummerVorschlag) : "");
+  const [thema, setThema] = useState(termin.noten[0]?.topic || "");
+  const [lehrer, setLehrer] = useState(lehrerName);
+
+  /* Notenspiegel zaehlt in den sechs Schulnoten, auch wenn Tu-vi intern
+     Tendenzen (1+/1-/...) speichert - das Formular kennt nur ganze Noten,
+     darum wird zur naechsten gerundet. */
+  const verteilung = [1, 2, 3, 4, 5, 6].map((note) => ({
+    note,
+    anzahl: termin.noten.filter((g) => Math.round(g.value) === note).length,
+  }));
+  const anzahlSuS = termin.noten.length;
+  const gesamtGewicht = termin.noten.reduce((s, g) => s + (g.factor || 1), 0);
+  const durchschnitt = gesamtGewicht
+    ? termin.noten.reduce((s, g) => s + g.value * (g.factor || 1), 0) / gesamtGewicht
+    : null;
+
+  const langesDatum = localDate(termin.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  function drucken() {
+    window.print();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-stone-900/50 z-[70] flex flex-col print:static print:bg-white" onClick={onClose}>
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 20mm 18mm; }
+          body { background: white !important; }
+          .print-hide { display: none !important; }
+          .print-spiegel { box-shadow: none !important; margin: 0 !important; max-width: none !important; padding: 0 !important; }
+        }
+      `}</style>
+
+      <div className="print-hide bg-white border-b border-stone-200 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 leading-none mb-0.5 truncate">Meldung an die Abteilungsleitung</div>
+            <div className="font-semibold text-stone-800 truncate">Klassenspiegel{cls?.name ? ` – ${cls.name}` : ""}</div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button onClick={drucken}><Printer size={14} /> Als PDF drucken</Button>
+            <button onClick={onClose} className="w-11 h-11 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+        <p className="px-4 text-xs text-stone-500 mb-2">
+          Klasse, Fach, Datum, Notenspiegel und Nachschreiber sind schon ausgefüllt. Nr. der Arbeit, Thema und Lehrer*in kannst du hier noch anpassen, bevor du druckst.
+        </p>
+        <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+          <label className="text-xs text-stone-500">
+            Nr. der Arbeit
+            <input className={`${inputCls} mt-1`} value={nummer} onChange={(e) => setNummer(e.target.value)} placeholder="z. B. 2" maxLength={20} />
+          </label>
+          <label className="text-xs text-stone-500">
+            Thema der Arbeit
+            <input className={`${inputCls} mt-1`} value={thema} onChange={(e) => setThema(e.target.value)} placeholder="optional" maxLength={100} />
+          </label>
+          <label className="text-xs text-stone-500 col-span-2">
+            Lehrer*in
+            <input className={`${inputCls} mt-1`} value={lehrer} onChange={(e) => setLehrer(e.target.value)} placeholder="Name/Kürzel" maxLength={80} />
+          </label>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto flex justify-center py-6 print:py-0 print:block" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="print-spiegel bg-white max-w-[720px] mx-auto shadow-md p-8 text-stone-800 text-sm leading-relaxed"
+          style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}
+        >
+          <h1 className="text-xl font-bold mb-4 text-stone-900">Klassenspiegel</h1>
+
+          <table className="mb-5">
+            <tbody>
+              <tr><td className="pr-3 py-0.5 text-stone-500 align-top whitespace-nowrap">Klasse / Kurs*:</td><td className="font-medium">{cls?.name || "—"}</td></tr>
+              <tr><td className="pr-3 py-0.5 text-stone-500 align-top whitespace-nowrap">Nr. der Arbeit*:</td><td className="font-medium">{nummer || "—"}</td></tr>
+              <tr><td className="pr-3 py-0.5 text-stone-500 align-top whitespace-nowrap">Thema der Arbeit*:</td><td className="font-medium">{thema || "—"}</td></tr>
+              <tr><td className="pr-3 py-0.5 text-stone-500 align-top whitespace-nowrap">geschrieben am*:</td><td className="font-medium">{langesDatum}</td></tr>
+              <tr><td className="pr-3 py-0.5 text-stone-500 align-top whitespace-nowrap">Lehrer*in*:</td><td className="font-medium">{lehrer || "—"}</td></tr>
+            </tbody>
+          </table>
+
+          <div className="font-semibold mb-1.5 text-stone-900">Notenspiegel*:</div>
+          <table className="w-full border-collapse mb-5">
+            <thead>
+              <tr>
+                {verteilung.map((v) => (
+                  <th key={v.note} className="border border-stone-400 px-2 py-1 font-medium text-center w-[9%]">{v.note}</th>
+                ))}
+                <th className="border border-stone-400 px-2 py-1 font-medium text-center">Anzahl der SuS</th>
+                <th className="border border-stone-400 px-2 py-1 font-medium text-center">Durchschnitt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {verteilung.map((v) => (
+                  <td key={v.note} className="border border-stone-400 px-2 py-1.5 text-center tabular-nums">{v.anzahl || ""}</td>
+                ))}
+                <td className="border border-stone-400 px-2 py-1.5 text-center tabular-nums font-medium">{anzahlSuS}</td>
+                <td className="border border-stone-400 px-2 py-1.5 text-center tabular-nums font-medium">{durchschnitt != null ? durchschnitt.toFixed(2).replace(".", ",") : "—"}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="mb-5">
+            <div className="font-semibold mb-1 text-stone-900">ggf. Informationen zu Nachschreibern*:</div>
+            <div>Anzahl: {nachschreiber.length || 0}</div>
+            <div>Name/n der SuS: {nachschreiber.length ? nachschreiber.map((s) => s.name).join(", ") : "—"}</div>
+          </div>
+
+          <div className="mb-6">Datum der Vorlage bei der AL*: ________________________</div>
+          <div className="mb-8">Unterschrift / Kürzel der Lehrkraft*: ____________________</div>
+
+          <div className="mb-8">
+            <div className="font-semibold mb-1 text-stone-900">Anlagen*:</div>
+            <ul className="list-disc pl-5 space-y-0.5">
+              <li>Klassenliste mit Angabe der Noten fortlaufend über das Schuljahr</li>
+              <li>Klassenarbeit blanco + Erwartungshorizont</li>
+              <li>3 Klassenarbeiten (stark, mittel, schwach)</li>
+            </ul>
+          </div>
+
+          <div>Unterschrift / Kürzel der AL: ___________________________</div>
+
+          <p className="text-[10px] text-stone-500 mt-8">*Pflichtfelder lesbar in Druckbuchstaben ausfüllen, auch das Kürzel</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -18889,6 +19074,8 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                 termin={t}
                 students={students}
                 fach={fach}
+                cls={cls}
+                data={data}
                 halbjahr={halbjahr}
                 colored={colored}
                 update={update}
