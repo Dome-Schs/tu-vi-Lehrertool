@@ -107,7 +107,7 @@ const QUICK_SYMBOLS = [
    Dateien selbst liegen in IndexedDB. So bleibt die normale Datensicherung
    klein, und nach dem Wiederherstellen auf einem neuen Geraet ist wenigstens
    sichtbar, welche Unterlagen es gab. */
-const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], aufsichten: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "", stundenlaenge: 60, mittagspause: null } };
+const EMPTY_DATA = { classes: [], students: [], notes: [], timetable: [], events: [], grades: [], periodTimes: {}, subjectColors: {}, faecher: [], taskLists: [], tasks: [], incidents: [], finalGrades: [], duties: [], aufsichten: [], hausaufgaben: [], lessonTopics: [], absences: [], documents: [], sitzplaene: {}, foerderZiele: [], graduierungVerlauf: [], deletedSnapshot: null, settings: { dashboardOrder: ["unterricht", "aufgaben", "kalender", "geburtstage"], bundesland: null, ferienAdded: false, showFerienCountdown: true, countdownSchooldaysOnly: true, fehlzeitenImportInterval: 7, fehlzeitenLastImport: null, notenfarben: true, colorMode: false, lehrerName: "", stundenlaenge: 60, mittagspause: null, hausaufgabenBegriff: "Hausaufgaben" } };
 
 /* Sortierbar sind nur die Karten im unteren Raster.
    Fest sitzen: „Unterricht" als Hauptkarte sowie die Dreierreihe aus Terminen,
@@ -160,6 +160,52 @@ const EINTRAG_KATEGORIEN = [
   { key: "eltern", label: "Elternkontakt", kurz: "Eltern", farbe: "#1D4ED8", flaeche: "bg-blue-50 text-blue-700 border-blue-200" },
 ];
 const EINTRAG_KEYS = EINTRAG_KATEGORIEN.map((k) => k.key);
+
+/* Hausaufgaben-Stand pro Kind. Drei Zustaende statt ja/nein, weil
+   "nachgereicht" der paedagogisch entscheidende Fall ist: Es macht einen
+   Unterschied, ob ein Kind die Aufgabe schuldig geblieben ist oder sie von
+   sich aus nachgeholt hat - im Elterngespraech ist das oft der ganze Punkt.
+   Kein Eintrag = noch nicht kontrolliert (nicht "gemacht"). */
+const HA_STATUS = ["gemacht", "fehlt", "nachgereicht"];
+const HA_STATUS_INFO = {
+  gemacht: { label: "Gemacht", kurz: "Gemacht", flaeche: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  fehlt: { label: "Fehlt", kurz: "Fehlt", flaeche: "bg-red-50 text-red-700 border-red-200" },
+  nachgereicht: { label: "Nachgereicht", kurz: "Nachgereicht", flaeche: "bg-blue-50 text-blue-700 border-blue-200" },
+};
+/* Schulformen nennen es unterschiedlich - der Begriff ist einstellbar und
+   wird ueberall dort verwendet, wo die Lehrkraft ihn liest. */
+/* Kinder aus dem Stand einer Hausaufgabe entfernen. Der Stand liegt als
+   Objekt im Datensatz, wird also von den ueblichen array-Filtern beim
+   Loeschen eines Kindes nicht erfasst - ohne das blieben Namen von
+   geloeschten Kindern in den Daten stehen. */
+/* Naechster Unterrichtstermin desselben Fachs nach `abDatum`. Dient als
+   Vorgabe fuer die Faelligkeit - "bis zur naechsten Stunde" ist der
+   Normalfall, den niemand tippen will. Sucht hoechstens 21 Tage voraus,
+   damit ein Fach ohne Stundenplan-Eintrag nicht in eine Endlosschleife laeuft. */
+function naechsteStundeFuerFach(timetable, fachId, abDatum) {
+  const tage = (timetable || []).filter((t) => t.fachId === fachId).map((t) => t.day);
+  if (!tage.length) return null;
+  let d = localDate(abDatum);
+  for (let i = 1; i <= 21; i++) {
+    d = addDays(d, 1);
+    const key = DAYS[(d.getDay() + 6) % 7];
+    if (key && tage.includes(key)) return isoDate(d);
+  }
+  return null;
+}
+
+function haOhneKinder(hausaufgaben, kindIds) {
+  const weg = new Set(kindIds);
+  return (hausaufgaben || []).map((h) => {
+    const rest = Object.entries(h.status || {}).filter(([sid]) => !weg.has(sid));
+    return rest.length === Object.keys(h.status || {}).length ? h : { ...h, status: Object.fromEntries(rest) };
+  });
+}
+
+function haBegriff(settings) {
+  const b = (settings?.hausaufgabenBegriff || "").trim();
+  return b || "Hausaufgaben";
+}
 
 /* Kategorie eines Eintrags bestimmen - auch fuer Altbestand ohne das Feld. */
 function eintragKategorie(eintrag) {
@@ -1131,6 +1177,21 @@ function sanitizeImport(imported) {
       start: S_ZEIT(a.start), end: S_ZEIT(a.end),
       label: S_TEXT(a.label, 60),
     })).filter((a) => a.day && a.start && a.end && a.end > a.start),
+    /* Der Stand pro Kind liegt als Objekt studentId -> Status im Datensatz.
+       Unbekannte Status-Werte fliegen raus, damit die Anzeige nicht auf
+       Fantasiewerte trifft. */
+    hausaufgaben: map("hausaufgaben", (h) => ({
+      ...h,
+      text: S_TEXT(h.text, 500),
+      gestelltAm: S_DATUM(h.gestelltAm),
+      faelligAm: S_DATUM(h.faelligAm),
+      kontrolliert: h.kontrolliert === true,
+      status: Object.fromEntries(
+        Object.entries(S_SAUBER(h.status))
+          .filter(([sid, wert]) => typeof sid === "string" && sid.length <= 100 && HA_STATUS.includes(wert))
+          .slice(0, 200)
+      ),
+    })).filter((h) => h.faelligAm),
     finalGrades: map("finalGrades", (f) => ({ ...f, value: typeof f.value === "number" ? f.value : null })),
     /* Nur die Eintraege - die Dateien kommen aus der getrennten Dokument-
        Sicherung. `scope` steuert, wo ein Dokument auftaucht; ein fremder Wert
@@ -1203,6 +1264,7 @@ function sanitizeVollstaendig(imported) {
       : (EMPTY_DATA.settings || {}).dashboardOrder,
     lehrerName: typeof impSettings.lehrerName === "string" ? impSettings.lehrerName.slice(0, 80) : "",
     stundenlaenge: impSettings.stundenlaenge === 45 ? 45 : 60,
+    hausaufgabenBegriff: typeof impSettings.hausaufgabenBegriff === "string" ? impSettings.hausaufgabenBegriff.slice(0, 40) : "Hausaufgaben",
     mittagspause: S_ZEIT(impSettings.mittagspause?.start) && S_ZEIT(impSettings.mittagspause?.end) && impSettings.mittagspause.end > impSettings.mittagspause.start
       ? { start: impSettings.mittagspause.start, end: impSettings.mittagspause.end }
       : null,
@@ -2084,6 +2146,33 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
                 </button>
               ))}
             </div>
+
+            <div className="border-t border-stone-100 pt-3 mt-1" />
+            <div className="text-xs font-medium text-stone-500 mb-2">Bezeichnung für Hausaufgaben</div>
+            <input
+              className={`${inputCls} mb-1`}
+              placeholder="Hausaufgaben"
+              value={data.settings?.hausaufgabenBegriff ?? "Hausaufgaben"}
+              maxLength={40}
+              onChange={(e) => setSetting("hausaufgabenBegriff", e.target.value)}
+            />
+            <div className="flex flex-wrap gap-1.5 mb-1">
+              {["Hausaufgaben", "Lernzeitaufgaben", "Wochenplan", "Übungsaufgaben"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setSetting("hausaufgabenBegriff", v)}
+                  className={`px-2.5 py-1 rounded-full text-xs border ${
+                    (data.settings?.hausaufgabenBegriff || "Hausaufgaben") === v ? "akzent-flaeche akzent-rand" : "border-stone-200 text-stone-600"
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-stone-500 mb-4">
+              Schulformen nennen es unterschiedlich. Der Begriff erscheint im Stunden-Sheet und auf der Übersicht.
+              Vergessenes Sportzeug bleibt davon unberührt.
+            </p>
 
             <div className="border-t border-stone-100 pt-3 mt-1" />
             <div className="text-xs font-medium text-stone-500 mb-2">Stundenlänge</div>
@@ -3411,6 +3500,10 @@ const HELP_DATA = [
       { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
       { q: "Wie kommen Fehlzeiten in Tu-vi?", a: `Auf zwei Wegen. (1) Direkt im Unterricht: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" → Reiter „Anwesenheit". Dort stehen alle Kinder der Klasse, standardmäßig als anwesend. (2) Aus dem Klassenbuch: „Klassen & Schüler" → oben rechts „Fehlzeiten" (oder „Mehr" → „Einstellungen" → „Daten & Sicherung" → „WebUntis / Fehlzeiten"). Die noch offenen Entschuldigungen siehst du in beiden Fällen im Reiter „Verwaltung" → „Entschuldigungen". Wichtig: Das Klassenbuch ist die amtliche Quelle – importierst du später einen Tag, den du selbst erfasst hast, ersetzt der Import deinen Eintrag, statt ihn zu verdoppeln.` },
       { q: "Wie trage ich ein, wer gerade in meiner Stunde fehlt?", a: `Übersicht → JETZT-Karte → „Stunde öffnen" → Reiter „Anwesenheit". Alle Kinder gelten zunächst als anwesend (grüner Haken). Wische ein Kind nach links, dann gilt es als fehlend. Kommt es doch noch, wische es wieder nach rechts – es steht dann als „verspätet" da; ein weiteres Wischen nach rechts setzt es zurück auf anwesend. Wer nicht wischen mag, tippt auf den Haken links neben dem Namen und wählt den Status direkt aus; bei „verspätet" lässt sich dort auch eintragen, um wie viele Minuten. Über die Filter oben („Alle / Anwesend / Abwesend") siehst du schnell nur die Fehlenden. Gespeichert wird sofort – du kannst das Fenster jederzeit schließen.` },
+      { q: "Wie gebe ich Hausaufgaben auf und kontrolliere sie?", a: `Aufgeben: Stunde öffnen → Reiter „Vorbereitung" → ganz oben das Feld unter „Hausaufgaben aufgeben" (der Begriff heißt so, wie du ihn eingestellt hast). Als Fälligkeit schlägt Tu-vi automatisch die nächste Stunde desselben Fachs aus deinem Stundenplan vor; über das Datumsfeld darunter kannst du sie ändern. Kontrollieren: In der Stunde, in der die Aufgabe fällig ist, erscheint im Stunden-Sheet ein zusätzlicher Reiter mit dem Begriff und der Zahl der noch offenen Kinder. Dort setzt du pro Kind „Gemacht", „Fehlt" oder „Nachgereicht". Weil fast immer die Mehrheit sie hat, gibt es oben einen Knopf „Alle auf Gemacht setzen" – danach tippst du nur die Ausnahmen um. Der Reiter erscheint nur, wenn für diese Stunde wirklich etwas fällig ist.` },
+      { q: "Warum gibt es bei Hausaufgaben drei Zustände statt nur gemacht / nicht gemacht?", a: `Weil „nachgereicht" pädagogisch etwas anderes ist als „fehlt". Es macht einen Unterschied, ob ein Kind eine Aufgabe schuldig geblieben ist oder ob es sie von sich aus nachgeholt hat – im Elterngespräch ist genau das oft der entscheidende Punkt: „5× gefehlt, davon 4× nachgereicht" erzählt eine völlig andere Geschichte als „5× gefehlt". Kein Eintrag bedeutet übrigens „noch nicht kontrolliert", nicht „gemacht" – deshalb zeigt der Reiter, wie viele Kinder noch offen sind.` },
+      { q: "Wo sehe ich, dass ich Hausaufgaben kontrollieren muss oder etwas nachgereicht wird?", a: `Auf der Übersicht in der Kachel „X Dinge brauchen deine Aufmerksamkeit". Dort erscheinen zwei Signale: „Hausaufgaben kontrollieren" für alles, was heute fällig und noch nicht abgehakt ist – ein Tipp darauf springt direkt in den richtigen Reiter der richtigen Stunde – und „X × Hausaufgaben nachzureichen" für alles, was du als „Fehlt" markiert und noch nicht bekommen hast. Das zweite Signal bleibt stehen, bis du das Kind auf „Nachgereicht" stellst; genau dafür ist es da.` },
+      { q: "Meine Schule nennt Hausaufgaben anders – kann ich das ändern?", a: `Ja. „Mehr" → „Einstellungen" → „Schuljahr & Schule" → „Bezeichnung für Hausaufgaben". Vier gängige Begriffe stehen zum Antippen bereit (Hausaufgaben, Lernzeitaufgaben, Wochenplan, Übungsaufgaben), du kannst aber auch einen eigenen eintippen. Der Begriff erscheint dann überall dort, wo du ihn liest – im Stunden-Sheet, im Reiter und auf der Übersicht. Vergessenes Sportzeug bleibt davon unberührt, das heißt in Sport weiterhin „Sportzeug".` },
       { q: "Wie mache ich einen Klassenbuch-Eintrag zu einem Kind?", a: `Übersicht → JETZT-Karte → „Stunde öffnen" → Reiter „Noten & Notizen". Tippe beim Kind rechts auf das ···-Symbol, dann auf „Eintrag". Wähle die Kategorie – Positiv, Störung, Material, Hausaufgabe, Vorkommnis oder Eltern – und schreib bei Bedarf einen Satz dazu; der Text ist freiwillig, die Kategorie allein reicht auch. Der Eintrag wird mit Datum und Fach gespeichert und erscheint sofort im Verlauf des Kindes sowie in der Schülerakte für die Übergabe. „Positiv" steht bewusst an erster Stelle: Eine Akte, in der über Jahre nur Störungen stehen, zeichnet ein schiefes Bild vom Kind – und im Elterngespräch fehlt dann genau die Hälfte.` },
       { q: "Was steht alles im Verlauf eines Kindes?", a: `Der Verlauf im Kind-Profil (Reiter „Übersicht") ist die Zeitleiste über alles, was zu diesem Kind festgehalten wurde: Notizen, Gespräche, Klassenbuch-Einträge und Fehlzeiten – chronologisch gemischt, jüngstes zuerst. Jede Zeile zeigt, worum es sich handelt (farbige Kategorie beim Eintrag, „Fehlzeit", „Notiz", Gesprächstyp mit Stimmungs-Emoji), bei Einträgen zusätzlich das Fach. Früher standen hier nur Notizen und Gespräche – vergessenes Material und Fehlzeiten lagen zwar in den Daten, waren im Profil aber unsichtbar. Sind es mehr als sieben, führen die Links rechts oben zu den vollständigen Listen.` },
       { q: "Erkennt Tu-vi Muster in den Fehlzeiten?", a: `Ja. Im Kind-Profil erscheint unter „Auffälligkeiten bei den Fehlzeiten" eine kurze Liste, sobald genug Daten für eine belastbare Aussage vorliegen – zum Beispiel „6 von 8 Fehltagen liegen auf Montage", „Meist betroffen ist die 1. Stunde", „4 der 7 Fehltage liegen in den letzten vier Wochen" oder „3 von 8 Fehltagen sind unentschuldigt". Dieselben Sätze stehen auch in der Schülerakte für die Übergabe und im Vorbereitungstext fürs Elterngespräch. Der Sinn: Nicht die Zahl „8 Fehltage" hilft der nächsten Lehrkraft weiter, sondern das Muster dahinter. Tu-vi hält sich dabei bewusst zurück – jede Aussage braucht eine Mindestzahl an Fehltagen UND einen Mindestanteil, damit aus drei zufällig gleichen Wochentagen keine Behauptung über ein Kind wird. Und es bleibt bei der Beobachtung („liegen auf Montagen"); was dahintersteckt, weißt nur du.` },
@@ -5893,6 +5986,7 @@ export default function App() {
          reichten Student/Klasse als Kaskade-Ankerpunkte, jetzt nicht mehr. */
       d.grades = d.grades.filter((g) => !expiredStudentIds.includes(g.studentId) && !expiredClassIds.includes(g.classId) && !expiredFachIds.includes(g.fachId));
       d.incidents = (d.incidents || []).filter((i) => !expiredStudentIds.includes(i.studentId) && !expiredFachIds.includes(i.fachId));
+      d.hausaufgaben = haOhneKinder((d.hausaufgaben || []).filter((h) => !expiredFachIds.includes(h.fachId)), expiredStudentIds);
       d.absences = (d.absences || []).filter((a) => !expiredStudentIds.includes(a.studentId));
       d.finalGrades = (d.finalGrades || []).filter((fg) => !expiredStudentIds.includes(fg.studentId) && !expiredFachIds.includes(fg.fachId));
       d.foerderZiele = (d.foerderZiele || []).filter((z) => !expiredStudentIds.includes(z.studentId));
@@ -8045,6 +8139,7 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
   const [gesprTexts, setGesprTexts] = useState({});
   const [actionsId, setActionsId] = useState(null);
   const [eintragFor, setEintragFor] = useState(null);   // studentId mit offenem Eintrags-Feld
+  const [haText, setHaText] = useState("");
   const [eintragKat, setEintragKat] = useState("positiv");
   const [eintragTexts, setEintragTexts] = useState({});
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -8110,6 +8205,77 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
       return d;
     });
   }
+
+  /* ── Hausaufgaben ─────────────────────────────────────────────
+     Eine Aufgabe gehoert zum Fach und hat ein Faelligkeitsdatum; der Stand
+     pro Kind liegt im selben Datensatz. Der Begriff ist einstellbar, weil
+     Schulformen ihn unterschiedlich nennen. */
+  const haWort = haBegriff(data.settings);
+  const haListe = data.hausaufgaben || [];
+  // In DIESER Stunde faellig - das ist die, die kontrolliert wird.
+  const haFaellig = haListe.find((h) => h.fachId === fach.id && h.faelligAm === date) || null;
+  // In DIESER Stunde gestellt - die wird gerade aufgegeben.
+  const haGestellt = haListe.find((h) => h.fachId === fach.id && h.gestelltAm === date) || null;
+
+  function stelleHausaufgabe(text, faelligAm) {
+    const sauber = (text || "").trim();
+    update((d) => {
+      d.hausaufgaben = d.hausaufgaben || [];
+      const vorhanden = d.hausaufgaben.find((h) => h.fachId === fach.id && h.gestelltAm === date);
+      if (!sauber && vorhanden) {
+        // Text geleert = Aufgabe zuruecknehmen, solange noch nichts kontrolliert wurde.
+        if (!Object.keys(vorhanden.status || {}).length) {
+          d.hausaufgaben = d.hausaufgaben.filter((h) => h !== vorhanden);
+        }
+        return d;
+      }
+      if (!sauber) return d;
+      if (vorhanden) {
+        vorhanden.text = sauber;
+        if (faelligAm) vorhanden.faelligAm = faelligAm;
+      } else {
+        d.hausaufgaben.push({
+          id: uid(), fachId: fach.id, text: sauber,
+          gestelltAm: date,
+          faelligAm: faelligAm || naechsteStundeFuerFach(data.timetable, fach.id, date) || date,
+          status: {}, kontrolliert: false,
+        });
+      }
+      return d;
+    });
+  }
+
+  function setzeHaStatus(hausaufgabeId, sid, status) {
+    update((d) => {
+      const h = (d.hausaufgaben || []).find((x) => x.id === hausaufgabeId);
+      if (!h) return d;
+      h.status = { ...(h.status || {}) };
+      if (status) h.status[sid] = status; else delete h.status[sid];
+      h.kontrolliert = true;
+      return d;
+    });
+  }
+
+  /* Der haeufigste Fall in der Praxis: fast alle haben sie. Ein Tap setzt
+     alle auf "gemacht"; die Ausnahmen tippt man danach einzeln um. */
+  function alleHaGemacht(hausaufgabeId) {
+    update((d) => {
+      const h = (d.hausaufgaben || []).find((x) => x.id === hausaufgabeId);
+      if (!h) return d;
+      const naechster = { ...(h.status || {}) };
+      students.forEach((st) => { if (!naechster[st.id]) naechster[st.id] = "gemacht"; });
+      h.status = naechster;
+      h.kontrolliert = true;
+      return d;
+    });
+  }
+
+  const haOffen = haFaellig
+    ? students.filter((st) => (haFaellig.status || {})[st.id] === "fehlt").length
+    : 0;
+  const haUnkontrolliert = haFaellig
+    ? students.filter((st) => !(haFaellig.status || {})[st.id]).length
+    : 0;
 
   /* Wischen: nach links immer "abwesend"; nach rechts eine Stufe zurueck
      (abwesend -> verspaetet -> anwesend). So laesst sich ein Kind, das
@@ -8390,6 +8556,9 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
           <div className="flex border-t border-stone-100" role="tablist" aria-label="Bereich waehlen">
             {[
               { key: "anwesenheit", label: fehlendCount ? `Anwesenheit (${fehlendCount})` : "Anwesenheit" },
+              /* Nur zeigen, wenn fuer diese Stunde wirklich etwas faellig ist -
+                 sonst steht die Lehrkraft dauerhaft vor einem leeren Reiter. */
+              ...(haFaellig ? [{ key: "hausaufgaben", label: haUnkontrolliert ? `${haWort} (${haUnkontrolliert})` : haWort }] : []),
               { key: "noten", label: "Noten & Notizen" },
               { key: "vorbereitung", label: "Vorbereitung" },
             ].map((tab) => {
@@ -8477,6 +8646,71 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
             );
           })()}
         </div>
+
+        {/* Kontrolle der faelligen Aufgabe. Drei Zustaende: gemacht, fehlt,
+            nachgereicht - "nachgereicht" ist der paedagogisch entscheidende
+            Fall, weil es einen Unterschied macht, ob ein Kind etwas schuldig
+            bleibt oder es von sich aus nachholt. */}
+        {haFaellig && (
+          <div className="p-4 pb-[max(2rem,env(safe-area-inset-bottom))]" hidden={activeTab !== "hausaufgaben"}>
+            <Card className="p-3 mb-3">
+              <div className="text-[10px] uppercase tracking-wide text-stone-400 mb-1">Heute fällig</div>
+              <div className="text-sm text-stone-800">{haFaellig.text}</div>
+              <div className="t-caption mt-0.5">
+                aufgegeben am {localDate(haFaellig.gestelltAm || haFaellig.faelligAm).toLocaleDateString("de-DE")}
+              </div>
+            </Card>
+
+            {haUnkontrolliert > 0 && (
+              <button
+                onClick={() => alleHaGemacht(haFaellig.id)}
+                className="w-full mb-3 py-2.5 rounded-xl border akzent-rand akzent-ton akzent-text text-sm font-medium press-scale"
+              >
+                Alle {haUnkontrolliert === students.length ? "" : "übrigen "}auf „Gemacht" setzen
+              </button>
+            )}
+
+            <ul className="divide-y divide-stone-100">
+              {students.map((st) => {
+                const stand = (haFaellig.status || {})[st.id] || null;
+                return (
+                  <li key={st.id} className="py-2">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <StudentAvatar student={st} size={26} />
+                      <span className="flex-1 text-sm text-stone-800 truncate min-w-0">{st.name}</span>
+                      {!stand && <span className="text-[10px] text-stone-400 shrink-0">offen</span>}
+                    </div>
+                    <div className="flex gap-1.5">
+                      {HA_STATUS.map((k) => {
+                        const info = HA_STATUS_INFO[k];
+                        const aktiv = stand === k;
+                        return (
+                          <button
+                            key={k}
+                            onClick={() => setzeHaStatus(haFaellig.id, st.id, aktiv ? null : k)}
+                            aria-pressed={aktiv}
+                            aria-label={`${st.name}: ${info.label}`}
+                            className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors press-scale ${
+                              aktiv ? info.flaeche : "border-stone-200 bg-white text-stone-500"
+                            }`}
+                          >
+                            {info.kurz}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {haOffen > 0 && (
+              <p className="text-xs text-stone-500 mt-3">
+                {haOffen} {haOffen === 1 ? "Kind muss" : "Kinder müssen"} noch nachreichen – das erscheint auf der Übersicht,
+                bis du hier auf „Nachgereicht" stellst.
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="p-4 pb-[max(2rem,env(safe-area-inset-bottom))]" hidden={activeTab !== "noten"}>
 
@@ -8784,6 +9018,48 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
 
         {/* Tab: Vorbereitung – Thema, Material, Vor-Aufgaben pro Stunde. */}
         <div className="p-4 pb-[max(2rem,env(safe-area-inset-bottom))] space-y-5" hidden={activeTab !== "vorbereitung"}>
+          {/* Aufgabe stellen. Faellig ist standardmaessig die naechste Stunde
+              desselben Fachs - das ist der Normalfall, den niemand tippen will.
+              In dieser Stunde kontrolliert wird sie dann automatisch dort. */}
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 block mb-1.5">
+              {haWort} aufgeben
+            </label>
+            <div className="flex gap-1.5">
+              <input
+                className="flex-1 text-sm rounded-lg border border-stone-300 px-2.5 py-2"
+                placeholder={`z. B. S. 42 Nr. 3–5`}
+                maxLength={500}
+                defaultValue={haGestellt?.text || ""}
+                key={haGestellt?.id || "neu"}
+                onChange={(e) => setHaText(e.target.value)}
+                onBlur={(e) => stelleHausaufgabe(e.target.value, haGestellt?.faelligAm)}
+                onKeyDown={(e) => { if (e.key === "Enter") { stelleHausaufgabe(e.currentTarget.value, haGestellt?.faelligAm); e.currentTarget.blur(); } }}
+              />
+            </div>
+            {haGestellt ? (
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="t-caption shrink-0">fällig:</span>
+                <input
+                  type="date"
+                  className="text-xs rounded border border-stone-200 px-1.5 py-1 tabular-nums"
+                  value={haGestellt.faelligAm || ""}
+                  min={date}
+                  onChange={(e) => stelleHausaufgabe(haGestellt.text, e.target.value)}
+                />
+                {Object.keys(haGestellt.status || {}).length > 0 && (
+                  <span className="t-caption">· bereits kontrolliert</span>
+                )}
+              </div>
+            ) : (
+              <p className="t-caption mt-1.5">
+                {naechsteStundeFuerFach(data.timetable, fach.id, date)
+                  ? `Fällig zur nächsten Stunde am ${localDate(naechsteStundeFuerFach(data.timetable, fach.id, date)).toLocaleDateString("de-DE")} – dort kannst du sie abhaken.`
+                  : "Steht das Fach im Stundenplan, schlägt Tu-vi die nächste Stunde als Fälligkeit vor."}
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 block mb-1.5">Inhalt · Thema</label>
             {(() => {
@@ -9633,6 +9909,48 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         });
       }
     });
+    /* 3. Hausaufgaben: heute zu kontrollieren und offene Nachreichungen.
+       Bewusst in dieser Kachel statt als eigener Block - die Heute-Seite hat
+       mit JETZT, ALS NAECHSTES, Aufmerksamkeit und Nicht-vergessen ihr Limit. */
+    (() => {
+      const wort = haBegriff(data.settings);
+      const heuteFaellig = (data.hausaufgaben || []).filter((h) => h.faelligAm === todayStr);
+      const zuKontrollieren = heuteFaellig.filter((h) => {
+        const f = (data.faecher || []).find((x) => x.id === h.fachId);
+        const kinder = (data.students || []).filter((st) => st.classId === f?.classId && !st.deletedAt);
+        return kinder.some((st) => !(h.status || {})[st.id]);
+      });
+      if (zuKontrollieren.length) {
+        const erste = zuKontrollieren[0];
+        const f = (data.faecher || []).find((x) => x.id === erste.fachId);
+        const c = (data.classes || []).find((x) => x.id === f?.classId);
+        items.push({
+          id: "ha-kontrolle",
+          titel: zuKontrollieren.length === 1
+            ? `${wort} kontrollieren: ${c?.name || ""} ${f?.subject || ""}`.trim()
+            : `${wort} kontrollieren (${zuKontrollieren.length} Stunden)`,
+          sub: erste.text || null,
+          onClick: f && c ? () => setCaptureLesson?.({ fach: f, cls: c, date: todayStr, initialTab: "hausaufgaben" }) : null,
+          icon: BookOpen,
+        });
+      }
+      /* Offene Nachreichungen aus der Vergangenheit - die geraten sonst in
+         Vergessenheit, und genau darum ging es der Lehrkraft. */
+      let offen = 0;
+      (data.hausaufgaben || []).filter((h) => h.faelligAm <= todayStr).forEach((h) => {
+        Object.values(h.status || {}).forEach((v) => { if (v === "fehlt") offen++; });
+      });
+      if (offen) {
+        items.push({
+          id: "ha-nachreichen",
+          titel: `${offen} × ${wort} nachzureichen`,
+          sub: "noch nicht abgegeben",
+          onClick: null,
+          icon: AlertTriangle,
+        });
+      }
+    })();
+
     // 3. Dringliche Briefing-Sätze (urgent), Begrüßung weggelassen
     briefingSentences.slice(1).filter((s) => s.urgent).forEach((s, i) => {
       items.push({
@@ -15730,6 +16048,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.notes = d.notes.filter((n) => !studentIds.includes(n.studentId));
       d.grades = d.grades.filter((g) => !studentIds.includes(g.studentId) && g.classId !== id);
       d.incidents = (d.incidents || []).filter((i) => !studentIds.includes(i.studentId));
+      d.hausaufgaben = haOhneKinder(d.hausaufgaben || [], studentIds);
       d.absences = (d.absences || []).filter((a) => !studentIds.includes(a.studentId));
       d.finalGrades = (d.finalGrades || []).filter((fg) => !studentIds.includes(fg.studentId));
       d.foerderZiele = (d.foerderZiele || []).filter((z) => !studentIds.includes(z.studentId));
@@ -15740,6 +16059,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.faecher = d.faecher.filter((f) => f.classId !== id);
       d.timetable = (d.timetable || []).filter((t) => !fachIds.includes(t.fachId) && t.classId !== id);
       d.lessonTopics = (d.lessonTopics || []).filter((t) => !fachIds.includes(t.fachId));
+      d.hausaufgaben = (d.hausaufgaben || []).filter((h) => !fachIds.includes(h.fachId));
       return d;
     });
   }
@@ -15751,6 +16071,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.notes = d.notes.filter((n) => n.studentId !== id);
       d.grades = d.grades.filter((g) => g.studentId !== id);
       d.incidents = (d.incidents || []).filter((i) => i.studentId !== id);
+      d.hausaufgaben = haOhneKinder(d.hausaufgaben || [], [id]);
       d.absences = (d.absences || []).filter((a) => a.studentId !== id);
       d.finalGrades = (d.finalGrades || []).filter((fg) => fg.studentId !== id);
       d.foerderZiele = (d.foerderZiele || []).filter((z) => z.studentId !== id);
@@ -15789,6 +16110,7 @@ function KlassenFusszeile({ rohdaten: data, update }) {
       d.finalGrades = (d.finalGrades || []).filter((fg) => fg.fachId !== id);
       d.incidents = (d.incidents || []).filter((i) => i.fachId !== id);
       d.lessonTopics = (d.lessonTopics || []).filter((t) => t.fachId !== id);
+      d.hausaufgaben = (d.hausaufgaben || []).filter((h) => h.fachId !== id);
       d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
       return d;
     });
@@ -16914,6 +17236,7 @@ function FaecherTab({ data, update, onOpenFach }) {
       d.finalGrades = (d.finalGrades || []).filter((fg) => fg.fachId !== id);
       d.incidents = (d.incidents || []).filter((i) => i.fachId !== id);
       d.lessonTopics = (d.lessonTopics || []).filter((t) => t.fachId !== id);
+      d.hausaufgaben = (d.hausaufgaben || []).filter((h) => h.fachId !== id);
       d.documents = (d.documents || []).filter((doc) => !dokIds.includes(doc.id));
       return d;
     });
