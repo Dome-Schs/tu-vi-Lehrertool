@@ -700,6 +700,16 @@ function subjectColor(subjectColors, name) {
   return (subjectColors && subjectColors[name]) || "#78716C";
 }
 
+function textAufFarbe(hex) {
+  if (!hex || hex.length < 7) return "#FFFFFF";
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const srgb = (c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  const L = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
+  return L > 0.36 ? "#1B1D16" : "#FFFFFF";
+}
+
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -3456,11 +3466,11 @@ const HELP_DATA = [
       { q: "Wie stelle ich mein Bundesland ein?", a: `Beim ersten Start fragt Tu-vi automatisch nach deinem Bundesland und trägt die Schulferien ein. Nachträglich: „Mehr" → „Einstellungen" → „Schuljahr & Schule" → Bundesland wählen → „Schulferien eintragen".` },
       { q: "Was passiert beim ersten Start?", a: `Tu-vi beginnt leer – keine Klassen, keine Kinder, keine Termine. Zuerst fragt die App nach deinem Bundesland und trägt die Schulferien ein; das lässt sich mit „Später einrichten" überspringen und in den Einstellungen nachholen. Danach steht auf der Übersicht eine Willkommenskarte mit dem einzigen sinnvollen ersten Schritt: eine Klasse anlegen. Sind Klasse und Kinder da, kommen Fächer und Stundenplan dazu – alles Weitere entsteht im Alltag. Wenn du dich lieber erst umsehen möchtest, kannst du unter „Einstellungen" → „Daten & Sicherung" → „Erweiterte Einstellungen" Beispieldaten laden: zwei erfundene Klassen mit Noten und Terminen. Der Knopf erscheint nur, solange du noch keine eigene Klasse angelegt hast – so kann er nichts überschreiben.` },
       { q: "Wie schalte ich den Farb-Modus ein?", a: `Tippe auf der Startseite oben rechts auf das Sternchen-Symbol (✦). Im Standard-Modus ist die App schlicht und einfarbig – ein Tipp bringt Farbe hinein. Die Palette heißt „Salbei & Sand" und kommt mit drei Tönen aus: Salbeigrün trägt den Wochentag, die laufende Stunde und die Kästchen; Sand gehört ausschließlich der Aktion („Schnell erfassen", der Plus-Knopf); ein warmer Tonfarbton meldet sich nur bei „Aufmerksamkeit". Alles andere bleibt neutral. Gefärbt werden vor allem Schrift und Linien – die Kartenkanten sind feine Linien, keine Füllungen. Im Stundenplan färben sich zusätzlich alle Stundenkacheln nach Fach, dazu kommen farbige Fach-Markierungen und Noten-Trends in den übrigen Ansichten. Erneutes Tippen schaltet zurück zum Mono-Modus. Der Farb-Modus ist unabhängig von Hell/Dunkel und funktioniert in beiden.` },
-      { q: "Wie ändere ich die Farbe eines Fachs?", a: `Klasse antippen → Reiter „Unterricht" → bei dem Fach auf das ···-Symbol rechts tippen → „Fach bearbeiten". Im Bearbeiten-Dialog steht unter „Farbe" eine Auswahl aus 18 Farbtönen zum direkten Antippen. Neu angelegte Fächer bekommen automatisch eine noch unbenutzte Farbe zugewiesen; hier lässt sich das jederzeit ändern, etwa wenn zwei Fächer sich zu ähnlich sehen.` },
+      { q: "Wie ändere ich die Farbe eines Fachs?", a: `Zwei Wege: (1) Klasse antippen → Reiter „Unterricht" → bei dem Fach auf das ···-Symbol rechts tippen → „Fach bearbeiten". Im Bearbeiten-Dialog steht unter „Farbe" eine Auswahl aus 18 Farbtönen zum direkten Antippen. (2) Im Stundenplan eine Stunde antippen – im Bearbeitungs-Popover erscheint unter dem gewählten Fach dieselbe Farbpalette. So lässt sich die Farbe ändern, ohne den Stundenplan zu verlassen. Neu angelegte Fächer bekommen automatisch eine noch unbenutzte Farbe zugewiesen; hier lässt sich das jederzeit ändern, etwa wenn zwei Fächer sich zu ähnlich sehen. Die Fachfarbe erscheint überall: Stundenplan, Notenübersicht, JETZT- und ALS-NÄCHSTES-Karten auf der Übersicht.` },
       { q: "Wie bekomme ich Tu-vi als App auf den Home-Bildschirm?", a: `Das hängt vom Gerät ab. Auf Android und am Computer (Chrome, Edge) genügt ein Tipp: Der Knopf „Auf dem Home-Bildschirm ablegen" steht auf dem Anmeldebildschirm und später im Menü. Auf iPhone und iPad geht es nur über zwei Schritte, weil Apple keinen anderen Weg zulässt: unten in der Mitte (am iPad oben rechts) auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm" wählen. Tu-vi zeigt dir diese zwei Schritte automatisch an, solange sie noch nicht als App läuft. Wichtig auf iPhone und iPad: Mach das möglichst VOR der ersten Anmeldung. Die App auf dem Home-Bildschirm bekommt bei iOS einen eigenen Speicher – meldest du dich erst in Safari an und legst sie danach ab, musst du dich dort noch einmal anmelden, und auch die Face-ID-Sperre wäre dort zunächst wieder aus. Deine Daten sind dabei nicht weg, sie liegen auf dem Server und sind nach der Anmeldung sofort wieder da.` },
       { q: "Wo finde ich das Ablegen auf dem Home-Bildschirm später wieder?", a: `Unter „Mehr" → „Einstellungen" → „Als App ablegen". Auf dem Anmeldebildschirm erscheint der Hinweis nur beim ersten Mal – danach würde er im Alltag nur Platz kosten, deshalb wandert er in die Einstellungen. Läuft Tu-vi auf dem Gerät bereits als App, sagt die Seite dir das; kann dein Browser es gar nicht, steht dort, was stattdessen geht.` },
       { q: "Warum sehe ich den Hinweis zum Home-Bildschirm nicht?", a: `Dafür gibt es vier Gründe. Erstens: Tu-vi läuft bereits als App – dann ist der Hinweis überflüssig und blendet sich aus. Zweitens: Du hast dich auf diesem Gerät schon einmal angemeldet oder auf „Später" getippt – dann steht der Weg unter „Einstellungen" → „Als App ablegen". Drittens: Du hast Tu-vi aus einer anderen App heraus geöffnet, etwa aus einer Mail oder aus WhatsApp. In diesen eingebauten Browsern gibt es „Zum Home-Bildschirm" gar nicht – öffne tu-vi.de dann in Safari. Viertens: Am Mac mit Safari bietet Apple das Ablegen nicht an; dort gibt es stattdessen „Zum Dock hinzufügen" im Menü „Ablage".` },
-      { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – bei jedem Öffnen der App (auch nach vollständigem Schließen und Neustarten) und immer dann, wenn sie länger als zwei Minuten im Hintergrund war. Kurzes Wegwischen (eine Nachricht lesen) löst die Sperre nicht aus. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
+      { q: "Wie sperre ich Tu-vi mit Face ID oder Touch ID?", a: `„Mehr" → „Einstellungen" → „Sicherheit & Konto" → Schalter „Mit Face ID / Touch ID sperren" einschalten. Dein Gerät fragt einmal nach der Bestätigung, danach ist die Sperre aktiv. Ab dann verlangt Tu-vi Face ID oder Touch ID, bevor Klassen und Schülerdaten sichtbar werden – bei jedem Öffnen der App und sobald die App auch nur für einen Moment in den Hintergrund geht (Fensterwechsel, Nachricht lesen, anderes Tab). Weil es um hochsensible Schülerdaten geht, gibt es keine Wartezeit – die Sperre greift sofort. Wichtig: Die Sperre gilt nur auf diesem Gerät. Nutzt du Tu-vi zusätzlich auf dem iPad, musst du sie dort separat einschalten. Erscheint der Abschnitt gar nicht oder als Hinweis, kann dein Gerät oder Browser keine Face ID für Webseiten – auf dem iPhone brauchst du dafür Safari und eine https-Verbindung.` },
       { q: "Warum werde ich beim Öffnen von Tu-vi manchmal nach E-Mail und Passwort gefragt, obwohl ich schon angemeldet war?", a: `Weil auf diesem Gerät keine Face-ID/Touch-ID-Sperre eingerichtet ist. Schülerdaten sind hoch sensibel – deshalb reicht eine still im Hintergrund liegende Anmeldung allein nicht als Nachweis, wer gerade vor dem Gerät sitzt. Bei jedem echten Neustart der App (vollständig geschlossen und wieder geöffnet, nicht nur kurz gewechselt) prüft Tu-vi deshalb: Ist Face ID/Touch ID eingerichtet, entsperrst du mit einem Blick. Ist sie es nicht, wirst du automatisch abgemeldet und musst dich neu mit E-Mail und Passwort anmelden. Um das zu vermeiden, richte einmalig die Face-ID-Sperre ein: „Einstellungen" → „Sicherheit & Konto" → „Mit Face ID / Touch ID sperren".` },
       { q: "Sperrt sich Tu-vi, wenn ich es liegen lasse?", a: `Ja. Unter „Mehr" → „Einstellungen" → „Sicherheit & Konto" → „Automatisch sperren" wählst du zwischen Aus, 5, 15 und 30 Minuten; voreingestellt sind 15 Minuten. Passiert in dieser Zeit nichts – kein Tippen, kein Scrollen –, greift die Sperre. Was dann geschieht, hängt davon ab, was auf dem Gerät eingerichtet ist: Mit Face ID oder Touch ID wird nur gesperrt, und du bist mit einem Blick wieder da, genau an der Stelle, an der du warst. Ohne eingerichtete Sperre wirst du abgemeldet, weil eine wegwischbare Sperre kein Schutz wäre – zurück brauchst du dann E-Mail und Passwort. Gedacht ist das für den Fall, dass das iPad aufgeklappt auf dem Pult liegen bleibt. Die Einstellung gilt nur auf dem Gerät, an dem du sie triffst, und deine Daten gehen dabei nie verloren.` },
       { q: "Was, wenn Face ID beim Entsperren nicht funktioniert?", a: `Auf dem Sperrbildschirm steht unter dem Entsperren-Knopf „Stattdessen mit Passwort anmelden". Das meldet dich ab und du kommst zur normalen Anmeldung mit E-Mail und Passwort – danach bist du wieder drin. Du sperrst dich also nie aus. Die Sperre bleibt dabei eingerichtet; ausschalten kannst du sie unter „Einstellungen" → „Sicherheit & Konto".` },
@@ -3480,6 +3490,7 @@ const HELP_DATA = [
       { q: `Warum zeigt „Nicht vergessen" nicht alle Aufgaben?`, a: `Damit die Startseite nicht zur Endlosliste wird. Die Kachel zeigt höchstens drei Aufgaben, und zwar die dringendsten: zuerst überfällige (rot markiert), dann heute fällige (gelb), dann solche ohne Datum, zuletzt spätere. Oben rechts steht „N heute" – oder „N offen", wenn heute nichts fällig ist. Ein Tipp auf die Kachel oder auf „+N weitere" öffnet die vollständige Liste – dort kannst du auch direkt abhaken. Ganz unten in dieser Liste führt „Alle Aufgaben und Listen" in den Aufgaben-Bereich. Erledigte Aufgaben verschwinden aus der Kachel.` },
       { q: "Wie lege ich Material für ein Fach fest, das immer mitzunehmen ist?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung" → im Editor die Sektion „Immer mitnehmen". Trage ein Ding pro Zeile ein und tippe das +-Symbol oder drücke Enter – z. B. „12 Volleybälle", „6 Hütchen", „Leibchen", „Beamer". Die Einträge erscheinen automatisch auf der Heute-Seite: in der JETZT-Karte beim aktiven Fach, und – wichtiger – in der ALS-NÄCHSTES-Karte als Chip-Reihe „Vorher mitnehmen", damit du sie in der Vorstunde noch einsammeln kannst. Kannst du jederzeit über das × am Chip löschen. Wird pro Fach gespeichert, nicht pro Stunde – Sport hat also für jede Sportstunde dieselben Bälle.` },
       { q: "Was ist der Unterrichtstipp des Tages?", a: `Ganz unten auf der Übersicht liegt eine kompakte Zeile mit einem Tipp aus dem Wissenspool – Titel plus Merksatz. Der Tipp wechselt automatisch mit jedem Tag (er ist an das Datum gekoppelt, bleibt also bei mehrmaligem Öffnen am selben Tag gleich). Tippe drauf, dann öffnet sich die volle Karte: „Warum?" mit Kurzbegründung, „So setzt du es um" als praktische Punkte, und der Merksatz zum Mitnehmen. Ein „Nächster Tipp"-Knopf springt zufällig zu einer anderen Karte, so kannst du zwischendurch etwas schmökern. Unter „Einstellungen" → „Darstellung" lässt sich die Kachel abschalten.` },
+      { q: "Was ist der Wochenausblick auf der Übersicht?", a: `Eine aufklappbare Karte auf der Übersicht, die zeigt was in den nächsten 7 Tagen ansteht: Klassenarbeiten und Tests (mit Fachfarbe), Termine und geplante Gespräche. Sonntags ab 14 Uhr klappt sie sich automatisch auf, damit du dich auf die Woche vorbereiten kannst – an anderen Tagen ist sie zugeklappt, lässt sich aber jederzeit öffnen. Jeder Tag wird einzeln aufgeführt, so siehst du auf einen Blick ob Montag eine Mathe-Arbeit und Mittwoch ein Elterngespräch ansteht. Tage ohne Einträge werden übersprungen. Ist in der ganzen Woche nichts geplant, verschwindet die Karte. Die Reihenfolge der Karte auf der Übersicht lässt sich unter „Einstellungen" → „Darstellung" → „Übersicht anpassen" verschieben oder ausblenden.` },
       { q: "Was ist der Wochenrückblick auf der Übersicht?", a: `Eine Karte, die von Freitag 12 Uhr bis Sonntag Nacht ganz oben auf der Übersicht erscheint (ab Montag ist sie automatisch weg). Sie zeigt drei Dinge: die Zahlen der Woche (gehaltene Stunden, vergebene Noten, geführte Gespräche, neue Notizen), was aufgefallen ist (Klassen mit Signalen aus dem Klassenradar, Kinder ohne Eintrag in dieser Woche) und einen Ausblick auf die nächste Woche (Klassenarbeiten, Termine). Ein × blendet die Karte für den Rest dieser Woche aus – am nächsten Freitag kommt sie wieder.` },
       { q: "Was macht der grüne Plus-Knopf in der Mitte?", a: `Er ist der Schnellzugriff zum Erfassen und funktioniert aus jedem Bereich heraus. Ganz oben steht immer „Kind suchen" – der kürzeste Weg ins Schülerprofil. Darunter: „Stunde nachtragen" springt direkt in die Schnellerfassung – Tu-vi wählt dabei selbst die passende Stunde, zuerst eine noch nicht erfasste, sonst die zuletzt gehaltene von heute. „Gespräch notieren" und „Notiz zu einem Kind" fragen zuerst nach dem Kind (einfach den Namen tippen) und dann nach dem Text; beim Gespräch kommen Art (Schüler, Eltern, Förder) und Stimmung dazu. „Aufgabe" und „Termin" legen einen To-do beziehungsweise einen Kalendereintrag an. Bist du gerade in einem Bereich mit eigener Aktion – etwa im Klassen-Tab – steht diese zusätzlich ganz oben in der Liste. Auf Tablet und Desktop heißt der Knopf „Schnell erfassen" und sitzt in der linken Seitenleiste, ganz oben; das aufklappende Menü enthält dieselben Aktionen.` },
       { q: "Wo finde ich die Aufgaben in der unteren Leiste?", a: `Die Leiste zeigt Übersicht, Klassen, den Plus-Knopf, Noten und „Mehr". Die Aufgaben sind unter „Mehr" zu finden – dort stehen oben die Bereiche „Stundenplan", „Kalender" und „Aufgaben", darunter die Werkzeuge „Suchen", „Dokumente", „Einstellungen" und „Hilfe". Eine neue Aufgabe legst du schneller über den grünen Plus-Knopf an.` },
@@ -4359,9 +4370,8 @@ function leseAutoSperre() {
     return AUTOSPERRE_STANDARD;
   }
 }
-/* Kurz weggewischt und zurueck soll nicht jedes Mal nach Face ID fragen -
-   erst nach dieser Pause wird wieder gesperrt. */
-const APPLOCK_PAUSE_MS = 2 * 60 * 1000;
+/* DSGVO: Bei hochsensiblen Schuelerdaten muss die App bei jeder
+   Hintergrund-Phase sofort sperren - kein Kulanz-Fenster. */
 
 function b64urlZuBytes(s) {
   const pad = "=".repeat((4 - (s.length % 4)) % 4);
@@ -5228,12 +5238,10 @@ export default function App() {
   /* Beim Start sofort gesperrt, wenn auf diesem Geraet eine Sperre
      eingerichtet ist - noch bevor Daten geladen werden. */
   const [gesperrt, setGesperrt] = useState(appLockAktiv);
-  const versteckSeit = useRef(null);
   const userRef = useRef(null);
 
-  /* Wieder sperren, wenn die App laenger als APPLOCK_PAUSE_MS im
-     Hintergrund war. Kurzes Wegwischen (Nachricht lesen, Stundenplan
-     im anderen Tab) soll nicht jedes Mal Face ID ausloesen. */
+  /* Sofort sperren, sobald die App in den Hintergrund geht -
+     DSGVO-kritisch bei hochsensiblen Schuelerdaten. */
   /* Untaetigkeit: alle 20 Sekunden pruefen, ob seit der letzten Beruehrung
      zu viel Zeit vergangen ist. Ein Timer, der bei jedem Fingertipp neu
      gesetzt wird, waere teurer - hier reicht ein Zeitstempel. */
@@ -5272,8 +5280,6 @@ export default function App() {
     const onSichtbarkeit = () => {
       if (!appLockAktiv()) return;
       if (document.visibilityState === "hidden") {
-        versteckSeit.current = Date.now();
-      } else if (versteckSeit.current && Date.now() - versteckSeit.current > APPLOCK_PAUSE_MS) {
         setGesperrt(true);
       }
     };
@@ -9400,6 +9406,55 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     return { stundenWoche, notenWoche, gespraecheWoche, notizenWoche, klassenSignale, kinderLuecke, kasNext, termineNext, kw: woche.kw };
   })();
 
+  /* Wochenausblick: Vorschau auf die naechsten 7 Kalendertage.
+     Zeigt Klassenarbeiten, Termine und geplante Gespraeche. Automatisch
+     aufgeklappt am Sonntag ab 14 Uhr, sonst per Tipp aufklappbar. */
+  const ausblickKey = `saidy_ausblick_${wocheKey}`;
+  const [ausblickOffen, setAusblickOffen] = useState(() => {
+    try {
+      const v = localStorage.getItem(ausblickKey);
+      if (v === "closed") return false;
+      if (v === "open") return true;
+    } catch {}
+    return dow === 0 && stunde >= 14;
+  });
+  function toggleAusblick() {
+    const neu = !ausblickOffen;
+    setAusblickOffen(neu);
+    try { localStorage.setItem(ausblickKey, neu ? "open" : "closed"); } catch {}
+  }
+
+  const ausblickDaten = (() => {
+    if (!isToday) return [];
+    const eintraege = [];
+    const morgen = addDays(jetzt, 1);
+    for (let i = 0; i < 7; i++) {
+      const tag = addDays(morgen, i);
+      const iso = isoDate(tag);
+      const items = [];
+      (data.faecher || []).forEach((f) => {
+        if (f.nextTestDate === iso) {
+          const cls = (data.classes || []).find((c) => c.id === f.classId);
+          items.push({ typ: "ka", text: `${cls?.name || ""} ${f.subject}: ${f.nextTestTitle || "Klassenarbeit"}`, color: f.color });
+        }
+      });
+      (data.events || []).forEach((e) => {
+        if (e.type === "ferien" || e.type === "frei") return;
+        if (e.endDate ? e.date <= iso && iso <= e.endDate : e.date === iso) {
+          items.push({ typ: "termin", text: e.title + (e.time ? ` (${e.time})` : ""), color: null });
+        }
+      });
+      (data.notes || []).filter((n) => n.type === "gespraech" && n.date === iso).forEach((g) => {
+        const s = (data.students || []).find((x) => x.id === g.studentId);
+        if (s) items.push({ typ: "gespraech", text: `Gespräch: ${s.name}`, color: null });
+      });
+      if (items.length) {
+        eintraege.push({ datum: iso, tag, items });
+      }
+    }
+    return eintraege;
+  })();
+
   /* Unterrichtstipp des Tages: waehlt deterministisch eine Karte pro Datum aus dem Pool
      (fester Grundstock + eigene aus data.settings.tippKartenEigene). Damit sich derselbe
      Tipp nach Reload nicht aendert, wird der Index aus dem ISO-Datum abgeleitet. */
@@ -10021,6 +10076,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     { key: "naechstes",       label: "ALS NÄCHSTES" },
     { key: "danach",          label: "Danach heute" },
     { key: "aufmerksamkeit",  label: "Aufmerksamkeit + Nicht vergessen" },
+    { key: "ausblick",        label: "Wochenausblick" },
     { key: "rueckblick",      label: "Wochenrückblick (Fr–So)" },
     { key: "tipp",            label: "Unterrichtstipp des Tages" },
   ];
@@ -10240,6 +10296,38 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         </div>
       )}
 
+      {/* ───────── WOCHENAUSBLICK ───────── */}
+      {isToday && ausblickDaten.length > 0 && (
+        <Card className="px-4 py-3.5" style={{ order: orderOf("ausblick") }}>
+          <button onClick={toggleAusblick} className="w-full flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wide akzent-text">Wochenausblick</span>
+            <ChevronDown size={16} className={`text-stone-400 transition-transform ${ausblickOffen ? "rotate-180" : ""}`} />
+          </button>
+          {ausblickOffen && (
+            <div className="mt-3 space-y-3">
+              {ausblickDaten.map(({ datum, tag, items }) => (
+                <div key={datum}>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-1">
+                    {tag.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}
+                  </div>
+                  <ul className="space-y-1">
+                    {items.map((it, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-stone-700">
+                        {it.typ === "ka" && <FileText size={13} className="shrink-0 text-red-500" />}
+                        {it.typ === "termin" && <CalendarDays size={13} className="shrink-0 text-stone-400" />}
+                        {it.typ === "gespraech" && <MessageSquare size={13} className="shrink-0 text-stone-400" />}
+                        {it.color && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: it.color }} />}
+                        <span className="truncate">{it.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* ───────── JETZT ─────────
           Die dominanteste Karte: was gerade läuft. Wenn heute nichts mehr,
           zeigt sie stattdessen den ganzen Tag. Kein „großes Nichts" mehr. */}
@@ -10260,7 +10348,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
              damit man ohne Lesen erkennt, worin man gerade steckt. */
           <Card
             className="px-4 py-4 space-y-3 ring-2 akzent-rand ring-offset-2 ring-offset-[color:var(--creme)]"
-            style={{ order: orderOf("jetzt"), ...(isColor ? { "--tw-ring-color": "var(--f-haupt)" } : {}) }}
+            style={{ order: orderOf("jetzt"), ...(isColor && fach?.color ? { "--tw-ring-color": fach.color } : {}) }}
           >
             {/* JETZT ist mit dem Marken-Akzent (Oliv) gekennzeichnet - eindeutig
                 das primaere Element der Heute-Seite. Kein emerald/blau/violett
@@ -10269,7 +10357,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               <div className="flex items-center gap-2 flex-wrap">
                 <span
                   className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full akzent-flaeche text-white"
-                  style={isColor ? { backgroundColor: "var(--f-haupt)", color: "var(--auf-haupt)" } : undefined}
+                  style={isColor && fach?.color ? { backgroundColor: fach.color, color: textAufFarbe(fach.color) } : undefined}
                 >Jetzt</span>
                 <span className="text-xs text-stone-500 tabular-nums">
                   {startZeit}{endZeit ? ` – ${endZeit}` : ""}
@@ -10280,8 +10368,8 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             <div className="flex items-center gap-3">
               {/* Gefuellt statt nur getoent: bei 12 % Deckkraft war der
                   Farbmodus auf der Startseite praktisch unsichtbar. */}
-              <span className="w-11 h-11 rounded-2xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor ? "var(--f-haupt)" : undefined }}>
-                <span className="text-base font-bold akzent-text" style={{ color: isColor ? "var(--auf-haupt)" : undefined }}>
+              <span className="w-11 h-11 rounded-2xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : undefined }}>
+                <span className="text-base font-bold akzent-text" style={{ color: isColor && fach?.color ? textAufFarbe(fach.color) : undefined }}>
                   {fach?.subject?.slice(0, 2) || "—"}
                 </span>
               </span>
@@ -10395,7 +10483,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               className="w-full py-2.5 rounded-xl akzent-flaeche text-white text-sm font-medium press-scale flex items-center justify-center gap-2"
               /* Sonst steht ein oliver Knopf mitten in einer fachfarbenen
                  Karte - der Block liest sich dann als zwei Dinge. */
-              style={isColor ? { backgroundColor: "var(--f-haupt)", color: "var(--auf-haupt)" } : undefined}
+              style={isColor && fach?.color ? { backgroundColor: fach.color, color: textAufFarbe(fach.color) } : undefined}
             >
               <BookOpen size={15} /> Stunde öffnen
             </button>
@@ -10428,7 +10516,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         return (
           <Card
             className="px-4 py-3.5 space-y-2.5"
-            style={{ order: orderOf("naechstes"), ...(isColor ? { borderLeft: "4px solid var(--f-haupt)" } : {}) }}
+            style={{ order: orderOf("naechstes"), ...(isColor && fach?.color ? { borderLeft: `4px solid ${fach.color}` } : {}) }}
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -10442,8 +10530,8 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="w-9 h-9 rounded-xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor ? "var(--f-haupt)" : undefined }}>
-                <span className="text-sm font-bold akzent-text" style={{ color: isColor ? "var(--auf-haupt)" : undefined }}>
+              <span className="w-9 h-9 rounded-xl akzent-ton flex items-center justify-center shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : undefined }}>
+                <span className="text-sm font-bold akzent-text" style={{ color: isColor && fach?.color ? textAufFarbe(fach.color) : undefined }}>
                   {fach?.subject?.slice(0, 2) || "—"}
                 </span>
               </span>
@@ -17589,6 +17677,15 @@ function StundenplanTab({ data, update }) {
               initial={cellData(editingCell.day, editingCell.period)}
               onSave={(fachId) => setCell(editingCell.day, editingCell.period, fachId)}
               onCancel={() => setEditingCell(null)}
+              onColorChange={(fachId, subject, color) => {
+                update((d) => {
+                  const f = d.faecher.find((x) => x.id === fachId);
+                  if (f) f.color = color;
+                  if (!d.subjectColors) d.subjectColors = {};
+                  d.subjectColors[subject] = color;
+                  return d;
+                });
+              }}
             />
           </div>
         </div>
@@ -17787,8 +17884,9 @@ function PeriodTimeEditor({ initial, onSave, onCancel }) {
   );
 }
 
-function CellEditor({ faecher, classes, initial, onSave, onCancel }) {
+function CellEditor({ faecher, classes, initial, onSave, onCancel, onColorChange }) {
   const [fachId, setFachId] = useState(initial?.fachId || "");
+  const gewaehltesFach = faecher.find((f) => f.id === fachId);
 
   return (
     <div className="bg-white border akzent-rand rounded-xl p-3 space-y-2 shadow-xl w-52">
@@ -17799,6 +17897,23 @@ function CellEditor({ faecher, classes, initial, onSave, onCancel }) {
           return <option key={f.id} value={f.id}>{cls?.name} · {f.subject}</option>;
         })}
       </select>
+      {gewaehltesFach && (
+        <div>
+          <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-1">Farbe</div>
+          <div className="flex flex-wrap gap-1">
+            {COLOR_PALETTE.map((c) => (
+              <button
+                key={c}
+                onClick={() => onColorChange?.(gewaehltesFach.id, gewaehltesFach.subject, c)}
+                className="w-5 h-5 rounded-full border-2 transition-transform press-scale"
+                style={{ backgroundColor: c, borderColor: gewaehltesFach.color === c ? "var(--ink)" : "transparent" }}
+                aria-label={COLOR_NAMEN[c] || c}
+                title={COLOR_NAMEN[c] || c}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       {!faecher.length && <p className="text-xs text-stone-400 px-0.5">Erst unter „Fächer" anlegen.</p>}
       <div className="flex gap-1.5">
         <button onClick={() => onSave(fachId)} className="flex-1 text-sm akzent-flaeche rounded-lg py-1.5"><Check size={14} className="inline" /></button>
@@ -20565,7 +20680,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
               <>
                 <ChevronRight size={13} className="text-stone-300" />
                 <span className="text-stone-800 font-medium inline-flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: isColor ? fach.color : "var(--linie)" }} />
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: fach.color || "var(--linie)" }} />
                   {fach.subject}
                 </span>
               </>
@@ -20630,7 +20745,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                       key={f.id}
                       className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg bg-stone-50 text-stone-600"
                     >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: isColor ? f.color : "var(--linie)" }} />
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: f.color || "var(--linie)" }} />
                       {f.subject}
                     </span>
                   ))}
@@ -20659,7 +20774,7 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
                 className="karte-luft w-full p-4 text-left hover:akzent-rand transition-colors press-scale"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-11 rounded-full shrink-0" style={{ backgroundColor: isColor ? f.color : "var(--oliv)" }} />
+                  <span className="w-2.5 h-11 rounded-full shrink-0" style={{ backgroundColor: f.color || "var(--oliv)" }} />
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-stone-800">{f.subject}</div>
                     <div className="text-xs text-stone-400">
