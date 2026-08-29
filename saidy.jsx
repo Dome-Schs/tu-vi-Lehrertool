@@ -142,6 +142,127 @@ const EXCUSE_STATUS = {
 const ANWESENHEIT_ARTEN = ["abwesend", "verspaetet"];
 const ANWESENHEIT_LABEL = { abwesend: "Abwesend", verspaetet: "Verspätet", anwesend: "Anwesend" };
 
+/* Aus Fehlzeiten lesbare Muster ableiten.
+   Der Sinn ist nicht Statistik, sondern Uebergabe: "fehlt seit Wochen fast nur
+   montags in der ersten Stunde" ist etwas, das eine Vertretung in einem Satz
+   uebernimmt - "8 Fehltage" ist es nicht.
+
+   Bewusst vorsichtig: Jedes Muster hat eine Mindestzahl an Fehltagen UND einen
+   Mindestanteil, sonst wird aus drei zufaellig gleichen Wochentagen eine
+   Aussage ueber ein Kind. Formuliert wird beobachtend ("liegen auf Montagen"),
+   nicht deutend ("schwaenzt montags") - die Deutung bleibt bei der Lehrkraft. */
+function fehlzeitenMuster(absences, { timetable = [], faecher = [], heute = null } = {}) {
+  const alle = (absences || []).filter((a) => a && a.date);
+  if (!alle.length) return [];
+
+  /* Pro Tag nur ein Eintrag bewerten. Mehrere Datensaetze am selben Tag kann
+     es geben (z. B. ein Untis-Export mit einer Zeile je Stunde); "abwesend"
+     ist dabei die staerkere Aussage als "verspaetet". */
+  const proTag = new Map();
+  alle.forEach((a) => {
+    const da = proTag.get(a.date);
+    if (!da || (da.art === "verspaetet" && (a.art || "abwesend") === "abwesend")) proTag.set(a.date, a);
+  });
+  const tage = [...proTag.values()];
+  const fehltage = tage.filter((a) => (a.art || "abwesend") === "abwesend");
+  const verspaetungen = tage.filter((a) => a.art === "verspaetet");
+  const funde = [];
+
+  /* Nur Schultage Mo-Fr betrachten. Ein Wochenend-Datum (z. B. aus einem
+     verrutschten Import) haette sonst "undefined" in den Satz geschrieben,
+     weil WEEKDAY_LANG nur fuenf Eintraege hat. */
+  const schultagIndex = (d) => {
+    const i = (localDate(d).getDay() + 6) % 7;
+    return i <= 4 ? i : null;
+  };
+  const haeufigsterTag = (liste) => {
+    const zaehler = new Array(5).fill(0);
+    let gesamt = 0;
+    liste.forEach((a) => { const i = schultagIndex(a.date); if (i !== null) { zaehler[i]++; gesamt++; } });
+    if (!gesamt) return null;
+    const max = Math.max(...zaehler);
+    return { idx: zaehler.indexOf(max), max, gesamt };
+  };
+
+  // 1. Haeufung auf einem Wochentag
+  if (fehltage.length >= 5) {
+    const top = haeufigsterTag(fehltage);
+    if (top && top.max >= 3 && top.max / top.gesamt >= 0.5) {
+      funde.push({ key: "wochentag", stark: top.max / top.gesamt >= 0.66,
+        text: `${top.max} von ${top.gesamt} Fehltagen liegen auf ${WEEKDAY_LANG[top.idx]}.` });
+    }
+  }
+
+  /* 2. Haeufung in einem Fach - nur aussagekraeftig, wenn ueberhaupt in
+     mehreren Faechern erfasst wurde. Wer nur Sport unterrichtet, bekaeme
+     sonst zwangslaeufig "fehlt fast nur in Sport". */
+  const fachZaehler = {};
+  tage.forEach((a) => (a.stunden || []).forEach((s) => {
+    if (s.art === "abwesend" && s.fachId) fachZaehler[s.fachId] = (fachZaehler[s.fachId] || 0) + 1;
+  }));
+  const fachIds = Object.keys(fachZaehler);
+  if (fachIds.length >= 2) {
+    const gesamt = fachIds.reduce((n, k) => n + fachZaehler[k], 0);
+    const top = fachIds.reduce((a, b) => (fachZaehler[a] >= fachZaehler[b] ? a : b));
+    const name = faecher.find((f) => f.id === top)?.subject;
+    if (name && fachZaehler[top] >= 3 && fachZaehler[top] / gesamt >= 0.6) {
+      funde.push({ key: "fach", stark: fachZaehler[top] / gesamt >= 0.75,
+        text: `${fachZaehler[top]} von ${gesamt} erfassten Fehlstunden entfallen auf ${name}.` });
+    }
+  }
+
+  /* 3. Randstunde - die Unterrichtsstunde ergibt sich aus dem Stundenplan
+     (Wochentag + Fach). Erste und letzte Stunde sind paedagogisch die
+     interessanten Faelle (Verschlafen, frueher gehen). */
+  if (fehltage.length >= 4 && timetable.length) {
+    const stundenZaehler = {};
+    let erkannt = 0;
+    fehltage.forEach((a) => {
+      const tag = DAYS[(localDate(a.date).getDay() + 6) % 7];
+      (a.stunden || []).forEach((s) => {
+        const eintrag = timetable.find((t) => t.day === tag && t.fachId === s.fachId);
+        if (eintrag) { stundenZaehler[eintrag.period] = (stundenZaehler[eintrag.period] || 0) + 1; erkannt++; }
+      });
+    });
+    const perioden = Object.keys(stundenZaehler);
+    if (erkannt >= 4 && perioden.length) {
+      const top = perioden.reduce((a, b) => (stundenZaehler[a] >= stundenZaehler[b] ? a : b));
+      if (stundenZaehler[top] >= 3 && stundenZaehler[top] / erkannt >= 0.6) {
+        funde.push({ key: "stunde", stark: false,
+          text: `Meist betroffen ist die ${top}. Stunde (${stundenZaehler[top]} von ${erkannt}).` });
+      }
+    }
+  }
+
+  // 4. Haeufung in den letzten vier Wochen
+  if (fehltage.length >= 6) {
+    const bezug = localDate(heute || isoDate(new Date()));
+    const grenze = isoDate(addDays(bezug, -28));
+    const zuletzt = fehltage.filter((a) => a.date >= grenze).length;
+    if (zuletzt >= 3 && zuletzt / fehltage.length >= 0.5) {
+      funde.push({ key: "trend", stark: true,
+        text: `${zuletzt} der ${fehltage.length} Fehltage liegen in den letzten vier Wochen.` });
+    }
+  }
+
+  // 5. Anteil unentschuldigt
+  const unent = tage.filter((a) => a.excuseStatus === "unentschuldigt").length;
+  if (unent >= 2 && unent / tage.length >= 0.3) {
+    funde.push({ key: "unentschuldigt", stark: unent / tage.length >= 0.5,
+      text: `${unent} von ${tage.length} Fehltagen sind unentschuldigt.` });
+  }
+
+  // 6. Wiederholte Verspaetungen
+  if (verspaetungen.length >= 3) {
+    const top = haeufigsterTag(verspaetungen);
+    const zusatz = top && top.max >= 3 && top.max / top.gesamt >= 0.6 ? ` – davon ${top.max} auf ${WEEKDAY_LANG[top.idx]}` : "";
+    funde.push({ key: "verspaetung", stark: verspaetungen.length >= 5,
+      text: `${verspaetungen.length} Verspätungen erfasst${zusatz}.` });
+  }
+
+  return funde;
+}
+
 // Erkennt WebUntis-CSV-Spalten anhand typischer Bezeichnungen
 const UNTIS_COL_KEYS = {
   studentName: ["name", "schüler", "schüler/in", "schülername", "student", "nachname"],
@@ -3257,6 +3378,7 @@ const HELP_DATA = [
       { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
       { q: "Wie kommen Fehlzeiten in Tu-vi?", a: `Auf zwei Wegen. (1) Direkt im Unterricht: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" → Reiter „Anwesenheit". Dort stehen alle Kinder der Klasse, standardmäßig als anwesend. (2) Aus dem Klassenbuch: „Klassen & Schüler" → oben rechts „Fehlzeiten" (oder „Mehr" → „Einstellungen" → „Daten & Sicherung" → „WebUntis / Fehlzeiten"). Die noch offenen Entschuldigungen siehst du in beiden Fällen im Reiter „Verwaltung" → „Entschuldigungen". Wichtig: Das Klassenbuch ist die amtliche Quelle – importierst du später einen Tag, den du selbst erfasst hast, ersetzt der Import deinen Eintrag, statt ihn zu verdoppeln.` },
       { q: "Wie trage ich ein, wer gerade in meiner Stunde fehlt?", a: `Übersicht → JETZT-Karte → „Stunde öffnen" → Reiter „Anwesenheit". Alle Kinder gelten zunächst als anwesend (grüner Haken). Wische ein Kind nach links, dann gilt es als fehlend. Kommt es doch noch, wische es wieder nach rechts – es steht dann als „verspätet" da; ein weiteres Wischen nach rechts setzt es zurück auf anwesend. Wer nicht wischen mag, tippt auf den Haken links neben dem Namen und wählt den Status direkt aus; bei „verspätet" lässt sich dort auch eintragen, um wie viele Minuten. Über die Filter oben („Alle / Anwesend / Abwesend") siehst du schnell nur die Fehlenden. Gespeichert wird sofort – du kannst das Fenster jederzeit schließen.` },
+      { q: "Erkennt Tu-vi Muster in den Fehlzeiten?", a: `Ja. Im Kind-Profil erscheint unter „Auffälligkeiten bei den Fehlzeiten" eine kurze Liste, sobald genug Daten für eine belastbare Aussage vorliegen – zum Beispiel „6 von 8 Fehltagen liegen auf Montage", „Meist betroffen ist die 1. Stunde", „4 der 7 Fehltage liegen in den letzten vier Wochen" oder „3 von 8 Fehltagen sind unentschuldigt". Dieselben Sätze stehen auch in der Schülerakte für die Übergabe und im Vorbereitungstext fürs Elterngespräch. Der Sinn: Nicht die Zahl „8 Fehltage" hilft der nächsten Lehrkraft weiter, sondern das Muster dahinter. Tu-vi hält sich dabei bewusst zurück – jede Aussage braucht eine Mindestzahl an Fehltagen UND einen Mindestanteil, damit aus drei zufällig gleichen Wochentagen keine Behauptung über ein Kind wird. Und es bleibt bei der Beobachtung („liegen auf Montagen"); was dahintersteckt, weißt nur du.` },
       { q: "Werden Fehlzeiten pro Stunde oder pro Tag gezählt?", a: `Gespeichert wird ein Eintrag pro Kind und Tag, in dem festgehalten ist, welche Stunden betroffen waren. Das ist wichtig für die Zahlen, die später im Elterngespräch oder in der Übergabe auf dem Tisch liegen: Ein Kind, das einen ganzen Schultag fehlt, erscheint dort als ein Fehltag und nicht als sechs Fehlzeiten. Trägst du dasselbe Kind am selben Tag in einer zweiten Stunde ein, kommt diese Stunde zum bestehenden Tages-Eintrag dazu. Fehlt ein Kind in einer Stunde und ist in der nächsten nur verspätet, zählt der Tag als Fehltag – die Stunden-Details bleiben trotzdem erhalten.` },
       { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. Ein Kind entfernen: Token nach unten über den Rand der Fläche in die rote Toolbar ziehen und loslassen. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen.` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
@@ -11944,7 +12066,7 @@ function DokumenteAllgemein({ data, update, onClose }) {
 }
 
 /* Eigenständiges Fenster für die Schülerliste einer Klasse – bewusst getrennt von der Klassenübersicht */
-function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, incidents, documents, graduierungVerlauf, update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
+function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, timetable = [], incidents, documents, graduierungVerlauf, update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
   const [photoError, setPhotoError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmDeleteZielId, setConfirmDeleteZielId] = useState(null);
@@ -12911,6 +13033,34 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                     </button>
                   </div>
                 </div>
+
+                {/* Muster in den Fehlzeiten - erscheint nur, wenn genug Daten
+                    fuer eine belastbare Aussage da sind. Zweck ist die
+                    Uebergabe: ein Satz, den die naechste Lehrkraft versteht,
+                    statt einer Zahl, die sie selbst deuten muesste. */}
+                {(() => {
+                  const muster = fehlzeitenMuster(
+                    (absences || []).filter((a) => a.studentId === s.id),
+                    { timetable, faecher: faecher || [] }
+                  );
+                  if (!muster.length) return null;
+                  return (
+                    <div className="mb-4">
+                      <div className="t-section mb-2 px-1">Auffälligkeiten bei den Fehlzeiten</div>
+                      <Card className="p-3 space-y-1.5">
+                        {muster.map((m) => (
+                          <div key={m.key} className="flex items-start gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${m.stark ? "bg-amber-500" : "bg-stone-300"}`} />
+                            <span className="text-sm text-stone-700 leading-snug">{m.text}</span>
+                          </div>
+                        ))}
+                        <p className="text-[11px] text-stone-400 pt-1.5 leading-relaxed">
+                          Beobachtungen aus den erfassten Daten – kein Urteil. Was dahintersteckt, weißt nur du.
+                        </p>
+                      </Card>
+                    </div>
+                  );
+                })()}
 
                 {/* Verlauf: Notizen + Gespräche kombiniert */}
                 {(() => {
@@ -16312,6 +16462,7 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
           faecher={classFaecher}
           foerderZiele={data.foerderZiele || []}
           absences={data.absences || []}
+          timetable={data.timetable || []}
           incidents={data.incidents || []}
           documents={data.documents || []}
           graduierungVerlauf={data.graduierungVerlauf || []}
@@ -18391,6 +18542,21 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
                 {Object.entries(incidentsGrp).map(([label, n]) => (
                   <div key={label}><span className="text-stone-500">{label} vergessen: </span>{n}×</div>
                 ))}
+                {/* Der eigentliche Uebergabewert: nicht die Zahl, sondern das
+                    Muster dahinter. Genau das kann die naechste Lehrkraft
+                    nicht aus einer Zahlenliste rekonstruieren. */}
+                {(() => {
+                  const muster = fehlzeitenMuster(sFehl, { timetable: data.timetable || [], faecher: data.faecher || [] });
+                  if (!muster.length) return null;
+                  return (
+                    <div className="pt-1.5">
+                      <div className="text-stone-500">Auffälligkeiten:</div>
+                      <ul className="list-disc pl-4">
+                        {muster.map((m) => <li key={m.key}>{m.text}</li>)}
+                      </ul>
+                    </div>
+                  );
+                })()}
               </div>
             </section>
           )}
@@ -19803,6 +19969,10 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
       lines.push(`Fehlzeiten gesamt: ${gesamt} ${gesamt === 1 ? "Tag" : "Tage"}`);
       if (unentsch) lines.push(`– Unentschuldigt: ${unentsch}×`);
       if (ausstehend) lines.push(`– Entschuldigung noch ausstehend: ${ausstehend}×`);
+      /* Muster mit ins Gespraech geben - "8 Fehltage" fuehrt zu nichts,
+         "6 davon montags" ist ein Gespraechsanfang. */
+      fehlzeitenMuster(studentAbsences, { timetable: data.timetable || [], faecher: data.faecher || [] })
+        .forEach((m) => lines.push(`– ${m.text}`));
     }
     if (sprechtagNotiz.trim()) {
       lines.push("");
