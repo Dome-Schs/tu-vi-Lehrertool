@@ -32,8 +32,10 @@ Nach Änderungen an `saidy.jsx` oder Agents: Artifact mit demselben Dateipfad ne
 
 ## Deployment
 
-Build lokal mit `npm run build`, dann `dist/index.html` + `public/.htaccess` auf Hetzner hochladen.
-GitHub wird nur als Code-Repository genutzt, nicht für Deployment.
+**GitHub wird NICHT für Dateiaustausch oder Deployment genutzt.**
+Nach jeder Änderung: `npm run build` ausführen und `dist/index.html` direkt per `SendUserFile` an den Nutzer senden.
+Der Nutzer lädt die Datei dann selbst auf Hetzner (Apache) hoch.
+Niemals den Nutzer auf GitHub verweisen, niemals `git push` als Auslieferungsweg vorschlagen.
 
 ## Wichtige Regeln
 
