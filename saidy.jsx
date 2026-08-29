@@ -9439,24 +9439,6 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       if (istFrei) continue;
       schulTage++;
       const items = [];
-      const tagLessons = data.timetable.filter((t) => t.day === tagKey).sort((a, b) => a.period - b.period);
-      if (tagLessons.length) {
-        const blocks = [];
-        tagLessons.forEach((slot) => {
-          const last = blocks[blocks.length - 1];
-          if (last && last.fachId === slot.fachId && slot.period === last.lastPeriod + 1) {
-            last.lastPeriod = slot.period;
-          } else {
-            blocks.push({ fachId: slot.fachId, firstPeriod: slot.period, lastPeriod: slot.period });
-          }
-        });
-        const stunden = blocks.map((b) => {
-          const fach = data.faecher.find((f) => f.id === b.fachId);
-          const cls = fach ? data.classes.find((c) => c.id === fach.classId) : null;
-          return { subject: fach?.subject, className: cls?.name, color: fach?.color };
-        });
-        items.push({ typ: "unterricht", stunden });
-      }
       (data.faecher || []).forEach((f) => {
         if (f.nextTestDate === iso) {
           const cls = (data.classes || []).find((c) => c.id === f.classId);
@@ -10330,41 +10312,24 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
           </button>
           {ausblickOffen && (
             <div className="mt-3 space-y-3">
-              {ausblickDaten.map(({ datum, tag, items }) => {
-                const unterricht = items.find((it) => it.typ === "unterricht");
-                const events = items.filter((it) => it.typ !== "unterricht");
-                return (
-                  <div key={datum}>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-1">
-                      {tag.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}
-                    </div>
-                    {unterricht && (
-                      <div className="flex flex-wrap gap-1.5 mb-1">
-                        {unterricht.stunden.map((s, j) => (
-                          <span key={j} className="inline-flex items-center gap-1 text-[11px] text-stone-600 bg-stone-100 rounded px-1.5 py-0.5">
-                            {s.color && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />}
-                            <span className="font-medium">{s.subject || "—"}</span>
-                            {s.className && <span className="text-stone-400 text-[10px]">{s.className}</span>}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {events.length > 0 && (
-                      <ul className="space-y-1">
-                        {events.map((it, i) => (
-                          <li key={i} className="flex items-center gap-2 text-xs text-stone-700">
-                            {it.typ === "ka" && <FileText size={13} className="shrink-0 text-red-500" />}
-                            {it.typ === "termin" && <CalendarDays size={13} className="shrink-0 text-stone-400" />}
-                            {it.typ === "gespraech" && <MessageSquare size={13} className="shrink-0 text-stone-400" />}
-                            {it.color && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: it.color }} />}
-                            <span className="truncate">{it.text}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+              {ausblickDaten.map(({ datum, tag, items }) => (
+                <div key={datum}>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-1">
+                    {tag.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}
                   </div>
-                );
-              })}
+                  <ul className="space-y-1">
+                    {items.map((it, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-stone-700">
+                        {it.typ === "ka" && <FileText size={13} className="shrink-0 text-red-500" />}
+                        {it.typ === "termin" && <CalendarDays size={13} className="shrink-0 text-stone-400" />}
+                        {it.typ === "gespraech" && <MessageSquare size={13} className="shrink-0 text-stone-400" />}
+                        {it.color && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: it.color }} />}
+                        <span className="truncate">{it.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           )}
         </Card>
