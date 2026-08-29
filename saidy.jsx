@@ -142,6 +142,35 @@ const EXCUSE_STATUS = {
 const ANWESENHEIT_ARTEN = ["abwesend", "verspaetet"];
 const ANWESENHEIT_LABEL = { abwesend: "Abwesend", verspaetet: "Verspätet", anwesend: "Anwesend" };
 
+/* Klassenbuch-Eintraege. Positives steht bewusst an erster Stelle und ist eine
+   gleichwertige Kategorie, kein Anhaengsel: Eine Akte, in der ueber Jahre nur
+   Stoerungen stehen, erzeugt beim Elterngespraech und bei der Uebergabe ein
+   schiefes Bild vom Kind.
+   Technisch sitzen die Eintraege auf der bestehenden `incidents`-Sammlung
+   statt in einer neuen - dort haengt bereits das Aufraeumen beim Loeschen von
+   Kind, Klasse und Fach sowie die Schuelerakte dran. Alte Eintraege ohne
+   `kategorie` (bisher nur "Sportzeug"/"Hausaufgabe" vergessen) werden ueber
+   ihr Label zugeordnet, es braucht also keine Migration. */
+const EINTRAG_KATEGORIEN = [
+  { key: "positiv", label: "Positiv", kurz: "Positiv", farbe: "#15803D", flaeche: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  { key: "stoerung", label: "Störung", kurz: "Störung", farbe: "#B45309", flaeche: "bg-amber-50 text-amber-700 border-amber-200" },
+  { key: "material", label: "Material vergessen", kurz: "Material", farbe: "#B45309", flaeche: "bg-amber-50 text-amber-700 border-amber-200" },
+  { key: "hausaufgabe", label: "Hausaufgabe fehlt", kurz: "Hausaufgabe", farbe: "#B45309", flaeche: "bg-amber-50 text-amber-700 border-amber-200" },
+  { key: "vorkommnis", label: "Besonderes Vorkommnis", kurz: "Vorkommnis", farbe: "#B91C1C", flaeche: "bg-red-50 text-red-700 border-red-200" },
+  { key: "eltern", label: "Elternkontakt", kurz: "Eltern", farbe: "#1D4ED8", flaeche: "bg-blue-50 text-blue-700 border-blue-200" },
+];
+const EINTRAG_KEYS = EINTRAG_KATEGORIEN.map((k) => k.key);
+
+/* Kategorie eines Eintrags bestimmen - auch fuer Altbestand ohne das Feld. */
+function eintragKategorie(eintrag) {
+  if (EINTRAG_KEYS.includes(eintrag?.kategorie)) return eintrag.kategorie;
+  return /hausaufgabe/i.test(eintrag?.label || "") ? "hausaufgabe" : "material";
+}
+function eintragKategorieInfo(eintrag) {
+  const key = eintragKategorie(eintrag);
+  return EINTRAG_KATEGORIEN.find((k) => k.key === key) || EINTRAG_KATEGORIEN[2];
+}
+
 /* Aus Fehlzeiten lesbare Muster ableiten.
    Der Sinn ist nicht Statistik, sondern Uebergabe: "fehlt seit Wochen fast nur
    montags in der ersten Stunde" ist etwas, das eine Vertretung in einem Satz
@@ -1050,7 +1079,11 @@ function sanitizeImport(imported) {
       ...n, text: S_TEXT(n.text, 5000), date: S_DATUM(n.date),
       type: S_TEXT(n.type, 30), mood: S_TEXT(n.mood, 30), gesprTyp: S_TEXT(n.gesprTyp, 30),
     })),
-    incidents: map("incidents", (i) => ({ ...i, label: S_TEXT(i.label, 100), date: S_DATUM(i.date), note: S_TEXT(i.note, 2000) })),
+    incidents: map("incidents", (i) => ({
+      ...i, label: S_TEXT(i.label, 100), date: S_DATUM(i.date), note: S_TEXT(i.note, 2000),
+      // Fehlt die Kategorie (Altbestand), wird sie beim Anzeigen aus dem Label abgeleitet.
+      kategorie: EINTRAG_KEYS.includes(i.kategorie) ? i.kategorie : null,
+    })),
     /* `art` und `stunden` kommen aus der Anwesenheitserfassung im Unterricht.
        Bewusst EIN Eintrag pro Kind und Tag (die einzelnen Stunden stehen in
        `stunden`), nicht einer pro Stunde: mehrere Stellen zaehlen Fehlzeiten
@@ -3378,6 +3411,8 @@ const HELP_DATA = [
       { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
       { q: "Wie kommen Fehlzeiten in Tu-vi?", a: `Auf zwei Wegen. (1) Direkt im Unterricht: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" → Reiter „Anwesenheit". Dort stehen alle Kinder der Klasse, standardmäßig als anwesend. (2) Aus dem Klassenbuch: „Klassen & Schüler" → oben rechts „Fehlzeiten" (oder „Mehr" → „Einstellungen" → „Daten & Sicherung" → „WebUntis / Fehlzeiten"). Die noch offenen Entschuldigungen siehst du in beiden Fällen im Reiter „Verwaltung" → „Entschuldigungen". Wichtig: Das Klassenbuch ist die amtliche Quelle – importierst du später einen Tag, den du selbst erfasst hast, ersetzt der Import deinen Eintrag, statt ihn zu verdoppeln.` },
       { q: "Wie trage ich ein, wer gerade in meiner Stunde fehlt?", a: `Übersicht → JETZT-Karte → „Stunde öffnen" → Reiter „Anwesenheit". Alle Kinder gelten zunächst als anwesend (grüner Haken). Wische ein Kind nach links, dann gilt es als fehlend. Kommt es doch noch, wische es wieder nach rechts – es steht dann als „verspätet" da; ein weiteres Wischen nach rechts setzt es zurück auf anwesend. Wer nicht wischen mag, tippt auf den Haken links neben dem Namen und wählt den Status direkt aus; bei „verspätet" lässt sich dort auch eintragen, um wie viele Minuten. Über die Filter oben („Alle / Anwesend / Abwesend") siehst du schnell nur die Fehlenden. Gespeichert wird sofort – du kannst das Fenster jederzeit schließen.` },
+      { q: "Wie mache ich einen Klassenbuch-Eintrag zu einem Kind?", a: `Übersicht → JETZT-Karte → „Stunde öffnen" → Reiter „Noten & Notizen". Tippe beim Kind rechts auf das ···-Symbol, dann auf „Eintrag". Wähle die Kategorie – Positiv, Störung, Material, Hausaufgabe, Vorkommnis oder Eltern – und schreib bei Bedarf einen Satz dazu; der Text ist freiwillig, die Kategorie allein reicht auch. Der Eintrag wird mit Datum und Fach gespeichert und erscheint sofort im Verlauf des Kindes sowie in der Schülerakte für die Übergabe. „Positiv" steht bewusst an erster Stelle: Eine Akte, in der über Jahre nur Störungen stehen, zeichnet ein schiefes Bild vom Kind – und im Elterngespräch fehlt dann genau die Hälfte.` },
+      { q: "Was steht alles im Verlauf eines Kindes?", a: `Der Verlauf im Kind-Profil (Reiter „Übersicht") ist die Zeitleiste über alles, was zu diesem Kind festgehalten wurde: Notizen, Gespräche, Klassenbuch-Einträge und Fehlzeiten – chronologisch gemischt, jüngstes zuerst. Jede Zeile zeigt, worum es sich handelt (farbige Kategorie beim Eintrag, „Fehlzeit", „Notiz", Gesprächstyp mit Stimmungs-Emoji), bei Einträgen zusätzlich das Fach. Früher standen hier nur Notizen und Gespräche – vergessenes Material und Fehlzeiten lagen zwar in den Daten, waren im Profil aber unsichtbar. Sind es mehr als sieben, führen die Links rechts oben zu den vollständigen Listen.` },
       { q: "Erkennt Tu-vi Muster in den Fehlzeiten?", a: `Ja. Im Kind-Profil erscheint unter „Auffälligkeiten bei den Fehlzeiten" eine kurze Liste, sobald genug Daten für eine belastbare Aussage vorliegen – zum Beispiel „6 von 8 Fehltagen liegen auf Montage", „Meist betroffen ist die 1. Stunde", „4 der 7 Fehltage liegen in den letzten vier Wochen" oder „3 von 8 Fehltagen sind unentschuldigt". Dieselben Sätze stehen auch in der Schülerakte für die Übergabe und im Vorbereitungstext fürs Elterngespräch. Der Sinn: Nicht die Zahl „8 Fehltage" hilft der nächsten Lehrkraft weiter, sondern das Muster dahinter. Tu-vi hält sich dabei bewusst zurück – jede Aussage braucht eine Mindestzahl an Fehltagen UND einen Mindestanteil, damit aus drei zufällig gleichen Wochentagen keine Behauptung über ein Kind wird. Und es bleibt bei der Beobachtung („liegen auf Montagen"); was dahintersteckt, weißt nur du.` },
       { q: "Werden Fehlzeiten pro Stunde oder pro Tag gezählt?", a: `Gespeichert wird ein Eintrag pro Kind und Tag, in dem festgehalten ist, welche Stunden betroffen waren. Das ist wichtig für die Zahlen, die später im Elterngespräch oder in der Übergabe auf dem Tisch liegen: Ein Kind, das einen ganzen Schultag fehlt, erscheint dort als ein Fehltag und nicht als sechs Fehlzeiten. Trägst du dasselbe Kind am selben Tag in einer zweiten Stunde ein, kommt diese Stunde zum bestehenden Tages-Eintrag dazu. Fehlt ein Kind in einer Stunde und ist in der nächsten nur verspätet, zählt der Tag als Fehltag – die Stunden-Details bleiben trotzdem erhalten.` },
       { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. Ein Kind entfernen: Token nach unten über den Rand der Fläche in die rote Toolbar ziehen und loslassen. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen.` },
@@ -8009,6 +8044,9 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
   const [gesprTyp, setGesprTyp] = useState("schueler");
   const [gesprTexts, setGesprTexts] = useState({});
   const [actionsId, setActionsId] = useState(null);
+  const [eintragFor, setEintragFor] = useState(null);   // studentId mit offenem Eintrags-Feld
+  const [eintragKat, setEintragKat] = useState("positiv");
+  const [eintragTexts, setEintragTexts] = useState({});
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [anwFilter, setAnwFilter] = useState("alle"); // alle | anwesend | abwesend | verspaetet
   const [anwMenuFor, setAnwMenuFor] = useState(null); // studentId fuer das manuelle Menue
@@ -8238,6 +8276,25 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
     });
     setGesprTexts((d) => ({ ...d, [studentId]: "" }));
     setGesprExpanded(null);
+  }
+
+  /* Klassenbuch-Eintrag: Kategorie + kurzer Text, an Kind, Fach und Datum
+     gebunden. Landet in `incidents` und damit automatisch im Verlauf des
+     Kindes und in der Schuelerakte - genau der Punkt, warum es den Eintrag
+     gibt: Er soll nicht in der Stunde verpuffen. */
+  function saveEintrag(studentId) {
+    const text = (eintragTexts[studentId] || "").trim();
+    const info = EINTRAG_KATEGORIEN.find((k) => k.key === eintragKat) || EINTRAG_KATEGORIEN[0];
+    update((d) => {
+      d.incidents = d.incidents || [];
+      d.incidents.push({
+        id: uid(), studentId, fachId: fach.id, date,
+        kategorie: info.key, label: info.label, note: text || null,
+      });
+      return d;
+    });
+    setEintragTexts((t) => ({ ...t, [studentId]: "" }));
+    setEintragFor(null);
   }
 
   /* Beim Schliessen alle offenen Gespraechs-Drafts mitspeichern, statt sie
@@ -8542,7 +8599,7 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
                       className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border transition-colors press-scale ${
                         hatNotiz ? "akzent-ton akzent-rand akzent-text" : actionsId === s.id ? "bg-stone-100 border-stone-300 text-stone-600" : "border-stone-200 text-stone-400"
                       }`}
-                      aria-label="Notiz oder Gespräch"
+                      aria-label="Notiz, Gespräch oder Eintrag"
                     >
                       <MoreHorizontal size={16} />
                     </button>
@@ -8607,6 +8664,55 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
                       >
                         <MessageSquare size={13} /> Gespräch
                       </button>
+                      <button
+                        onClick={() => { setEintragFor((cur) => (cur === s.id ? null : s.id)); setEintragKat("positiv"); }}
+                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs font-medium transition-colors press-scale ${
+                          eintragFor === s.id ? "akzent-ton akzent-rand akzent-text" : "border-stone-200 text-stone-500 bg-stone-50"
+                        }`}
+                      >
+                        <BookOpen size={13} /> Eintrag
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Klassenbuch-Eintrag: erst die Kategorie, dann optional ein
+                      Satz dazu. "Positiv" steht vorn - eine Akte, in der nur
+                      Stoerungen stehen, zeichnet ein schiefes Bild vom Kind. */}
+                  {eintragFor === s.id && (
+                    <div className="mt-2 bg-stone-50 border border-stone-200 rounded-xl p-2.5">
+                      <div className="flex flex-wrap gap-1 mb-1.5">
+                        {EINTRAG_KATEGORIEN.map((k) => (
+                          <button
+                            key={k.key}
+                            type="button"
+                            onClick={() => setEintragKat(k.key)}
+                            className={`px-2 py-1 rounded-lg border text-[11px] font-medium transition-colors ${
+                              eintragKat === k.key ? k.flaeche : "border-stone-200 bg-white text-stone-500"
+                            }`}
+                          >
+                            {k.kurz}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <input
+                          autoFocus
+                          className="flex-1 text-sm rounded-lg border border-stone-300 px-2.5 py-1.5"
+                          placeholder="Kurz dazu (optional) …"
+                          maxLength={500}
+                          value={eintragTexts[s.id] || ""}
+                          onChange={(e) => setEintragTexts((d) => ({ ...d, [s.id]: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveEintrag(s.id); }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => saveEintrag(s.id)}
+                          className="shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium akzent-flaeche text-white"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-stone-400 mt-1.5">Landet im Verlauf des Kindes und in der Schülerakte.</p>
                     </div>
                   )}
 
@@ -13062,15 +13168,23 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                   );
                 })()}
 
-                {/* Verlauf: Notizen + Gespräche kombiniert */}
+                {/* Verlauf: alles, was ueber das Kind festgehalten wurde.
+                    Klassenbuch-Eintraege und Fehlzeiten liefen hier frueher
+                    vorbei - sie standen zwar in den Daten, waren im Profil aber
+                    unsichtbar. Genau das ist gemeint mit "Eintraege kommen zur
+                    Akte des Kindes": eine Zeitleiste, nicht vier Silos. */}
                 {(() => {
+                  const sEintraege = (incidents || []).filter((i) => i.studentId === s.id && i.date);
+                  const sFehlzeiten = (absences || []).filter((a) => a.studentId === s.id && a.date);
                   const combined = [
                     ...sNotes.map((n) => ({ ...n, _kind: "notiz" })),
                     ...sGespraeche.map((g) => ({ ...g, _kind: "gespraech" })),
+                    ...sEintraege.map((e) => ({ ...e, _kind: "eintrag" })),
+                    ...sFehlzeiten.map((a) => ({ ...a, _kind: "fehlzeit" })),
                   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
                   if (!combined.length) return null;
                   const groups = groupByDateLabel(combined);
-                  const total = sNotes.length + sGespraeche.length;
+                  const total = sNotes.length + sGespraeche.length + sEintraege.length + sFehlzeiten.length;
                   return (
                     <div>
                       <div className="flex items-center justify-between mb-2 px-1">
@@ -13089,13 +13203,31 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                             <div className="tl-group-label">{label}</div>
                             {items.map((item) => {
                               const isGespraeche = item._kind === "gespraech";
+                              const isEintrag = item._kind === "eintrag";
+                              const isFehlzeit = item._kind === "fehlzeit";
                               const mood = isGespraeche ? MOOD_OPTIONS.find((m) => m.key === item.mood) : null;
                               const typ = isGespraeche ? GESPRAECH_TYPEN.find((t) => t.key === item.gesprTyp) : null;
+                              const kat = isEintrag ? eintragKategorieInfo(item) : null;
+                              const fachName = (isEintrag || isFehlzeit)
+                                ? (faecher || []).find((f) => f.id === (item.fachId || item.stunden?.[0]?.fachId))?.subject
+                                : null;
+                              /* Fehlzeiten tragen keinen freien Text - der Satz
+                                 wird aus Art, Fach und Entschuldigungsstand
+                                 gebaut, damit die Zeile fuer sich lesbar ist. */
+                              const fehlzeitText = isFehlzeit
+                                ? [
+                                    ANWESENHEIT_LABEL[item.art || "abwesend"],
+                                    item.art === "verspaetet" && item.minuten ? `${item.minuten} Min.` : null,
+                                    fachName,
+                                    EXCUSE_STATUS[item.excuseStatus]?.label,
+                                  ].filter(Boolean).join(" · ")
+                                : null;
                               return (
                                 <div key={item.id} className="tl-entry">
                                   <div className="tl-icon">
-                                    {isGespraeche
-                                      ? <span className="text-lg leading-none">{mood?.emoji ?? "💬"}</span>
+                                    {isGespraeche ? <span className="text-lg leading-none">{mood?.emoji ?? "💬"}</span>
+                                      : isEintrag ? <BookOpen size={15} style={{ color: kat.farbe }} />
+                                      : isFehlzeit ? <Clock size={15} className="text-stone-400" />
                                       : <StickyNote size={15} className="text-stone-400" />}
                                   </div>
                                   <div className="tl-body">
@@ -13103,12 +13235,21 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                                       {isGespraeche && typ && (
                                         <span className="text-[10px] font-semibold akzent-text bg-[#ECEEE2] px-1.5 py-0.5 rounded-full">{typ.label}</span>
                                       )}
-                                      {!isGespraeche && (
+                                      {isEintrag && (
+                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${kat.flaeche}`}>{kat.label}</span>
+                                      )}
+                                      {isFehlzeit && (
+                                        <span className="text-[10px] font-semibold text-stone-400">Fehlzeit</span>
+                                      )}
+                                      {!isGespraeche && !isEintrag && !isFehlzeit && (
                                         <span className="text-[10px] font-semibold text-stone-400">Notiz</span>
                                       )}
+                                      {isEintrag && fachName && <span className="t-caption">{fachName}</span>}
                                       <span className="t-caption ml-auto">{relativeTime(item.date)}</span>
                                     </div>
-                                    <p className="text-sm text-stone-700 leading-snug line-clamp-2">{item.text}</p>
+                                    <p className="text-sm text-stone-700 leading-snug line-clamp-2">
+                                      {isFehlzeit ? fehlzeitText : isEintrag ? (item.note || kat.label) : item.text}
+                                    </p>
                                   </div>
                                 </div>
                               );
@@ -18386,8 +18527,19 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
      einen einzigen Fehltag. */
   const fehlUnent = new Set(sFehl.filter((a) => a.excuseStatus === "unentschuldigt").map((a) => a.date)).size;
 
+  /* Nach Kategorie buendeln statt nach Label. Frueher stand hier stur
+     "<Label> vergessen: n x" - bei einem Klassenbuch-Eintrag der Kategorie
+     "Stoerung" haette das "Stoerung vergessen: 3 x" ergeben. */
   const incidentsGrp = {};
-  sIncidents.forEach((i) => { incidentsGrp[i.label] = (incidentsGrp[i.label] || 0) + 1; });
+  sIncidents.forEach((i) => {
+    const k = eintragKategorie(i);
+    incidentsGrp[k] = (incidentsGrp[k] || 0) + 1;
+  });
+  // Eintraege mit eigenem Text einzeln auffuehren - dort steckt der Inhalt.
+  const eintraegeMitText = sIncidents
+    .filter((i) => (i.note || "").trim())
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+    .slice(0, 15);
 
   function drucken() {
     window.print();
@@ -18539,9 +18691,23 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
                 {fehlTage > 0 && (
                   <div><span className="text-stone-500">Fehltage: </span>{fehlTage}{fehlUnent > 0 && <span className="text-stone-500"> · davon unentschuldigt: {fehlUnent}</span>}</div>
                 )}
-                {Object.entries(incidentsGrp).map(([label, n]) => (
-                  <div key={label}><span className="text-stone-500">{label} vergessen: </span>{n}×</div>
-                ))}
+                {Object.entries(incidentsGrp).map(([key, n]) => {
+                  const info = EINTRAG_KATEGORIEN.find((k) => k.key === key);
+                  return <div key={key}><span className="text-stone-500">{info?.label || key}: </span>{n}×</div>;
+                })}
+                {eintraegeMitText.length > 0 && (
+                  <div className="pt-1.5">
+                    <div className="text-stone-500">Einträge:</div>
+                    <ul className="list-disc pl-4">
+                      {eintraegeMitText.map((i) => (
+                        <li key={i.id}>
+                          <span className="text-stone-500">{localDate(i.date).toLocaleDateString("de-DE")} · {eintragKategorieInfo(i).label}: </span>
+                          {i.note}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {/* Der eigentliche Uebergabewert: nicht die Zahl, sondern das
                     Muster dahinter. Genau das kann die naechste Lehrkraft
                     nicht aus einer Zahlenliste rekonstruieren. */}
