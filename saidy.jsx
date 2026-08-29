@@ -136,6 +136,12 @@ const EXCUSE_STATUS = {
   unentschuldigt: { label: "Unentschuldigt", color: "#B91C1C" },
 };
 
+/* Anwesenheit im Unterricht. "anwesend" ist bewusst KEIN gespeicherter Wert -
+   wer da ist, erzeugt keinen Datensatz (Datensparsamkeit, und die
+   Fehlzeiten-Auswertungen zaehlen sonst Anwesenheit als Fehlzeit mit). */
+const ANWESENHEIT_ARTEN = ["abwesend", "verspaetet"];
+const ANWESENHEIT_LABEL = { abwesend: "Abwesend", verspaetet: "Verspätet", anwesend: "Anwesend" };
+
 // Erkennt WebUntis-CSV-Spalten anhand typischer Bezeichnungen
 const UNTIS_COL_KEYS = {
   studentName: ["name", "schüler", "schüler/in", "schülername", "student", "nachname"],
@@ -924,10 +930,26 @@ function sanitizeImport(imported) {
       type: S_TEXT(n.type, 30), mood: S_TEXT(n.mood, 30), gesprTyp: S_TEXT(n.gesprTyp, 30),
     })),
     incidents: map("incidents", (i) => ({ ...i, label: S_TEXT(i.label, 100), date: S_DATUM(i.date), note: S_TEXT(i.note, 2000) })),
+    /* `art` und `stunden` kommen aus der Anwesenheitserfassung im Unterricht.
+       Bewusst EIN Eintrag pro Kind und Tag (die einzelnen Stunden stehen in
+       `stunden`), nicht einer pro Stunde: mehrere Stellen zaehlen Fehlzeiten
+       als Datensaetze statt als Tage (Schuelerakte, Elterngespraechs-Bericht) -
+       stundengenaue Datensaetze wuerden dort aus einem Fehltag "6x
+       unentschuldigt" machen. */
     absences: map("absences", (a) => ({
       ...a, date: S_DATUM(a.date), reason: S_TEXT(a.reason, 500),
       excuseStatus: Object.keys(EXCUSE_STATUS).includes(a.excuseStatus) ? a.excuseStatus : "ausstehend",
       source: S_TEXT(a.source, 50),
+      art: ANWESENHEIT_ARTEN.includes(a.art) ? a.art : "abwesend",
+      minuten: Number.isInteger(a.minuten) && a.minuten > 0 && a.minuten <= 240 ? a.minuten : null,
+      stunden: S_LISTE(a.stunden)
+        .filter((s) => s && typeof s === "object")
+        .slice(0, 20)
+        .map((s) => ({
+          fachId: typeof s.fachId === "string" ? s.fachId.slice(0, 100) : null,
+          art: ANWESENHEIT_ARTEN.includes(s.art) ? s.art : "abwesend",
+        }))
+        .filter((s) => s.fachId),
     })),
     events: map("events", (e) => ({
       ...e, title: S_TEXT(e.title, 200), date: S_DATUM(e.date), time: S_ZEIT(e.time),
@@ -3233,7 +3255,9 @@ const HELP_DATA = [
       { q: "Wie lösche ich eine Klasse?", a: `Klasse antippen → Reiter „Überblick" → „Klasse verwalten". Ganz unten im Fenster steht „Diese Klasse löschen". Die Klasse landet mit allen Kindern, Noten und Notizen für 30 Tage im Papierkorb – den findest du im Reiter „Klassen" ganz unten.` },
       { q: "Was sind Dienste?", a: `Dienste sind Aufgaben, die Tu-vi Schüler:innen der Reihe nach zuweist (z. B. Tafeldienst). Anlegen unter „Klassen & Schüler" → Reiter „Dienste", mit einem Tippen weiter zum nächsten Kind.` },
       { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
-      { q: "Wie kommen Fehlzeiten in Tu-vi?", a: `Fehlzeiten tippst du nicht von Hand ein – sie kommen aus dem Klassenbuch. Öffne „Klassen & Schüler" und tippe oben rechts auf „Fehlzeiten" (oder „Mehr" → „Einstellungen" → „Daten & Sicherung" → „WebUntis / Fehlzeiten"). Tu-vi ordnet die eingelesenen Tage den Kindern zu; die noch offenen Entschuldigungen siehst du danach im Reiter „Verwaltung" → „Entschuldigungen".` },
+      { q: "Wie kommen Fehlzeiten in Tu-vi?", a: `Auf zwei Wegen. (1) Direkt im Unterricht: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" → Reiter „Anwesenheit". Dort stehen alle Kinder der Klasse, standardmäßig als anwesend. (2) Aus dem Klassenbuch: „Klassen & Schüler" → oben rechts „Fehlzeiten" (oder „Mehr" → „Einstellungen" → „Daten & Sicherung" → „WebUntis / Fehlzeiten"). Die noch offenen Entschuldigungen siehst du in beiden Fällen im Reiter „Verwaltung" → „Entschuldigungen". Wichtig: Das Klassenbuch ist die amtliche Quelle – importierst du später einen Tag, den du selbst erfasst hast, ersetzt der Import deinen Eintrag, statt ihn zu verdoppeln.` },
+      { q: "Wie trage ich ein, wer gerade in meiner Stunde fehlt?", a: `Übersicht → JETZT-Karte → „Stunde öffnen" → Reiter „Anwesenheit". Alle Kinder gelten zunächst als anwesend (grüner Haken). Wische ein Kind nach links, dann gilt es als fehlend. Kommt es doch noch, wische es wieder nach rechts – es steht dann als „verspätet" da; ein weiteres Wischen nach rechts setzt es zurück auf anwesend. Wer nicht wischen mag, tippt auf den Haken links neben dem Namen und wählt den Status direkt aus; bei „verspätet" lässt sich dort auch eintragen, um wie viele Minuten. Über die Filter oben („Alle / Anwesend / Abwesend") siehst du schnell nur die Fehlenden. Gespeichert wird sofort – du kannst das Fenster jederzeit schließen.` },
+      { q: "Werden Fehlzeiten pro Stunde oder pro Tag gezählt?", a: `Gespeichert wird ein Eintrag pro Kind und Tag, in dem festgehalten ist, welche Stunden betroffen waren. Das ist wichtig für die Zahlen, die später im Elterngespräch oder in der Übergabe auf dem Tisch liegen: Ein Kind, das einen ganzen Schultag fehlt, erscheint dort als ein Fehltag und nicht als sechs Fehlzeiten. Trägst du dasselbe Kind am selben Tag in einer zweiten Stunde ein, kommt diese Stunde zum bestehenden Tages-Eintrag dazu. Fehlt ein Kind in einer Stunde und ist in der nächsten nur verspätet, zählt der Tag als Fehltag – die Stunden-Details bleiben trotzdem erhalten.` },
       { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. Ein Kind entfernen: Token nach unten über den Rand der Fläche in die rote Toolbar ziehen und loslassen. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen.` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
       { q: `Was ist die „Auf einen Blick"-Karte im Kind-Profil?`, a: `Direkt unter der Profil-Karte erscheint bei aktiven Kindern eine kompakte Signal-Liste – die pädagogische Startseite des Kindes. Sie zeigt bis zu sechs Punkte, die im Alltag konkret helfen: die aktuelle Stimmung aus dem letzten Gespräch (Smiley), einen Notentrend („Noten verbessern sich zuletzt" bzw. „fallen zuletzt ab"), wiederkehrende Vorfälle (z. B. „5× Sportzeug vergessen"), das letzte Elterngespräch mit Datumsabstand, das aktive Förderziel. Alles lokal aus vorhandenen Daten berechnet – keine externen Übertragungen. Ziel: kein Wissen geht verloren, jede Lehrkraft (auch Vertretung) sieht in Sekunden was zählt.` },
@@ -6388,6 +6412,18 @@ export default function App() {
                 if (newAbsences.length > 0) {
                   update((d) => {
                     if (!d.absences) d.absences = [];
+                    /* Das Klassenbuch ist die amtliche Quelle und gewinnt: Ein im
+                       Unterricht selbst erfasster Tag wird durch den Import
+                       ersetzt, nicht ergaenzt. Ohne das lägen beide nebeneinander -
+                       der Dublettenschutz im Import-Dialog vergleicht auch
+                       Entschuldigungsstand und Grund, und die sind beim eigenen
+                       Eintrag zwangslaeufig "ausstehend"/leer, beim Import dagegen
+                       z. B. "entschuldigt"/"Krankheit". Jede Fehlzeit waere doppelt
+                       gezaehlt worden. */
+                    const importierteTage = new Set(newAbsences.map((a) => `${a.studentId}|${a.date}`));
+                    d.absences = d.absences.filter(
+                      (a) => !(a.source === "unterricht" && importierteTage.has(`${a.studentId}|${a.date}`))
+                    );
                     d.absences.push(...newAbsences);
                     d.settings = { ...(d.settings || {}), fehlzeitenLastImport: isoDate(new Date()) };
                     return d;
@@ -7704,6 +7740,133 @@ function StundenAbschlussModal({ data, update, fach, cls, students, halbjahr, on
   );
 }
 
+/* Eine Kind-Zeile der Anwesenheitsliste, wischbar wie im Klassenbuch.
+   Nach links = fehlt, nach rechts eine Stufe zurueck (abwesend -> verspaetet
+   -> anwesend). Die Zeile faengt nur waagerechte Bewegungen ab; senkrechtes
+   Scrollen bleibt beim Browser (touch-action: pan-y), sonst haengt die Liste
+   beim Durchblaettern. */
+function AnwesenheitZeile({ student, art, minuten, ausKlassenbuch, menuOffen, onMenu, onSetzen, onMinuten, onWischen }) {
+  const [dx, setDx] = useState(0);
+  const [zieht, setZieht] = useState(false);
+  const startRef = useRef(null);
+  const dxRef = useRef(0);
+  const SCHWELLE = 64;
+
+  // Nach rechts gibt es nur etwas zu holen, wenn das Kind gerade als fehlend gilt.
+  const rechtsZiel = art === "abwesend" ? "verspaetet" : art === "verspaetet" ? "anwesend" : null;
+
+  function zeigerRunter(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    startRef.current = { x: e.clientX, y: e.clientY, achse: null };
+  }
+  function zeigerBewegt(e) {
+    const st = startRef.current;
+    if (!st) return;
+    const ddx = e.clientX - st.x, ddy = e.clientY - st.y;
+    if (!st.achse) {
+      if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
+      st.achse = Math.abs(ddx) > Math.abs(ddy) ? "x" : "y";
+      if (st.achse === "x") {
+        setZieht(true);
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* aeltere Browser */ }
+      }
+    }
+    if (st.achse !== "x") return;
+    const wert = ddx > 0 && !rechtsZiel ? 0 : Math.max(-120, Math.min(120, ddx));
+    dxRef.current = wert;
+    setDx(wert);
+  }
+  function zeigerHoch() {
+    const st = startRef.current;
+    const wert = dxRef.current;
+    startRef.current = null;
+    dxRef.current = 0;
+    setZieht(false);
+    setDx(0);
+    if (st?.achse === "x" && Math.abs(wert) >= SCHWELLE) {
+      onWischen(wert < 0 ? "links" : "rechts");
+    }
+  }
+
+  const stil = {
+    anwesend: { Icon: Check, klasse: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+    abwesend: { Icon: X, klasse: "bg-red-50 text-red-600 border-red-200" },
+    verspaetet: { Icon: Clock, klasse: "bg-amber-50 text-amber-600 border-amber-200" },
+  }[art];
+  const Icon = stil.Icon;
+
+  return (
+    <div className="relative overflow-hidden border-b border-stone-100">
+      {/* Hinweisflaechen hinter der Zeile - zeigen beim Ziehen, was passiert. */}
+      <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none" aria-hidden="true">
+        <span className={`text-xs font-medium transition-opacity ${dx > 8 ? "opacity-100" : "opacity-0"} ${rechtsZiel === "anwesend" ? "text-emerald-600" : "text-amber-600"}`}>
+          {rechtsZiel ? ANWESENHEIT_LABEL[rechtsZiel] : ""}
+        </span>
+        <span className={`text-xs font-medium text-red-600 transition-opacity ${dx < -8 ? "opacity-100" : "opacity-0"}`}>Fehlt</span>
+      </div>
+
+      <div
+        onPointerDown={zeigerRunter}
+        onPointerMove={zeigerBewegt}
+        onPointerUp={zeigerHoch}
+        onPointerCancel={zeigerHoch}
+        className="relative bg-white flex items-center gap-2.5 px-4 py-2.5"
+        style={{ transform: `translateX(${dx}px)`, transition: zieht ? "none" : "transform 160ms ease-out", touchAction: "pan-y" }}
+      >
+        <button
+          onClick={onMenu}
+          className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center press-scale ${stil.klasse}`}
+          aria-label={`${student.name}: ${ANWESENHEIT_LABEL[art]} – Status ändern`}
+        >
+          <Icon size={16} />
+        </button>
+        <StudentAvatar student={student} size={26} />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm text-stone-800 truncate">{student.name}</div>
+          {(art !== "anwesend" || ausKlassenbuch) && (
+            <div className="text-[11px] text-stone-400 truncate">
+              {art !== "anwesend" && ANWESENHEIT_LABEL[art]}
+              {art === "verspaetet" && minuten ? ` · ${minuten} Min.` : ""}
+              {ausKlassenbuch && (art !== "anwesend" ? " · aus dem Klassenbuch" : "aus dem Klassenbuch")}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Manuell setzen - fuer alle, die nicht wischen wollen oder koennen. */}
+      {menuOffen && (
+        <div className="px-4 pb-3 pt-1 bg-stone-50 border-t border-stone-100">
+          <div className="flex gap-1.5">
+            {["anwesend", "abwesend", "verspaetet"].map((k) => (
+              <button
+                key={k}
+                onClick={() => onSetzen(k)}
+                className={`flex-1 py-2 rounded-lg text-xs font-medium border ${art === k ? "akzent-flaeche akzent-rand" : "bg-white border-stone-200 text-stone-600"}`}
+              >
+                {ANWESENHEIT_LABEL[k]}
+              </button>
+            ))}
+          </div>
+          {art === "verspaetet" && (
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="text-[11px] text-stone-500 shrink-0">Wie viele Minuten?</span>
+              {[5, 10, 15, 20].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => onMinuten(minuten === m ? null : m)}
+                  className={`px-2 py-1 rounded-lg text-[11px] border ${minuten === m ? "akzent-flaeche akzent-rand" : "bg-white border-stone-200 text-stone-600"}`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function QuickCaptureModal({ data, update, fach, cls, students, date: initialDate, halbjahr, onClose, onSwitch, initialTab }) {
   const isColor = data.settings?.colorMode === true;
   const istSport = /sport/i.test(fach?.subject || "");
@@ -7725,6 +7888,85 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
   const [gesprTexts, setGesprTexts] = useState({});
   const [actionsId, setActionsId] = useState(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [anwFilter, setAnwFilter] = useState("alle"); // alle | anwesend | abwesend | verspaetet
+  const [anwMenuFor, setAnwMenuFor] = useState(null); // studentId fuer das manuelle Menue
+
+  /* ── Anwesenheit ──────────────────────────────────────────────
+     Ein Datensatz pro Kind und TAG (nicht pro Stunde) - die einzelnen
+     Stunden stehen in `stunden`. Grund: Schuelerakte und
+     Elterngespraechs-Bericht zaehlen Fehlzeiten als Datensaetze; pro Stunde
+     ein Datensatz haette aus einem Fehltag dort "6x unentschuldigt" gemacht.
+     "anwesend" wird nie gespeichert - wer da ist, erzeugt keinen Eintrag. */
+  const anwEintrag = (sid) => (data.absences || []).find((a) => a.studentId === sid && a.date === date);
+
+  function anwArt(sid) {
+    const e = anwEintrag(sid);
+    if (!e) return "anwesend";
+    /* Stundengenau erfasst: nur die betroffenen Stunden zaehlen, in den
+       uebrigen ist das Kind da. */
+    if (Array.isArray(e.stunden) && e.stunden.length) {
+      return e.stunden.find((s) => s.fachId === fach.id)?.art || "anwesend";
+    }
+    // Ganztagseintrag (z. B. aus dem WebUntis-Import) gilt auch fuer diese Stunde.
+    return e.art || "abwesend";
+  }
+
+  function setzeAnwesenheit(sid, art) {
+    update((d) => {
+      d.absences = d.absences || [];
+      const idx = d.absences.findIndex((a) => a.studentId === sid && a.date === date);
+      const vorhanden = idx >= 0 ? d.absences[idx] : null;
+      const bisher = Array.isArray(vorhanden?.stunden) ? vorhanden.stunden.filter((s) => s.fachId !== fach.id) : [];
+      const neu = art === "anwesend" ? bisher : [...bisher, { fachId: fach.id, art }];
+
+      if (!neu.length) {
+        if (idx >= 0) d.absences.splice(idx, 1);
+        return d;
+      }
+      const gesamtArt = neu.some((s) => s.art === "abwesend") ? "abwesend" : "verspaetet";
+      if (vorhanden) {
+        /* Von Hand angefasst - gilt ab jetzt als eigene Erfassung. Ein
+           spaeterer WebUntis-Import ueberschreibt den Tag wieder, weil das
+           Klassenbuch die amtliche Quelle bleibt. Entschuldigungsstand und
+           Grund bleiben erhalten, falls schon geklaert. */
+        vorhanden.stunden = neu;
+        vorhanden.art = gesamtArt;
+        vorhanden.source = "unterricht";
+      } else {
+        d.absences.push({
+          id: uid(), studentId: sid, date,
+          excuseStatus: "ausstehend", reason: null, source: "unterricht",
+          art: gesamtArt, minuten: null, stunden: neu,
+        });
+      }
+      return d;
+    });
+  }
+
+  function setzeVerspaetungsMinuten(sid, minuten) {
+    update((d) => {
+      const e = (d.absences || []).find((a) => a.studentId === sid && a.date === date);
+      if (e) e.minuten = minuten;
+      return d;
+    });
+  }
+
+  /* Wischen: nach links immer "abwesend"; nach rechts eine Stufe zurueck
+     (abwesend -> verspaetet -> anwesend). So laesst sich ein Kind, das
+     doch noch kommt, mit derselben Geste als verspaetet weiterreichen. */
+  function wischen(sid, richtung) {
+    const jetzt = anwArt(sid);
+    if (richtung === "links") { setzeAnwesenheit(sid, "abwesend"); return; }
+    if (jetzt === "abwesend") setzeAnwesenheit(sid, "verspaetet");
+    else if (jetzt === "verspaetet") setzeAnwesenheit(sid, "anwesend");
+  }
+
+  const anwZaehler = students.reduce((acc, s) => {
+    const a = anwArt(s.id);
+    acc[a] = (acc[a] || 0) + 1;
+    return acc;
+  }, {});
+  const fehlendCount = (anwZaehler.abwesend || 0) + (anwZaehler.verspaetet || 0);
 
   /* Andere Stunden desselben Tages zum Wechseln - pro Fach genau eine Zeile.
      Eine Doppelstunde erscheint einmal, weil sie ohnehin als eine Einheit erfasst wird. */
@@ -7968,6 +8210,7 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
               Nutzungssituationen, damit nichts vom anderen ablenkt. */}
           <div className="flex border-t border-stone-100" role="tablist" aria-label="Bereich waehlen">
             {[
+              { key: "anwesenheit", label: fehlendCount ? `Anwesenheit (${fehlendCount})` : "Anwesenheit" },
               { key: "noten", label: "Noten & Notizen" },
               { key: "vorbereitung", label: "Vorbereitung" },
             ].map((tab) => {
@@ -7978,13 +8221,82 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
                   role="tab"
                   aria-selected={aktiv}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${aktiv ? "border-current akzent-text" : "border-transparent text-stone-400 hover:text-stone-600"}`}
+                  className={`flex-1 min-w-0 px-1 py-2.5 text-[13px] font-medium border-b-2 transition-colors truncate ${aktiv ? "border-current akzent-text" : "border-transparent text-stone-400 hover:text-stone-600"}`}
                 >
                   {tab.label}
                 </button>
               );
             })}
           </div>
+        </div>
+
+        {/* ── Anwesenheit ── Erste Handlung der Stunde: wer ist da?
+            Wischen nach links = fehlt, nach rechts eine Stufe zurueck.
+            Wer da ist, erzeugt keinen Datensatz. */}
+        <div className="pb-[max(2rem,env(safe-area-inset-bottom))]" hidden={activeTab !== "anwesenheit"}>
+          <div className="px-4 pt-3">
+            <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-1">
+              {[
+                { key: "alle", label: "Alle", n: students.length },
+                { key: "anwesend", label: "Anwesend", n: anwZaehler.anwesend || 0 },
+                { key: "abwesend", label: "Abwesend", n: anwZaehler.abwesend || 0 },
+                ...((anwZaehler.verspaetet || 0) > 0 ? [{ key: "verspaetet", label: "Verspätet", n: anwZaehler.verspaetet }] : []),
+              ].map((f) => {
+                const aktiv = anwFilter === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setAnwFilter(f.key)}
+                    aria-pressed={aktiv}
+                    className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${aktiv ? "akzent-flaeche akzent-rand" : "border-stone-200 text-stone-500 hover:bg-stone-50"}`}
+                  >
+                    {f.label} ({f.n})
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-stone-400 mt-1.5 leading-relaxed">
+              Nach links wischen = fehlt. Nach rechts zurück = verspätet, noch einmal = wieder da.
+              Antippen geht auch.
+            </p>
+          </div>
+
+          {(() => {
+            const gefiltert = students.filter((s) => anwFilter === "alle" || anwArt(s.id) === anwFilter);
+            if (!gefiltert.length) {
+              return <p className="px-4 py-8 text-center text-sm text-stone-400">Niemand in dieser Auswahl.</p>;
+            }
+            /* Buchstaben-Gruppen wie im Klassenbuch - bei 25+ Kindern ist die
+               Liste sonst eine unstrukturierte Wand. */
+            let letzterBuchstabe = null;
+            return (
+              <ul className="mt-1">
+                {gefiltert.map((s) => {
+                  const b = (s.name || "?").trim().charAt(0).toUpperCase();
+                  const neuerBuchstabe = b !== letzterBuchstabe;
+                  letzterBuchstabe = b;
+                  return (
+                    <li key={s.id}>
+                      {neuerBuchstabe && (
+                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold text-stone-400 border-b border-stone-100">{b}</div>
+                      )}
+                      <AnwesenheitZeile
+                        student={s}
+                        art={anwArt(s.id)}
+                        minuten={anwEintrag(s.id)?.minuten || null}
+                        ausKlassenbuch={anwEintrag(s.id)?.source === "webuntis"}
+                        menuOffen={anwMenuFor === s.id}
+                        onMenu={() => setAnwMenuFor(anwMenuFor === s.id ? null : s.id)}
+                        onSetzen={(art) => { setzeAnwesenheit(s.id, art); setAnwMenuFor(null); }}
+                        onMinuten={(m) => setzeVerspaetungsMinuten(s.id, m)}
+                        onWischen={(richtung) => wischen(s.id, richtung)}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()}
         </div>
 
         <div className="p-4 pb-[max(2rem,env(safe-area-inset-bottom))]" hidden={activeTab !== "noten"}>
@@ -17917,7 +18229,11 @@ function SchuelerakteExportModal({ student, cls, data, halbjahr, onClose }) {
   }).filter(Boolean);
 
   const fehlTage = new Set(sFehl.map((a) => a.date)).size;
-  const fehlUnent = sFehl.filter((a) => a.excuseStatus === "unentschuldigt").length;
+  /* Ueber Tage zaehlen, nicht ueber Datensaetze: Ein Untis-Export kann pro
+     Fehltag mehrere Zeilen liefern (unterschiedlicher Grund je Stunde), und
+     im Zeugnis-/Uebergabe-Dokument stuende dann "unentschuldigt: 6" fuer
+     einen einzigen Fehltag. */
+  const fehlUnent = new Set(sFehl.filter((a) => a.excuseStatus === "unentschuldigt").map((a) => a.date)).size;
 
   const incidentsGrp = {};
   sIncidents.forEach((i) => { incidentsGrp[i.label] = (incidentsGrp[i.label] || 0) + 1; });
@@ -19476,12 +19792,17 @@ function NotenTab({ data, update, halbjahr, initialFachId, onConsumeInitial, loc
       });
     }
     if (studentAbsences.length) {
-      const unentsch = studentAbsences.filter((a) => a.excuseStatus === "unentschuldigt");
-      const ausstehend = studentAbsences.filter((a) => a.excuseStatus === "ausstehend");
+      /* In Tagen, nicht in Datensaetzen - dieselbe Zahl steht spaeter im
+         Elterngespraech auf dem Tisch, und ein Fehltag mit mehreren
+         Untis-Zeilen darf dort nicht als mehrere Fehlzeiten erscheinen. */
+      const tage = (liste) => new Set(liste.map((a) => a.date)).size;
+      const unentsch = tage(studentAbsences.filter((a) => a.excuseStatus === "unentschuldigt"));
+      const ausstehend = tage(studentAbsences.filter((a) => a.excuseStatus === "ausstehend"));
+      const gesamt = tage(studentAbsences);
       lines.push("");
-      lines.push(`Fehlzeiten gesamt: ${studentAbsences.length} Einträge`);
-      if (unentsch.length) lines.push(`– Unentschuldigt: ${unentsch.length}×`);
-      if (ausstehend.length) lines.push(`– Entschuldigung noch ausstehend: ${ausstehend.length}×`);
+      lines.push(`Fehlzeiten gesamt: ${gesamt} ${gesamt === 1 ? "Tag" : "Tage"}`);
+      if (unentsch) lines.push(`– Unentschuldigt: ${unentsch}×`);
+      if (ausstehend) lines.push(`– Entschuldigung noch ausstehend: ${ausstehend}×`);
     }
     if (sprechtagNotiz.trim()) {
       lines.push("");
