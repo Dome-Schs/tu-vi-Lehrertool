@@ -3490,7 +3490,7 @@ const HELP_DATA = [
       { q: `Warum zeigt „Nicht vergessen" nicht alle Aufgaben?`, a: `Damit die Startseite nicht zur Endlosliste wird. Die Kachel zeigt höchstens drei Aufgaben, und zwar die dringendsten: zuerst überfällige (rot markiert), dann heute fällige (gelb), dann solche ohne Datum, zuletzt spätere. Oben rechts steht „N heute" – oder „N offen", wenn heute nichts fällig ist. Ein Tipp auf die Kachel oder auf „+N weitere" öffnet die vollständige Liste – dort kannst du auch direkt abhaken. Ganz unten in dieser Liste führt „Alle Aufgaben und Listen" in den Aufgaben-Bereich. Erledigte Aufgaben verschwinden aus der Kachel.` },
       { q: "Wie lege ich Material für ein Fach fest, das immer mitzunehmen ist?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung" → im Editor die Sektion „Immer mitnehmen". Trage ein Ding pro Zeile ein und tippe das +-Symbol oder drücke Enter – z. B. „12 Volleybälle", „6 Hütchen", „Leibchen", „Beamer". Die Einträge erscheinen automatisch auf der Heute-Seite: in der JETZT-Karte beim aktiven Fach, und – wichtiger – in der ALS-NÄCHSTES-Karte als Chip-Reihe „Vorher mitnehmen", damit du sie in der Vorstunde noch einsammeln kannst. Kannst du jederzeit über das × am Chip löschen. Wird pro Fach gespeichert, nicht pro Stunde – Sport hat also für jede Sportstunde dieselben Bälle.` },
       { q: "Was ist der Unterrichtstipp des Tages?", a: `Ganz unten auf der Übersicht liegt eine kompakte Zeile mit einem Tipp aus dem Wissenspool – Titel plus Merksatz. Der Tipp wechselt automatisch mit jedem Tag (er ist an das Datum gekoppelt, bleibt also bei mehrmaligem Öffnen am selben Tag gleich). Tippe drauf, dann öffnet sich die volle Karte: „Warum?" mit Kurzbegründung, „So setzt du es um" als praktische Punkte, und der Merksatz zum Mitnehmen. Ein „Nächster Tipp"-Knopf springt zufällig zu einer anderen Karte, so kannst du zwischendurch etwas schmökern. Unter „Einstellungen" → „Darstellung" lässt sich die Kachel abschalten.` },
-      { q: "Was ist der Wochenausblick auf der Übersicht?", a: `Eine aufklappbare Karte auf der Übersicht, die zeigt was in den nächsten 7 Tagen ansteht: Klassenarbeiten und Tests (mit Fachfarbe), Termine und geplante Gespräche. Sonntags ab 14 Uhr klappt sie sich automatisch auf, damit du dich auf die Woche vorbereiten kannst – an anderen Tagen ist sie zugeklappt, lässt sich aber jederzeit öffnen. Jeder Tag wird einzeln aufgeführt, so siehst du auf einen Blick ob Montag eine Mathe-Arbeit und Mittwoch ein Elterngespräch ansteht. Tage ohne Einträge werden übersprungen. Ist in der ganzen Woche nichts geplant, verschwindet die Karte. Die Reihenfolge der Karte auf der Übersicht lässt sich unter „Einstellungen" → „Darstellung" → „Übersicht anpassen" verschieben oder ausblenden.` },
+      { q: "Was zeigt die Karte Kommende Woche auf der Übersicht?", a: `Eine aufklappbare Karte, die die nächsten fünf Schultage vorausschaut – mit dem Stundenplan (welche Fächer und Klassen an welchem Tag), Klassenarbeiten, Terminen und geplanten Gesprächen. Wochenenden und Ferientage werden übersprungen, so dass auch am Ende der Ferien schon die erste Schulwoche sichtbar wird. Am Wochenende ab 14 Uhr klappt sie sich automatisch auf; unter der Woche ist sie zugeklappt, lässt sich aber jederzeit öffnen. Die Reihenfolge der Karte lässt sich unter „Einstellungen" → „Darstellung" → „Übersicht anpassen" verschieben oder ausblenden.` },
       { q: "Was ist der Wochenrückblick auf der Übersicht?", a: `Eine Karte, die von Freitag 12 Uhr bis Sonntag Nacht ganz oben auf der Übersicht erscheint (ab Montag ist sie automatisch weg). Sie zeigt drei Dinge: die Zahlen der Woche (gehaltene Stunden, vergebene Noten, geführte Gespräche, neue Notizen), was aufgefallen ist (Klassen mit Signalen aus dem Klassenradar, Kinder ohne Eintrag in dieser Woche) und einen Ausblick auf die nächste Woche (Klassenarbeiten, Termine). Ein × blendet die Karte für den Rest dieser Woche aus – am nächsten Freitag kommt sie wieder.` },
       { q: "Was macht der grüne Plus-Knopf in der Mitte?", a: `Er ist der Schnellzugriff zum Erfassen und funktioniert aus jedem Bereich heraus. Ganz oben steht immer „Kind suchen" – der kürzeste Weg ins Schülerprofil. Darunter: „Stunde nachtragen" springt direkt in die Schnellerfassung – Tu-vi wählt dabei selbst die passende Stunde, zuerst eine noch nicht erfasste, sonst die zuletzt gehaltene von heute. „Gespräch notieren" und „Notiz zu einem Kind" fragen zuerst nach dem Kind (einfach den Namen tippen) und dann nach dem Text; beim Gespräch kommen Art (Schüler, Eltern, Förder) und Stimmung dazu. „Aufgabe" und „Termin" legen einen To-do beziehungsweise einen Kalendereintrag an. Bist du gerade in einem Bereich mit eigener Aktion – etwa im Klassen-Tab – steht diese zusätzlich ganz oben in der Liste. Auf Tablet und Desktop heißt der Knopf „Schnell erfassen" und sitzt in der linken Seitenleiste, ganz oben; das aufklappende Menü enthält dieselben Aktionen.` },
       { q: "Wo finde ich die Aufgaben in der unteren Leiste?", a: `Die Leiste zeigt Übersicht, Klassen, den Plus-Knopf, Noten und „Mehr". Die Aufgaben sind unter „Mehr" zu finden – dort stehen oben die Bereiche „Stundenplan", „Kalender" und „Aufgaben", darunter die Werkzeuge „Suchen", „Dokumente", „Einstellungen" und „Hilfe". Eine neue Aufgabe legst du schneller über den grünen Plus-Knopf an.` },
@@ -9416,7 +9416,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       if (v === "closed") return false;
       if (v === "open") return true;
     } catch {}
-    return dow === 0 && stunde >= 14;
+    return (dow === 6 || dow === 0) && stunde >= 14;
   });
   function toggleAusblick() {
     const neu = !ausblickOffen;
@@ -9428,10 +9428,35 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     if (!isToday) return [];
     const eintraege = [];
     const morgen = addDays(jetzt, 1);
-    for (let i = 0; i < 7; i++) {
+    let schulTage = 0;
+    for (let i = 0; i < 14 && schulTage < 5; i++) {
       const tag = addDays(morgen, i);
       const iso = isoDate(tag);
+      const wt = (tag.getDay() + 6) % 7;
+      const tagKey = DAYS[wt];
+      if (!tagKey) continue;
+      const istFrei = (data.events || []).some((e) => (e.type === "ferien" || e.type === "frei") && e.date <= iso && iso <= (e.endDate || e.date));
+      if (istFrei) continue;
+      schulTage++;
       const items = [];
+      const tagLessons = data.timetable.filter((t) => t.day === tagKey).sort((a, b) => a.period - b.period);
+      if (tagLessons.length) {
+        const blocks = [];
+        tagLessons.forEach((slot) => {
+          const last = blocks[blocks.length - 1];
+          if (last && last.fachId === slot.fachId && slot.period === last.lastPeriod + 1) {
+            last.lastPeriod = slot.period;
+          } else {
+            blocks.push({ fachId: slot.fachId, firstPeriod: slot.period, lastPeriod: slot.period });
+          }
+        });
+        const stunden = blocks.map((b) => {
+          const fach = data.faecher.find((f) => f.id === b.fachId);
+          const cls = fach ? data.classes.find((c) => c.id === fach.classId) : null;
+          return { subject: fach?.subject, className: cls?.name, color: fach?.color };
+        });
+        items.push({ typ: "unterricht", stunden });
+      }
       (data.faecher || []).forEach((f) => {
         if (f.nextTestDate === iso) {
           const cls = (data.classes || []).find((c) => c.id === f.classId);
@@ -10076,7 +10101,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     { key: "naechstes",       label: "ALS NÄCHSTES" },
     { key: "danach",          label: "Danach heute" },
     { key: "aufmerksamkeit",  label: "Aufmerksamkeit + Nicht vergessen" },
-    { key: "ausblick",        label: "Wochenausblick" },
+    { key: "ausblick",        label: "Kommende Woche" },
     { key: "rueckblick",      label: "Wochenrückblick (Fr–So)" },
     { key: "tipp",            label: "Unterrichtstipp des Tages" },
   ];
@@ -10296,33 +10321,50 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         </div>
       )}
 
-      {/* ───────── WOCHENAUSBLICK ───────── */}
+      {/* ───────── KOMMENDE WOCHE ───────── */}
       {isToday && ausblickDaten.length > 0 && (
         <Card className="px-4 py-3.5" style={{ order: orderOf("ausblick") }}>
           <button onClick={toggleAusblick} className="w-full flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wide akzent-text">Wochenausblick</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide akzent-text">Kommende Woche</span>
             <ChevronDown size={16} className={`text-stone-400 transition-transform ${ausblickOffen ? "rotate-180" : ""}`} />
           </button>
           {ausblickOffen && (
             <div className="mt-3 space-y-3">
-              {ausblickDaten.map(({ datum, tag, items }) => (
-                <div key={datum}>
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-1">
-                    {tag.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}
+              {ausblickDaten.map(({ datum, tag, items }) => {
+                const unterricht = items.find((it) => it.typ === "unterricht");
+                const events = items.filter((it) => it.typ !== "unterricht");
+                return (
+                  <div key={datum}>
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-1">
+                      {tag.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}
+                    </div>
+                    {unterricht && (
+                      <div className="flex flex-wrap gap-1.5 mb-1">
+                        {unterricht.stunden.map((s, j) => (
+                          <span key={j} className="inline-flex items-center gap-1 text-[11px] text-stone-600 bg-stone-100 rounded px-1.5 py-0.5">
+                            {s.color && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />}
+                            <span className="font-medium">{s.subject || "—"}</span>
+                            {s.className && <span className="text-stone-400 text-[10px]">{s.className}</span>}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {events.length > 0 && (
+                      <ul className="space-y-1">
+                        {events.map((it, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs text-stone-700">
+                            {it.typ === "ka" && <FileText size={13} className="shrink-0 text-red-500" />}
+                            {it.typ === "termin" && <CalendarDays size={13} className="shrink-0 text-stone-400" />}
+                            {it.typ === "gespraech" && <MessageSquare size={13} className="shrink-0 text-stone-400" />}
+                            {it.color && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: it.color }} />}
+                            <span className="truncate">{it.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                  <ul className="space-y-1">
-                    {items.map((it, i) => (
-                      <li key={i} className="flex items-center gap-2 text-xs text-stone-700">
-                        {it.typ === "ka" && <FileText size={13} className="shrink-0 text-red-500" />}
-                        {it.typ === "termin" && <CalendarDays size={13} className="shrink-0 text-stone-400" />}
-                        {it.typ === "gespraech" && <MessageSquare size={13} className="shrink-0 text-stone-400" />}
-                        {it.color && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: it.color }} />}
-                        <span className="truncate">{it.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card>
