@@ -638,22 +638,21 @@ const LIST_ICON_KEYS = Object.keys(LIST_ICON_MAP);
 
 /* Zwoelf Fach-Farben — kraeftig, maximal unterschiedlich, sofort benennbar.
    Reihenfolge so gewaehlt, dass aufeinanderfolgende Farben (die ersten
-   Faecher einer Lehrkraft) sich deutlich unterscheiden: Blau, Rot, Gruen,
-   Orange, Lila, Tuerkis, Pink, Oliv, Dunkelblau, Braun, Himbeere, Petrol.
+   Faecher einer Lehrkraft) sich deutlich unterscheiden.
    Bereits vergebene Fach-Farben speichern ihren Hex-Wert direkt — keine
    Migration noetig, auch wenn ihr Ton nicht mehr in dieser Liste steht. */
 const COLOR_PALETTE = [
   "#2563EB" /* Blau */,     "#DC2626" /* Rot */,       "#16A34A" /* Grün */,
   "#EA580C" /* Orange */,   "#9333EA" /* Lila */,      "#0891B2" /* Türkis */,
   "#DB2777" /* Pink */,     "#65A30D" /* Oliv */,      "#1E40AF" /* Dunkelblau */,
-  "#92400E" /* Braun */,    "#BE185D" /* Himbeere */,   "#0D9488" /* Petrol */,
+  "#92400E" /* Braun */,    "#CA8A04" /* Gelb */,      "#475569" /* Schiefer */,
 ];
 
 const COLOR_NAMEN = {
   "#2563EB": "Blau",      "#DC2626": "Rot",       "#16A34A": "Grün",
   "#EA580C": "Orange",    "#9333EA": "Lila",      "#0891B2": "Türkis",
   "#DB2777": "Pink",      "#65A30D": "Oliv",      "#1E40AF": "Dunkelblau",
-  "#92400E": "Braun",     "#BE185D": "Himbeere",  "#0D9488": "Petrol",
+  "#92400E": "Braun",     "#CA8A04": "Gelb",      "#475569": "Schiefer",
 };
 
 function nextPaletteColor(usedColors) {
