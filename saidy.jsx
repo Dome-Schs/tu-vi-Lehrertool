@@ -10307,7 +10307,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       {isToday && ausblickDaten.length > 0 && (
         <Card className="px-4 py-3.5" style={{ order: orderOf("ausblick") }}>
           <button onClick={toggleAusblick} className="w-full flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wide akzent-text">Kommende Woche</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Kommende Woche</span>
             <ChevronDown size={16} className={`text-stone-400 transition-transform ${ausblickOffen ? "rotate-180" : ""}`} />
           </button>
           {ausblickOffen && (
@@ -17893,11 +17893,13 @@ function PeriodTimeEditor({ initial, onSave, onCancel }) {
 
 function CellEditor({ faecher, classes, initial, onSave, onCancel, onColorChange }) {
   const [fachId, setFachId] = useState(initial?.fachId || "");
+  const [pendingColor, setPendingColor] = useState(null);
   const gewaehltesFach = faecher.find((f) => f.id === fachId);
+  const aktiveFarbe = pendingColor || gewaehltesFach?.color;
 
   return (
-    <div className="bg-white border akzent-rand rounded-xl p-3 space-y-2 shadow-xl w-52">
-      <select className="w-full text-sm rounded border border-stone-200 px-2 py-1.5" value={fachId} onChange={(e) => setFachId(e.target.value)} autoFocus>
+    <div className="bg-white border akzent-rand rounded-xl p-3 space-y-2 shadow-xl w-60">
+      <select className="w-full text-sm rounded border border-stone-200 px-2 py-1.5" value={fachId} onChange={(e) => { setFachId(e.target.value); setPendingColor(null); }} autoFocus>
         <option value="">frei</option>
         {faecher.map((f) => {
           const cls = classes.find((c) => c.id === f.classId);
@@ -17911,19 +17913,23 @@ function CellEditor({ faecher, classes, initial, onSave, onCancel, onColorChange
             {COLOR_PALETTE.map((c) => (
               <button
                 key={c}
-                onClick={() => onColorChange?.(gewaehltesFach.id, gewaehltesFach.subject, c)}
-                className="w-5 h-5 rounded-full border-2 transition-transform press-scale"
-                style={{ backgroundColor: c, borderColor: gewaehltesFach.color === c ? "var(--ink)" : "transparent" }}
+                onClick={() => setPendingColor(c)}
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
                 aria-label={COLOR_NAMEN[c] || c}
                 title={COLOR_NAMEN[c] || c}
-              />
+              >
+                <span
+                  className="w-5 h-5 rounded-full block"
+                  style={{ backgroundColor: c, boxShadow: aktiveFarbe === c ? "0 0 0 2px white, 0 0 0 3.5px #292524" : "none" }}
+                />
+              </button>
             ))}
           </div>
         </div>
       )}
       {!faecher.length && <p className="text-xs text-stone-400 px-0.5">Erst unter „Fächer" anlegen.</p>}
       <div className="flex gap-1.5">
-        <button onClick={() => onSave(fachId)} className="flex-1 text-sm akzent-flaeche rounded-lg py-1.5"><Check size={14} className="inline" /></button>
+        <button onClick={() => { if (pendingColor && gewaehltesFach) onColorChange?.(gewaehltesFach.id, gewaehltesFach.subject, pendingColor); onSave(fachId); }} className="flex-1 text-sm akzent-flaeche rounded-lg py-1.5"><Check size={14} className="inline" /></button>
         <button onClick={onCancel} className="flex-1 text-sm bg-stone-100 text-stone-500 rounded-lg py-1.5"><X size={14} className="inline" /></button>
       </div>
     </div>
