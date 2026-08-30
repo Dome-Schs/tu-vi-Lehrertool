@@ -636,58 +636,24 @@ const LIST_ICON_MAP = {
 };
 const LIST_ICON_KEYS = Object.keys(LIST_ICON_MAP);
 
-/* Achtzehn Fach-Farben, per OKLCH-Farbrad konstruiert statt frei Hand
-   gewaehlt: die alte Liste sass fast komplett bei Chroma 0.03-0.09 (fast
-   Grau) mit mehreren Farbtoenen nur 5-15 Grad auseinander (z. B. zwei fast
-   identische Blautoene) - im Alltag kaum zu unterscheiden, genau das
-   gemeldete Problem.
-
-   2026-08 komplett ersetzt: eine von der Lehrkraft vorgegebene, benannte
-   Farbkarte (Saphirblau, Petrolgruen, Smaragd, Amethyst, Magenta, Rubinrot,
-   Terrakotta, Safrangold, Senfgelb, Olivgruen, Azur, Lavendel, Rosenquarz,
-   Champagner, Taupe, Espresso, Graphit, Onyx) sollte 1:1 uebernommen
-   werden. Die Rohwerte daraus bestanden den dataviz-Skill-Validator aber
-   nicht: 10 von 18 lagen ausserhalb der Helligkeits-Zielspanne (u. a.
-   Onyx/Graphit/Espresso zu dunkel, Safrangold/Rosenquarz/Champagner zu
-   hell), 9 unter der Chroma-Untergrenze (Onyx z. B. exakt Grau, C=0) und
-   Senfgelb/Safrangold lagen nur 11 Grad auseinander - unter
-   Rotgruen-Simulation nicht zu unterscheiden. Deshalb: Farbton (Hue) jeder
-   einzelnen Farbe unangetastet oder nur leicht verschoben, aber Helligkeit
-   und Saettigung pro Farbe so weit angehoben/gesenkt, bis sie in die
-   Zielspanne faellt - der Name und die Familie (z. B. "Onyx" bleibt ein
-   dunkler, aber jetzt tatsaechlich als Farbe erkennbarer Ton) bleiben
-   erhalten, nur die konkrete Umsetzung wird alltagstauglich. Die
-   Reihenfolge im Array ist zugleich die Zuweisungsreihenfolge fuer neu
-   angelegte Faecher (nextPaletteColor()) und wurde per Suche so gewaehlt,
-   dass benachbarte Faerben maximal auseinanderliegen - keine feste
-   Gradzahl-Regel wie bei der Vorgaenger-Liste, weil Rotgruen-Kollisionen
-   (z. B. ein bestimmtes Gruen und ein bestimmtes Rot) sich nicht an der
-   Position auf dem Farbrad ablesen lassen, nur an der Simulation selbst.
-   Bereits vergebene Fach-Farben speichern ihren Hex-Wert direkt - keine
-   Migration noetig, auch wenn ihr Ton nicht mehr in dieser Liste steht.
-   Geprueft mit dem dataviz-Skill-Validator (OKLab-Distanz,
-   Machado-Oliveira-Fernandes-CVD-Simulation, alle sechs Pruefungen in
-   dieser Reihenfolge bestanden): Helligkeits-Zielspanne alle 18 bestanden,
-   Chroma-Untergrenze alle 18 bestanden, Rotgruen-Sehschwaeche 11.2 (Ziel
-   >=8, klar bestanden), Normalsicht-Mindestabstand 22.8 (Ziel >=15,
-   bestanden), Kontrast zur Flaeche alle 18 bestanden. */
+/* Zwoelf Fach-Farben — kraeftig, maximal unterschiedlich, sofort benennbar.
+   Reihenfolge so gewaehlt, dass aufeinanderfolgende Farben (die ersten
+   Faecher einer Lehrkraft) sich deutlich unterscheiden: Blau, Rot, Gruen,
+   Orange, Lila, Tuerkis, Pink, Oliv, Dunkelblau, Braun, Himbeere, Petrol.
+   Bereits vergebene Fach-Farben speichern ihren Hex-Wert direkt — keine
+   Migration noetig, auch wenn ihr Ton nicht mehr in dieser Liste steht. */
 const COLOR_PALETTE = [
-  "#9f6202" /* Taupe */, "#0a78b7" /* Azur */, "#ab285c" /* Magenta */, "#bf8700" /* Safrangold */,
-  "#873700" /* Espresso */, "#008a65" /* Smaragd */, "#793c9f" /* Amethyst */, "#be7125" /* Champagner */,
-  "#3b5eb2" /* Saphirblau */, "#226929" /* Onyx */, "#897ed6" /* Lavendel */, "#ac2f39" /* Rubinrot */,
-  "#009284" /* Petrolgrün */, "#ce6234" /* Terrakotta */, "#285e9f" /* Graphit */, "#847200" /* Senfgelb */,
-  "#d06b9e" /* Rosenquarz */, "#516f00" /* Olivgrün */,
+  "#2563EB" /* Blau */,     "#DC2626" /* Rot */,       "#16A34A" /* Grün */,
+  "#EA580C" /* Orange */,   "#9333EA" /* Lila */,      "#0891B2" /* Türkis */,
+  "#DB2777" /* Pink */,     "#65A30D" /* Oliv */,      "#1E40AF" /* Dunkelblau */,
+  "#92400E" /* Braun */,    "#BE185D" /* Himbeere */,   "#0D9488" /* Petrol */,
 ];
 
-/* Sprechende Namen fuer die Farbpunkte - ohne sie liesse sich am Telefon
-   oder im Gespraech nicht sagen "ich hab Mathe in dem dunkelblauen", nur
-   auf einen nicht benennbaren Kreis zeigen. */
 const COLOR_NAMEN = {
-  "#9f6202": "Taupe", "#0a78b7": "Azur", "#ab285c": "Magenta", "#bf8700": "Safrangold",
-  "#873700": "Espresso", "#008a65": "Smaragd", "#793c9f": "Amethyst", "#be7125": "Champagner",
-  "#3b5eb2": "Saphirblau", "#226929": "Onyx", "#897ed6": "Lavendel", "#ac2f39": "Rubinrot",
-  "#009284": "Petrolgrün", "#ce6234": "Terrakotta", "#285e9f": "Graphit", "#847200": "Senfgelb",
-  "#d06b9e": "Rosenquarz", "#516f00": "Olivgrün",
+  "#2563EB": "Blau",      "#DC2626": "Rot",       "#16A34A": "Grün",
+  "#EA580C": "Orange",    "#9333EA": "Lila",      "#0891B2": "Türkis",
+  "#DB2777": "Pink",      "#65A30D": "Oliv",      "#1E40AF": "Dunkelblau",
+  "#92400E": "Braun",     "#BE185D": "Himbeere",  "#0D9488": "Petrol",
 };
 
 function nextPaletteColor(usedColors) {
