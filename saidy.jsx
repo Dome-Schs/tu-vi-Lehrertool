@@ -3522,6 +3522,7 @@ const HELP_DATA = [
       { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. Ein Kind entfernen: Token nach unten über den Rand der Fläche in die rote Toolbar ziehen und loslassen. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen.` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
       { q: `Was ist die „Auf einen Blick"-Karte im Kind-Profil?`, a: `Direkt unter der Profil-Karte erscheint bei aktiven Kindern eine kompakte Signal-Liste – die pädagogische Startseite des Kindes. Sie zeigt bis zu sechs Punkte, die im Alltag konkret helfen: die aktuelle Stimmung aus dem letzten Gespräch (Smiley), einen Notentrend („Noten verbessern sich zuletzt" bzw. „fallen zuletzt ab"), wiederkehrende Vorfälle (z. B. „5× Sportzeug vergessen"), das letzte Elterngespräch mit Datumsabstand, das aktive Förderziel. Alles lokal aus vorhandenen Daten berechnet – keine externen Übertragungen. Ziel: kein Wissen geht verloren, jede Lehrkraft (auch Vertretung) sieht in Sekunden was zählt.` },
+      { q: "Wie tracke ich vergessenes Schülermaterial?", a: `Auf der Übersicht in der JETZT-Karte: Unter dem aktuellen Stundenthema erscheint der Bereich „Noch nachbringen" mit allen offenen Material-Einträgen für diese Klasse und dieses Fach. Über „+ Material fehlt" trägst du ein, wem was fehlt – Kind wählen, Material-Text eingeben, fertig. Sobald das Kind das Material nachbringt, setzt du den Haken und der Eintrag verschwindet. Die Gesamtzahl offener Material-Erinnerungen erscheint außerdem in der Kachel „X Dinge brauchen deine Aufmerksamkeit" auf der Startseite, und in der ALS-NÄCHSTES-Karte steht ein kompakter Hinweis, wenn für die kommende Stunde noch Material nachzubringen ist.` },
       { q: `Wie exportiere ich eine Schülerakte für die Übergabe?`, a: `Im Kind-Profil unter der Gesprächs-Erfassung: „Schülerakte als PDF – für Übergabe an nächste Lehrkraft". Es öffnet sich eine druckbare Vorschau mit Stammdaten, Kontakten, aktuellen Förderzielen, Noten pro Fach, Fehlzeiten, Vorfällen, Gesprächen (letzte 15) und Beobachtungen (letzte 25). Ein Klick auf „Als PDF drucken" öffnet den Browser-Druckdialog – dort „In PDF speichern" wählen. So kann die nächste Klassen- oder Fachlehrkraft in Minuten das pädagogische Wissen übernehmen, statt sich durch Papier zu wühlen. Datenschutz-Hinweis am Fuß der Seite eingebaut.` },
       { q: "Wie funktionieren Sprachnotizen?", a: `Im Schülerprofil (Tab „Übersicht" oder „Notizen") gibt es neben dem Notiz-Eingabefeld ein Mikrofon-Symbol. Antippen startet die Aufnahme – beim ersten Mal erscheint ein kurzer Hinweis zur Datenverarbeitung. Während der Aufnahme erscheint eine Live-Vorschau des erkannten Textes. Nach der Aufnahme wird der Text automatisch ins Eingabefeld übernommen, wo er noch bearbeitet werden kann. Unterstützte Browser: Safari (iOS/macOS), Chrome und Edge. Firefox unterstützt diese Funktion nicht. Das Mikrofon-Symbol erscheint nur, wenn dein Browser Spracherkennung unterstützt.` },
       { q: "Was ist der Klassenradar?", a: `Signale die auffällige Klassen automatisch erkennen und in die Kachel „X Dinge brauchen deine Aufmerksamkeit" auf der Heute-Seite spielen. Drei Signale werden über die letzten 14 Tage berechnet: (1) häufige Klassenbucheinträge – ab 3 in 14 Tagen Warnung, ab 5 kritisch; (2) Klassenschnitt in einem Fach schlechter als 3,5 – ab 3,5 Warnung, ab 4,0 kritisch (nur ab 3 Noten im Fach, sonst Rauschen); (3) mindestens 4 Kinder mit „nicht so gut" oder „schlecht" in Gesprächen – ab 4 Warnung, ab 6 kritisch. Ist alles ruhig, bleibt die Kachel unauffällig oder verschwindet ganz. Ein Tipp im Aufmerksamkeits-Sheet öffnet direkt das Klassen-Dashboard mit allen Details.` },
@@ -9940,6 +9941,12 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     return (data.tasks || []).filter((t) => !t.done && t.linkedClassId === clsId);
   }
 
+  function offenesMaterial(clsId, fachId) {
+    if (!clsId) return [];
+    const kidIds = new Set(data.students.filter((s) => s.classId === clsId && !s.deletedAt).map((s) => s.id));
+    return (data.notes || []).filter((n) => n.type === "material" && !n.resolved && !n.deletedAt && kidIds.has(n.studentId) && (!fachId || n.fachId === fachId));
+  }
+
   /* „Aufmerksamkeit" = automatisch erkannte, heute relevante Signale. Nicht
      dasselbe wie „Nicht vergessen" – das sind manuelle ToDos. Hier landen:
      dringliche Briefing-Sätze, kritisches Klassenradar, offene Nachträge. */
@@ -10013,6 +10020,21 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       }
     })();
 
+    // Material-Erinnerungen
+    (() => {
+      let offen = 0;
+      (data.notes || []).filter((n) => n.type === "material" && !n.resolved && !n.deletedAt).forEach(() => offen++);
+      if (offen) {
+        items.push({
+          id: "mat-offen",
+          titel: `${offen} × Material noch nachzubringen`,
+          sub: null,
+          onClick: null,
+          icon: Folder,
+        });
+      }
+    })();
+
     // 3. Dringliche Briefing-Sätze (urgent), Begrüßung weggelassen
     briefingSentences.slice(1).filter((s) => s.urgent).forEach((s, i) => {
       items.push({
@@ -10051,6 +10073,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
   const [showAttentionSheet, setShowAttentionSheet] = useState(false);
   const [showNichtVergessen, setShowNichtVergessen] = useState(false);
   const [neueAufgabe, setNeueAufgabe] = useState("");
+  const [matFehltForm, setMatFehltForm] = useState(null);
   /* Kurz-Helfer: oeffnet die Stunde direkt im Vorbereitungs-Tab. Wir
      nutzen setCaptureLesson mit initialTab, damit alles in einem
      Sheet zusammenlaeuft und der Nutzer bei Bedarf auf Noten wechseln kann. */
@@ -10481,15 +10504,58 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               </div>
             )}
 
-            {/* Nur EIN CTA – Vorbereitung ist als Tab im geöffneten Sheet erreichbar.
-                Vermeidet die Verwirrung "Was ist der Unterschied zwischen Vorbereiten
-                und Stunde öffnen?". Wenn Vorbereitung existiert, ist ein dezentes
-                Klemmbrett-Icon oben rechts in der Karte (siehe Kopfbereich der Karte). */}
+            {/* Vergessenes Material – Erinnerung aus vorherigen Stunden */}
+            {(() => {
+              const matOffen = offenesMaterial(cls?.id, fach?.id);
+              const formAktiv = matFehltForm && matFehltForm.fachId === fach?.id;
+              if (!matOffen.length && !formAktiv) return null;
+              return (
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">Noch nachbringen</div>
+                  {matOffen.map((n) => {
+                    const s = data.students.find((x) => x.id === n.studentId);
+                    return (
+                      <button key={n.id} onClick={() => update((d) => { const e = d.notes.find((x) => x.id === n.id); if (e) { e.resolved = true; e.resolvedDate = todayStr; } return d; })} className="w-full flex items-center gap-2 text-xs text-stone-700 press-scale text-left">
+                        <span className="w-3.5 h-3.5 shrink-0 rounded border-2 border-stone-300" />
+                        <span className="truncate">{s?.name || "?"}: {n.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Material-fehlt-Formular (inline) */}
+            {(() => {
+              const formAktiv = matFehltForm && matFehltForm.fachId === fach?.id;
+              const kinder = cls ? data.students.filter((s) => s.classId === cls.id && !s.deletedAt).sort((a, b) => a.name.localeCompare(b.name)) : [];
+              return (
+                <>
+                  {formAktiv ? (
+                    <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-stone-50 border border-stone-200">
+                      <select className="w-full text-xs rounded border border-stone-200 px-2 py-1.5" value={matFehltForm.studentId} onChange={(e) => setMatFehltForm((p) => ({ ...p, studentId: e.target.value }))}>
+                        <option value="">Kind wählen…</option>
+                        {kinder.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                      <div className="flex gap-1.5">
+                        <input className="flex-1 text-xs rounded border border-stone-200 px-2 py-1.5" placeholder="Was fehlt?" value={matFehltForm.text} onChange={(e) => setMatFehltForm((p) => ({ ...p, text: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter" && matFehltForm.studentId && matFehltForm.text.trim()) { update((d) => { d.notes.push({ id: uid(), studentId: matFehltForm.studentId, fachId: fach.id, date: todayStr, text: matFehltForm.text.trim(), type: "material", resolved: false }); return d; }); setMatFehltForm(null); } }} />
+                        <button disabled={!matFehltForm.studentId || !matFehltForm.text.trim()} onClick={() => { update((d) => { d.notes.push({ id: uid(), studentId: matFehltForm.studentId, fachId: fach.id, date: todayStr, text: matFehltForm.text.trim(), type: "material", resolved: false }); return d; }); setMatFehltForm(null); }} className="px-2 py-1.5 rounded akzent-flaeche text-white text-xs disabled:opacity-40"><Check size={13} /></button>
+                        <button onClick={() => setMatFehltForm(null)} className="px-2 py-1.5 rounded bg-stone-100 text-stone-500 text-xs"><X size={13} /></button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setMatFehltForm({ fachId: fach.id, studentId: "", text: "" })} className="w-full py-1.5 rounded-lg border border-dashed border-stone-300 text-xs text-stone-500 hover:bg-stone-50 flex items-center justify-center gap-1.5">
+                      <Plus size={13} /> Material fehlt
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Nur EIN CTA – Vorbereitung ist als Tab im geöffneten Sheet erreichbar. */}
             <button
               onClick={() => setCaptureLesson?.({ fach, cls, date: selStr })}
               className="w-full py-2.5 rounded-xl akzent-flaeche text-white text-sm font-medium press-scale flex items-center justify-center gap-2"
-              /* Sonst steht ein oliver Knopf mitten in einer fachfarbenen
-                 Karte - der Block liest sich dann als zwei Dinge. */
               style={isColor && fach?.color ? { backgroundColor: fach.color, color: textAufFarbe(fach.color) } : undefined}
             >
               <BookOpen size={15} /> Stunde öffnen
@@ -10611,6 +10677,20 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                 <span>Noch offen: {entsch} {entsch === 1 ? "Entschuldigung" : "Entschuldigungen"}</span>
               </button>
             )}
+
+            {(() => {
+              const matOffen = offenesMaterial(cls?.id, fach?.id);
+              if (!matOffen.length) return null;
+              const kinderMap = {};
+              matOffen.forEach((n) => { kinderMap[n.studentId] = kinderMap[n.studentId] || []; kinderMap[n.studentId].push(n.text); });
+              const namen = Object.keys(kinderMap).map((sid) => data.students.find((s) => s.id === sid)?.name?.split(" ")[0] || "?");
+              return (
+                <div className="flex items-start gap-2 pt-1 text-xs text-stone-600">
+                  <Folder size={13} className="shrink-0 text-amber-600 mt-0.5" />
+                  <span>{matOffen.length} × Material nachbringen ({namen.slice(0, 3).join(", ")}{namen.length > 3 ? ` +${namen.length - 3}` : ""})</span>
+                </div>
+              );
+            })()}
           </Card>
         );
       })()}
