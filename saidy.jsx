@@ -17511,9 +17511,9 @@ function StundenplanTab({ data, update }) {
     setEditingTime(null);
   }
 
-  function setMittagspauseZeit(start, end) {
+  function setMittagspauseZeit(start, end, label) {
     update((d) => {
-      d.settings = { ...d.settings, mittagspause: start && end ? { start, end } : null };
+      d.settings = { ...d.settings, mittagspause: start && end ? { start, end, label: label || "" } : null };
       return d;
     });
     setEditingMittagspause(false);
@@ -17689,7 +17689,7 @@ function StundenplanTab({ data, update }) {
         style={{ top, height: hoehe, left: "10%", right: 0 }}
       >
         <span className="text-[10px] font-medium akzent-text flex items-center gap-1">
-          <Coffee size={10} /> Mittagspause · {mittagspause.start}–{mittagspause.end}
+          <Coffee size={10} /> {mittagspause.label || "Mittagspause"} · {mittagspause.start}–{mittagspause.end}
         </span>
       </div>
     );
@@ -17729,10 +17729,18 @@ function StundenplanTab({ data, update }) {
                 const top = (hmZuMin(zeit) - tagStart) * STUNDENPLAN_PX_PRO_MIN;
                 return (
                   <div key={zeit} className="absolute left-0 right-0 border-t border-stone-100" style={{ top }}>
-                    <span className="absolute -top-[7px] left-0 text-[10px] text-stone-400 tabular-nums bg-white pr-1" style={{ width: "10%" }}>
+                    <span className="absolute -top-[7px] left-0 text-[10px] text-stone-400 tabular-nums pr-1" style={{ width: "10%" }}>
                       {zeit}
                     </span>
                   </div>
+                );
+              })}
+              {zeitStunden.map(({ p, pt }, idx) => {
+                const mitte = ((hmZuMin(pt.start) + hmZuMin(pt.end)) / 2 - tagStart) * STUNDENPLAN_PX_PRO_MIN;
+                return (
+                  <span key={`nr-${p}`} className="absolute text-[9px] font-bold text-stone-300 tabular-nums pointer-events-none" style={{ top: mitte - 5, left: 0, width: "10%", textAlign: "center" }}>
+                    {idx + 1}.
+                  </span>
                 );
               })}
               {mittagspause && hmZuMin(mittagspause.end) > hmZuMin(mittagspause.start) && <MittagspauseBand />}
@@ -17813,10 +17821,10 @@ function StundenplanTab({ data, update }) {
               <li className="flex items-center gap-3 px-2 py-1.5">
                 <Coffee size={13} className="text-stone-400 shrink-0" />
                 {editingMittagspause ? (
-                  <PeriodTimeEditor initial={mittagspause} onSave={(start, end) => setMittagspauseZeit(start, end)} onCancel={() => setEditingMittagspause(false)} />
+                  <MittagspauseEditor initial={mittagspause} onSave={(start, end, label) => setMittagspauseZeit(start, end, label)} onCancel={() => setEditingMittagspause(false)} />
                 ) : (
                   <button onClick={() => setEditingMittagspause(true)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text py-1">
-                    <span className="font-medium">Mittagspause</span>{" "}
+                    <span className="font-medium">{mittagspause?.label || "Mittagspause"}</span>{" "}
                     {mittagspause ? <span className="tabular-nums text-stone-500">{mittagspause.start} – {mittagspause.end}</span> : <span className="text-stone-400">Uhrzeit eintragen</span>}
                   </button>
                 )}
@@ -17950,6 +17958,28 @@ function AufsichtEditor({ initial, onSave, onDelete, onCancel }) {
           </button>
         )
       )}
+    </div>
+  );
+}
+
+function MittagspauseEditor({ initial, onSave, onCancel }) {
+  const [start, setStart] = useState(initial?.start || "");
+  const [end, setEnd] = useState(initial?.end || "");
+  const [label, setLabel] = useState(initial?.label || "");
+  return (
+    <div className="relative">
+      <div className="h-8" />
+      <div className="absolute top-0 left-0 z-50 bg-white border akzent-rand rounded-lg p-1.5 space-y-1 shadow-lg w-40">
+        <input type="text" className="w-full text-xs rounded border border-stone-200 px-1.5 py-1" placeholder="Mittagspause" value={label} onChange={(e) => setLabel(e.target.value)} autoFocus />
+        <div className="flex gap-1">
+          <input type="time" className="flex-1 text-xs rounded border border-stone-200 px-1 py-1" value={start} onChange={(e) => setStart(e.target.value)} />
+          <input type="time" className="flex-1 text-xs rounded border border-stone-200 px-1 py-1" value={end} onChange={(e) => setEnd(e.target.value)} />
+        </div>
+        <div className="flex gap-1">
+          <button onClick={() => onSave(start, end, label)} className="flex-1 text-xs akzent-flaeche rounded py-1"><Check size={12} className="inline" /></button>
+          <button onClick={onCancel} className="flex-1 text-xs bg-stone-100 text-stone-500 rounded py-1"><X size={12} className="inline" /></button>
+        </div>
+      </div>
     </div>
   );
 }
