@@ -17601,7 +17601,7 @@ function StundenplanTab({ data, update }) {
         style={{
           top, height: Math.max(hoehe - 2, 16),
           ...(fach
-            ? isColor
+            ? fach.color
               ? { backgroundColor: fach.color + "1f", borderColor: fach.color + "40", color: fach.color }
               : { backgroundColor: "var(--oliv-hell)", borderColor: "var(--linie)", color: "var(--oliv)" }
             /* CSS-Variablen statt fester Hex-Werte - sonst bleibt eine leere
@@ -17610,7 +17610,7 @@ function StundenplanTab({ data, update }) {
             : { backgroundColor: "var(--n-50)", borderColor: "var(--n-100)", color: "var(--n-300)" }),
         }}
       >
-        {fach && isColor && <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: fach.color }} />}
+        {fach && fach.color && <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: fach.color }} />}
         {/* Bei einer Doppelstunde bleibt es EIN Kasten (Vorbild), aber innen
             liegen zwei Klickflaechen uebereinander, damit sich jede Haelfte
             weiterhin einzeln bearbeiten laesst - z.B. wenn nur die zweite
