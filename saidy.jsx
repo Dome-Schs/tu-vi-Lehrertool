@@ -16074,7 +16074,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                             className="flex-1 flex items-center gap-3 px-3 py-2.5 hover:bg-stone-50 press-scale text-left min-w-0"
                             aria-expanded={istOffen}
                           >
-                            <span className="w-2 h-10 rounded-full shrink-0" style={{ backgroundColor: isColor && f.color ? f.color : "#C0BBA8" }} />
+                            <span className="w-2 h-10 rounded-full shrink-0" style={{ backgroundColor: f.color || "#C0BBA8" }} />
                             <div className="min-w-0 flex-1">
                               <div className="text-sm font-semibold text-stone-800 truncate">{f.subject}</div>
                               <div className="text-[11px] text-stone-500 truncate">
