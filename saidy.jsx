@@ -3567,6 +3567,7 @@ const HELP_DATA = [
       { q: "Wie trage ich meine Mittagspause im Stundenplan ein?", a: `Im Stundenplan ganz unten den Bereich „Uhrzeiten der Stunden" aufklappen – dort steht die Mittagspause als erste Zeile, oberhalb der einzelnen Stunden. Start- und Endzeit eintragen, fertig: Die Pause erscheint danach als eigenes Band quer über alle Wochentage im Raster. Ein Tipp auf das ×-Symbol daneben entfernt sie wieder. Da Tu-vi nur eine schulweite Mittagszeit kennt (wie auch die Stunden-Uhrzeiten selbst gilt sie für alle Wochentage gleich), lässt sich pro Tag keine abweichende Zeit hinterlegen.` },
       { q: "Wie trage ich Pausenaufsichten ein?", a: `Im Stundenplan ganz unten den Bereich „Aufsichten" aufklappen und auf „Aufsicht eintragen" tippen. Wochentag, Start- und Endzeit sowie ein kurzer Ort (z. B. „Schulhof" oder „Pausenhalle") reichen – die Zeiten sind frei wählbar und nicht an die Stundenraster-Zeiten gebunden, eine Aufsicht kann also auch nur eine Hälfte der Mittagspause oder zwei halbe Pausen lang gehen. Eingetragene Aufsichten erscheinen als eigene, gestrichelte Kästchen im Stundenplan-Raster und lassen sich dort direkt antippen, um sie zu bearbeiten oder zu löschen.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
+      { q: "Wie importiere ich Termine aus Apple Kalender oder Google Calendar?", a: `Öffne „Mehr" → „Kalender" → oben rechts „ICS importieren". Wähle eine .ics-Datei – das Standardformat, das Apple Kalender, Google Calendar und Outlook beim Exportieren erzeugen. So exportierst du aus Apple Kalender: Am Mac „Ablage" → „Exportieren …", dort den Kalender als .ics speichern; auf iPhone/iPad gibt es keinen direkten Export, nutze dafür iCloud.com am Computer. Aus Google Calendar: „Einstellungen" → Kalender wählen → „Kalender exportieren". Tu-vi legt für jeden Termin in der Datei einen Eintrag an, Duplikate (gleicher Titel + gleiches Datum) werden automatisch übersprungen. Wiederkehrende Termine (wöchentlich, alle zwei Wochen, monatlich) werden ebenfalls erkannt. Es ist kein Live-Sync – bei neuen Terminen im Apple Kalender musst du erneut exportieren und importieren.` },
     ],
   },
   {
@@ -18052,6 +18053,57 @@ function isEventOnDate(event, ds) {
   return false;
 }
 
+function parseICS(text) {
+  const lines = [];
+  text.replace(/\r\n?/g, "\n").split("\n").forEach((raw) => {
+    if (/^\s/.test(raw) && lines.length) lines[lines.length - 1] += raw.trim();
+    else lines.push(raw);
+  });
+  const events = [];
+  let cur = null;
+  for (const line of lines) {
+    if (line === "BEGIN:VEVENT") { cur = {}; continue; }
+    if (line === "END:VEVENT") { if (cur) events.push(cur); cur = null; continue; }
+    if (!cur) continue;
+    const sep = line.indexOf(":");
+    if (sep < 0) continue;
+    const key = line.slice(0, sep).split(";")[0].toUpperCase();
+    const val = line.slice(sep + 1);
+    if (key === "SUMMARY") cur.summary = val.replace(/\\n/g, " ").replace(/\\,/g, ",").replace(/\\\\/g, "\\");
+    else if (key === "DTSTART") cur.dtstart = val;
+    else if (key === "DTEND") cur.dtend = val;
+    else if (key === "DESCRIPTION") cur.description = val.replace(/\\n/g, "\n").replace(/\\,/g, ",").replace(/\\\\/g, "\\");
+    else if (key === "LOCATION") cur.location = val.replace(/\\,/g, ",");
+    else if (key === "RRULE") cur.rrule = val;
+  }
+  return events.map((e) => {
+    const parseDate = (v) => {
+      if (!v) return {};
+      const d = v.replace(/[TZ]/g, "");
+      const date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+      const time = d.length >= 12 ? `${d.slice(8, 10)}:${d.slice(10, 12)}` : "";
+      return { date, time };
+    };
+    const start = parseDate(e.dtstart);
+    let recurrence = null;
+    if (e.rrule) {
+      const freq = (e.rrule.match(/FREQ=(\w+)/) || [])[1];
+      const interval = parseInt((e.rrule.match(/INTERVAL=(\d+)/) || [])[1] || "1");
+      if (freq === "WEEKLY" && interval === 1) recurrence = "weekly";
+      else if (freq === "WEEKLY" && interval === 2) recurrence = "biweekly";
+      else if (freq === "MONTHLY") recurrence = "monthly";
+    }
+    return {
+      title: e.summary || "Ohne Titel",
+      date: start.date,
+      time: start.time || "",
+      description: e.description || "",
+      location: e.location || "",
+      recurrence,
+    };
+  }).filter((e) => e.date);
+}
+
 function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
   const [view, setView] = useState("liste"); // "liste" | "monat"
   const [monthCursor, setMonthCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
@@ -18064,6 +18116,8 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
   const [recurrence, setRecurrence] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showAllFerien, setShowAllFerien] = useState(false);
+  const [icsResult, setIcsResult] = useState(null);
+  const icsRef = useRef(null);
 
   // Über den Plus-Knopf aufgerufen: Eingabefeld direkt geöffnet zeigen
   useEffect(() => {
@@ -18099,6 +18153,38 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
     update((d) => { d.events = d.events.filter((e) => e.id !== id); return d; });
   }
 
+  function handleICSImport(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = parseICS(ev.target.result);
+        if (!parsed.length) { setIcsResult({ count: 0 }); return; }
+        const existingTitles = new Set((data.events || []).map((e) => `${e.title}|${e.date}`));
+        const neu = parsed.filter((e) => !existingTitles.has(`${e.title}|${e.date}`));
+        if (neu.length) {
+          update((d) => {
+            neu.forEach((e) => {
+              d.events.push({
+                id: uid(),
+                title: e.location ? `${e.title} (${e.location})` : e.title,
+                date: e.date,
+                time: e.time,
+                type: "termin",
+                color: TASK_COLORS[0],
+                done: false,
+                recurrence: e.recurrence,
+              });
+            });
+            return d;
+          });
+        }
+        setIcsResult({ count: neu.length, skipped: parsed.length - neu.length });
+      } catch { setIcsResult({ error: true }); }
+    };
+    reader.readAsText(file);
+  }
+
   const sorted = [...data.events]
     .map((e) => ({ ...e, _eff: e.recurrence ? nextOccurrence(e) : e.date }))
     .filter((e) => !filterDate || isEventOnDate(e, filterDate))
@@ -18125,11 +18211,36 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Kalender</h1>
-        <div className="inline-flex bg-stone-100 rounded-xl p-1">
-          <button onClick={() => setView("liste")} className={`px-3.5 py-1.5 rounded-lg text-sm font-medium ${view === "liste" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"}`}>Liste</button>
-          <button onClick={() => setView("monat")} className={`px-3.5 py-1.5 rounded-lg text-sm font-medium ${view === "monat" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"}`}>Monat</button>
+        <div className="flex items-center gap-2">
+          <input ref={icsRef} type="file" accept=".ics,.ical" className="hidden" onChange={(e) => { handleICSImport(e.target.files?.[0]); e.target.value = ""; }} />
+          <button onClick={() => icsRef.current?.click()} className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-700 px-2.5 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50" title="Kalender-Datei importieren (.ics)">
+            <Upload size={13} /> ICS importieren
+          </button>
+          <div className="inline-flex bg-stone-100 rounded-xl p-1">
+            <button onClick={() => setView("liste")} className={`px-3.5 py-1.5 rounded-lg text-sm font-medium ${view === "liste" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"}`}>Liste</button>
+            <button onClick={() => setView("monat")} className={`px-3.5 py-1.5 rounded-lg text-sm font-medium ${view === "monat" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"}`}>Monat</button>
+          </div>
         </div>
       </div>
+
+      {icsResult && (
+        <div className={`rounded-xl p-4 flex items-start gap-3 ${icsResult.error ? "bg-red-50 border border-red-200" : "bg-emerald-50 border border-emerald-200"}`}>
+          <div className="flex-1 text-sm">
+            {icsResult.error ? (
+              <span className="text-red-700">Die Datei konnte nicht gelesen werden. Bitte eine gültige .ics-Datei wählen.</span>
+            ) : icsResult.count === 0 && !icsResult.skipped ? (
+              <span className="text-stone-600">Die Datei enthielt keine Termine.</span>
+            ) : (
+              <span className="text-emerald-800">
+                {icsResult.count > 0 && <><strong>{icsResult.count}</strong> {icsResult.count === 1 ? "Termin" : "Termine"} importiert. </>}
+                {icsResult.skipped > 0 && <span className="text-emerald-600">{icsResult.skipped} bereits vorhanden (übersprungen).</span>}
+                {icsResult.count === 0 && icsResult.skipped > 0 && <span className="text-stone-600">Alle Termine waren bereits vorhanden.</span>}
+              </span>
+            )}
+          </div>
+          <button onClick={() => setIcsResult(null)} className="text-stone-400 hover:text-stone-600 shrink-0"><X size={14} /></button>
+        </div>
+      )}
 
       {view === "monat" && (
         <Card className="p-3">
