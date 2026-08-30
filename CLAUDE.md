@@ -53,6 +53,13 @@ Wenn ein neues Feature eingebaut oder ein bestehender Workflow geändert wird,
 - Bottom Sheets: `pb-[max(2rem,env(safe-area-inset-bottom))]` für iPhone Home-Indicator
 - Supabase (EU, Frankfurt) für Auth und Datenspeicherung, lokale Berechnung
 
+### Geplante Features
+- **Google Calendar Live-Sync** — Apple Kalender → Google Calendar → Tu-vi. Architektur:
+  (1) Google Cloud Console: Projekt + Calendar API + OAuth-Client-ID einrichten.
+  (2) Supabase Edge Function: OAuth-Callback, Token-Speicherung (`google_calendar_tokens`-Tabelle), Kalender-Abfrage per Google Calendar REST API.
+  (3) saidy.jsx: "Mit Google Kalender verbinden"-Button, Sync-Trigger, synced Events anzeigen.
+  Voraussetzung: Nutzer muss manuell Google Cloud Console + Supabase Edge Function einrichten (Anleitung wird mitgeliefert).
+
 ### Daten
 - `window.storage.get/set` für Persistenz (localStorage-Mock in `src/main.jsx`)
 - Backup via `last_backup_at` in localStorage tracken
