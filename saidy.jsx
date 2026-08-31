@@ -1224,6 +1224,7 @@ function sanitizeVollstaendig(imported) {
          schon so gehandhabt, hier zusaetzlich beim Speichern absichern. */
       graduierungStufe: GRADUIERUNGS_STUFEN.some((g) => g.key === s.graduierungStufe) ? s.graduierungStufe : "neustarter",
       graduierungAufProbe: s.graduierungAufProbe === true,
+      fotoErlaubnis: s.fotoErlaubnis === "ja" || s.fotoErlaubnis === "nein" ? s.fotoErlaubnis : undefined,
     }));
 
   /* Einstellungen nicht blind uebernehmen: `merged` ist ein flacher Spread,
@@ -3471,6 +3472,7 @@ const HELP_DATA = [
       { q: "Wie trage ich eine Stunde am Wochenende oder in den Ferien nach?", a: `Übersicht → grünes Plus → „Stunde nachtragen". Wenn heute keine Stunde im Plan steht, öffnet sich automatisch der Nachtragen-Picker: Klasse wählen → Fach wählen → Datum wählen → weiter. Danach landest du in der normalen Stundenerfassung – auch für alte Stunden.` },
       { q: "Kann ich ein Gespräch von gestern nachträglich eintragen?", a: `Ja. Grünes Plus → „Gespräch notieren" – neben dem Notizfeld gibt es ein Datumsfeld, das standardmäßig auf heute steht. Ändere es auf das gewünschte Datum, dann bleibt der Eintrag im Verlauf an der richtigen Stelle stehen. Dasselbe gilt für „Notiz zu einem Kind".` },
       { q: "Wie bearbeite ich eine:n Schüler:in?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → auf den Namen tippen. Im Profil kannst du Name, Foto und weitere Angaben bearbeiten. Schneller geht es über das Suchfeld „Kind suchen …" oben im Reiter „Klassen".` },
+      { q: "Wo trage ich die Fotoerlaubnis ein?", a: `Im Schülerprofil unter „Stammdaten" gibt es das Feld „Fotoerlaubnis" mit drei Optionen: Ja, Nein, Nicht geklärt. Die Klassen-Überblick-Seite zeigt dir automatisch an, bei welchen Kindern keine Erlaubnis vorliegt oder noch nicht geklärt ist – praktisch vor dem Klassenausflug oder der Schulveranstaltung.` },
       { q: "Wie lösche ich eine Klasse?", a: `Klasse antippen → Reiter „Überblick" → „Klasse verwalten". Ganz unten im Fenster steht „Diese Klasse löschen". Die Klasse landet mit allen Kindern, Noten und Notizen für 30 Tage im Papierkorb – den findest du im Reiter „Klassen" ganz unten.` },
       { q: "Was sind Dienste?", a: `Dienste sind Aufgaben, die Tu-vi Schüler:innen der Reihe nach zuweist (z. B. Tafeldienst). Anlegen unter „Klassen & Schüler" → Reiter „Dienste", mit einem Tippen weiter zum nächsten Kind.` },
       { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
@@ -14089,6 +14091,24 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                       onChange={(e) => onUpdateField(s.id, "parentName", e.target.value)} className="input-base w-full" />
                   </div>
                   <div>
+                    <div className="t-caption mb-1">Fotoerlaubnis</div>
+                    <div className="flex gap-1.5">
+                      {[
+                        { key: "ja", label: "Ja", cls: "bg-emerald-100 text-emerald-700 border-emerald-300" },
+                        { key: "nein", label: "Nein", cls: "bg-red-100 text-red-700 border-red-300" },
+                        { key: "", label: "Nicht geklärt", cls: "bg-stone-100 text-stone-500 border-stone-200" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.key}
+                          onClick={() => onUpdateField(s.id, "fotoErlaubnis", opt.key || null)}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${(s.fotoErlaubnis || "") === opt.key ? opt.cls + " ring-1 ring-offset-1 ring-current font-semibold" : "bg-white text-stone-400 border-stone-200"}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
                     <div className="t-caption mb-1 flex items-center gap-1.5">
                       Besonderheiten / Vorerkrankungen
                       <span className="text-[9px] text-amber-600 font-semibold">(nur mit Einwilligung)</span>
@@ -16104,6 +16124,40 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                         <Plus size={16} />
                       </button>
                     </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Fotoerlaubnis-Übersicht */}
+            {(() => {
+              const ohneErlaubnis = students.filter((s) => s.fotoErlaubnis === "nein");
+              const nichtGeklaert = students.filter((s) => !s.fotoErlaubnis);
+              if (!ohneErlaubnis.length && !nichtGeklaert.length) return null;
+              return (
+                <div>
+                  <div className="t-section mb-2 flex items-center gap-1.5">
+                    <Camera size={13} />
+                    Fotoerlaubnis
+                  </div>
+                  <div className="karte rounded-xl p-4 space-y-2">
+                    {ohneErlaubnis.length > 0 && (
+                      <div className="flex items-start gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1.5" />
+                        <span className="text-sm text-stone-700">
+                          <span className="font-medium text-red-700">Keine Erlaubnis:</span>{" "}
+                          {ohneErlaubnis.map((s) => s.name.split(" ")[0]).join(", ")}
+                        </span>
+                      </div>
+                    )}
+                    {nichtGeklaert.length > 0 && (
+                      <div className="flex items-start gap-2">
+                        <span className="w-2 h-2 rounded-full bg-stone-300 shrink-0 mt-1.5" />
+                        <span className="text-sm text-stone-500">
+                          {nichtGeklaert.length} × nicht geklärt
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
