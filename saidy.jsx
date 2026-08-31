@@ -1134,7 +1134,7 @@ function sanitizeImport(imported) {
       ...t, day: WEEKDAY_KURZ.includes(t.day) ? t.day : null,
       period: Number.isInteger(t.period) && t.period >= 0 && t.period <= 20 ? t.period : null,
     })).filter((t) => t.day && t.period !== null),
-    tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), done: t.done === true })),
+    tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined })),
     taskLists: map("taskLists", (l) => ({ ...l, name: S_TEXT(l.name, 100), icon: S_TEXT(l.icon, 50) })),
     lessonTopics: map("lessonTopics", (t) => ({ ...t, text: S_TEXT(t.text, 300), date: S_DATUM(t.date) })),
     duties: map("duties", (d) => ({
@@ -3540,6 +3540,7 @@ const HELP_DATA = [
     items: [
       { q: "Wie lege ich eine Aufgabe an?", a: `Tippe unten auf „Mehr" → „Aufgaben". Wähle eine Liste und tippe auf „Aufgabe hinzufügen" – dort gibt es Titel, Farbe und ein Fälligkeitsdatum. Für ein schnelles To-do zwischendurch reicht das Feld „Aufgabe hinzufügen …" in der Kachel „Nicht vergessen" auf der Übersicht.` },
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
+      { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Diese Klassen-Notizen erscheinen dann auch auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
     ],
   },
   {
@@ -10740,7 +10741,10 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                           style={isColor ? { borderColor: "var(--f-haupt)" } : undefined}
                         />
                     </button>
-                    <span className="text-sm text-stone-700 leading-tight flex-1 truncate">{t.title}</span>
+                    <span className="text-sm text-stone-700 leading-tight flex-1 truncate">
+                      {t.classId && (() => { const c = data.classes.find((x) => x.id === t.classId); return c ? <span className="font-medium">{c.name}: </span> : null; })()}
+                      {t.title}
+                    </span>
                     {rang === 0 && <span className="chip chip-krit shrink-0">überfällig</span>}
                     {rang === 1 && <span className="chip chip-warn shrink-0">heute</span>}
                   </li>
@@ -10809,7 +10813,10 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                           style={isColor ? { borderColor: "var(--f-haupt)" } : undefined}
                         />
                       </button>
-                      <span className="text-sm text-stone-700 leading-tight flex-1">{t.title}</span>
+                      <span className="text-sm text-stone-700 leading-tight flex-1">
+                        {t.classId && (() => { const c = data.classes.find((x) => x.id === t.classId); return c ? <span className="font-medium">{c.name}: </span> : null; })()}
+                        {t.title}
+                      </span>
                       {rang === 0 && <span className="chip chip-krit shrink-0">überfällig</span>}
                       {rang === 1 && <span className="chip chip-warn shrink-0">heute</span>}
                       {rang === 3 && t.dueDate && (
@@ -15380,7 +15387,8 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
   );
 }
 
-function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele, absences, documents, update, onOpenStudent, onClose }) {
+function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele, absences, documents, tasks, update, onOpenStudent, onClose }) {
+  const [klassenNotiz, setKlassenNotiz] = useState("");
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const cutoff14Iso = (() => { const d = new Date(today); d.setDate(d.getDate() - 14); return d.toISOString().slice(0, 10); })();
 
@@ -15470,6 +15478,72 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
             <div className="t-caption mb-1">Förderbedarf</div>
             <div className={`text-2xl font-bold tnum ${foerderCount > 0 ? "text-[var(--s-warn)]" : "text-stone-300"}`}>{foerderCount}</div>
           </div>
+        </div>
+
+        {/* Nicht vergessen — Klassen-Notizen */}
+        <div className="card p-4">
+          <div className="t-section mb-2 flex items-center gap-1.5">
+            <Check size={13} className="text-stone-500" />
+            Nicht vergessen
+          </div>
+          {(() => {
+            const offene = (tasks || []).filter((t) => !t.done && t.classId === cls.id);
+            return (
+              <>
+                {offene.length > 0 && (
+                  <ul className="space-y-1.5 mb-2">
+                    {offene.map((t) => (
+                      <li key={t.id} className="flex items-center gap-2">
+                        <button
+                          onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
+                          className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
+                        >
+                          <span className="w-4 h-4 rounded border border-stone-300 block" />
+                        </button>
+                        <span className="text-sm text-stone-700 leading-tight flex-1">{t.title}</span>
+                        <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!offene.length && <p className="text-xs text-stone-400 mb-2">Keine Notizen für diese Klasse.</p>}
+                <div className="flex items-center gap-1.5 pt-2 border-t border-stone-100">
+                  <input
+                    value={klassenNotiz}
+                    onChange={(e) => setKlassenNotiz(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && klassenNotiz.trim()) {
+                        update((d) => {
+                          d.tasks = d.tasks || [];
+                          d.tasks.push({ id: uid(), title: klassenNotiz.trim(), color: TASK_COLORS[0], done: false, classId: cls.id });
+                          return d;
+                        });
+                        setKlassenNotiz("");
+                      }
+                    }}
+                    placeholder="Notiz hinzufügen …"
+                    className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                    maxLength={120}
+                  />
+                  <button
+                    onClick={() => {
+                      if (!klassenNotiz.trim()) return;
+                      update((d) => {
+                        d.tasks = d.tasks || [];
+                        d.tasks.push({ id: uid(), title: klassenNotiz.trim(), color: TASK_COLORS[0], done: false, classId: cls.id });
+                        return d;
+                      });
+                      setKlassenNotiz("");
+                    }}
+                    disabled={!klassenNotiz.trim()}
+                    className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Notenverteilung */}
@@ -17290,6 +17364,7 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
             foerderZiele={data.foerderZiele || []}
             absences={(data.absences || []).filter((a) => dashStudents.some((s) => s.id === a.studentId))}
             documents={data.documents || []}
+            tasks={data.tasks || []}
             update={update}
             onOpenStudent={(studentId) => {
               setKlassenDashboardId(null);
@@ -18715,7 +18790,10 @@ function AufgabenTab({ data, update }) {
                   {t.done && <Check size={12} className="text-white" />}
                 </button>
                 <button onClick={() => { setEditingTask(t); setShowModal(true); }} className="flex-1 text-left">
-                  <div className={`text-sm ${t.done ? "text-stone-400 line-through" : "text-stone-800"}`}>{t.title}</div>
+                  <div className={`text-sm ${t.done ? "text-stone-400 line-through" : "text-stone-800"}`}>
+                    {t.classId && (() => { const c = data.classes.find((x) => x.id === t.classId); return c ? <span className="font-medium">{c.name}: </span> : null; })()}
+                    {t.title}
+                  </div>
                   {list && <div className="text-xs text-stone-400">{list.name}</div>}
                 </button>
                 {t.dueDate && (
