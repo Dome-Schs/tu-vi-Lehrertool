@@ -22,7 +22,7 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
-  Sun, Moon, SunMoon, Coffee, Eye,
+  Sun, Moon, SunMoon, Coffee, Eye, EyeOff,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
@@ -1134,7 +1134,7 @@ function sanitizeImport(imported) {
       ...t, day: WEEKDAY_KURZ.includes(t.day) ? t.day : null,
       period: Number.isInteger(t.period) && t.period >= 0 && t.period <= 20 ? t.period : null,
     })).filter((t) => t.day && t.period !== null),
-    tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined })),
+    tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), showFrom: S_DATUM(t.showFrom) || undefined, done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined })),
     taskLists: map("taskLists", (l) => ({ ...l, name: S_TEXT(l.name, 100), icon: S_TEXT(l.icon, 50) })),
     lessonTopics: map("lessonTopics", (t) => ({ ...t, text: S_TEXT(t.text, 300), date: S_DATUM(t.date) })),
     duties: map("duties", (d) => ({
@@ -3541,8 +3541,9 @@ const HELP_DATA = [
   {
     category: "Aufgaben",
     items: [
-      { q: "Wie lege ich eine Aufgabe an?", a: `Tippe unten auf „Mehr" → „Aufgaben". Wähle eine Liste und tippe auf „Aufgabe hinzufügen" – dort gibt es Titel, Farbe und ein Fälligkeitsdatum. Für ein schnelles To-do zwischendurch reicht das Feld „Aufgabe hinzufügen …" in der Kachel „Nicht vergessen" auf der Übersicht.` },
+      { q: "Wie lege ich eine Aufgabe an?", a: `Tippe unten auf „Mehr" → „Aufgaben". Wähle eine Liste und tippe auf „Aufgabe hinzufügen" – dort gibt es Titel, Farbe, ein Fälligkeitsdatum und ein optionales „Anzeigen ab"-Datum. Für ein schnelles To-do zwischendurch reicht das Feld „Aufgabe hinzufügen …" in der Kachel „Nicht vergessen" auf der Übersicht.` },
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
+      { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Diese Klassen-Notizen erscheinen dann auch auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
     ],
   },
@@ -9235,7 +9236,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
 
   /* Vollstaendige Liste behalten - die Karten schneiden selbst zu, sonst zeigt
      der Zaehler in der Dreierreihe hoechstens 6 statt der echten Zahl. */
-  const alleOffenenTasks = (data.tasks || []).filter((t) => !t.done);
+  const alleOffenenTasks = (data.tasks || []).filter((t) => !t.done && (!t.showFrom || t.showFrom <= isoDate(new Date())));
   const openTasks = alleOffenenTasks.slice(0, 6);
 
   const birthdays = data.students.filter((s) => s.birthday && s.birthday.slice(5) === selStr.slice(5));
@@ -10023,7 +10024,8 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
      eine Aufgabe von naechster Woche ueber einer, die heute faellig war.
      Undatierte stehen bewusst vor "spaeter": sie wurden per Schnellerfassung
      angelegt und sind meistens fuer bald gemeint. */
-  const offeneAufgaben = (data.tasks || []).filter((t) => !t.done);
+  const heuteStr = isoDate(new Date());
+  const offeneAufgaben = (data.tasks || []).filter((t) => !t.done && (!t.showFrom || t.showFrom <= heuteStr));
   const aufgabenRang = (t) => {
     const heute = isoDate(new Date());
     if (t.dueDate && t.dueDate < heute) return 0;
@@ -15508,7 +15510,7 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
             Nicht vergessen
           </div>
           {(() => {
-            const offene = (tasks || []).filter((t) => !t.done && t.classId === cls.id);
+            const offene = (tasks || []).filter((t) => !t.done && t.classId === cls.id && (!t.showFrom || t.showFrom <= isoDate(new Date())));
             return (
               <>
                 {offene.length > 0 && (
@@ -16074,7 +16076,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
 
             {/* Nicht vergessen — Klassen-Notizen */}
             {(() => {
-              const offene = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId);
+              const offene = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId && (!t.showFrom || t.showFrom <= isoDate(new Date())));
               const addNote = () => {
                 const text = klassenNotizInput.trim();
                 if (!text) return;
@@ -18457,7 +18459,7 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
               const inMonth = d.getMonth() === monthCursor.getMonth();
               const isToday = ds === todayStr;
               const dayHasEvents = data.events.filter((e) => isEventOnDate(e, ds));
-              const dayHasTasks = (data.tasks || []).filter((t) => t.dueDate && t.dueDate.slice(0, 10) === ds && !t.done);
+              const dayHasTasks = (data.tasks || []).filter((t) => t.dueDate && t.dueDate.slice(0, 10) === ds && !t.done && (!t.showFrom || t.showFrom <= isoDate(new Date())));
               const active = filterDate === ds;
               return (
                 <button
@@ -18697,6 +18699,8 @@ function TaskModal({ data, initial, defaultListId, onSave, onClose }) {
   const [useDue, setUseDue] = useState(!!initial?.dueDate);
   const [dueDate, setDueDate] = useState(initial?.dueDate ? initial.dueDate.slice(0, 10) : isoDate(new Date()));
   const [dueTime, setDueTime] = useState(initial?.dueDate ? initial.dueDate.slice(11, 16) : "12:00");
+  const [useShowFrom, setUseShowFrom] = useState(!!initial?.showFrom);
+  const [showFromDate, setShowFromDate] = useState(initial?.showFrom ? initial.showFrom.slice(0, 10) : isoDate(new Date()));
 
   function save() {
     if (!title.trim()) return;
@@ -18706,6 +18710,7 @@ function TaskModal({ data, initial, defaultListId, onSave, onClose }) {
       listId: creatingList ? null : (listId || null),
       newList: creatingList && newListName.trim() ? { name: newListName.trim(), icon: newListIcon } : null,
       dueDate: useDue ? `${dueDate}T${dueTime}` : null,
+      showFrom: useShowFrom ? showFromDate : null,
     });
   }
 
@@ -18790,6 +18795,17 @@ function TaskModal({ data, initial, defaultListId, onSave, onClose }) {
               </div>
             )}
           </Field>
+
+          <Field label="Anzeigen ab (optional)">
+            {!useShowFrom ? (
+              <Button variant="subtle" onClick={() => setUseShowFrom(true)} className="w-full justify-center text-xs">Erst ab einem bestimmten Datum anzeigen</Button>
+            ) : (
+              <div className="flex gap-2 items-center">
+                <input type="date" className={inputCls} value={showFromDate} onChange={(e) => setShowFromDate(e.target.value)} />
+                <button onClick={() => setUseShowFrom(false)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={16} /></button>
+              </div>
+            )}
+          </Field>
         </div>
 
         <div className="flex gap-2 mt-5">
@@ -18828,9 +18844,9 @@ function AufgabenTab({ data, update }) {
       }
       if (editingTask) {
         const t = d.tasks.find((x) => x.id === editingTask.id);
-        if (t) { t.title = payload.title; t.color = payload.color; t.listId = listId; t.dueDate = payload.dueDate; }
+        if (t) { t.title = payload.title; t.color = payload.color; t.listId = listId; t.dueDate = payload.dueDate; t.showFrom = payload.showFrom || undefined; }
       } else {
-        d.tasks.push({ id: uid(), title: payload.title, color: payload.color, listId, dueDate: payload.dueDate, done: false });
+        d.tasks.push({ id: uid(), title: payload.title, color: payload.color, listId, dueDate: payload.dueDate, showFrom: payload.showFrom || undefined, done: false });
       }
       return d;
     });
@@ -18921,6 +18937,11 @@ function AufgabenTab({ data, update }) {
                   </div>
                   {list && <div className="text-xs text-stone-400">{list.name}</div>}
                 </button>
+                {t.showFrom && t.showFrom > isoDate(new Date()) && (
+                  <span className="text-xs rounded-full px-2 py-1 shrink-0 bg-stone-50 text-stone-400 flex items-center gap-1" title={`Sichtbar ab ${localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}`}>
+                    <EyeOff size={10} /> ab {localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                  </span>
+                )}
                 {t.dueDate && (
                   <span className={`text-xs rounded-full px-2.5 py-1 shrink-0 ${!t.done && localDate(t.dueDate) < new Date() ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
                     {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}{t.dueDate.length > 10 ? `, ${t.dueDate.slice(11, 16)}` : ""}
