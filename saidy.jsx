@@ -15876,6 +15876,7 @@ function NotenLineChart({ muendlich, schriftlich, w = 320, h = 160 }) {
    funktional ab. */
 function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onClose, onOpenStudent, onFachActions, onOpenSchueler, onOpenSitzplan, onOpenDashboard, onUmbenennen, onOpenFach }) {
   const [activeTab, setActiveTab] = useState(initialTab || "ueberblick");
+  const [klassenNotizInput, setKlassenNotizInput] = useState("");
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
   const cls = data.classes.find((c) => c.id === klasseId);
@@ -16049,6 +16050,64 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 <ChevronRight size={15} className="text-stone-300 shrink-0" />
               </button>
             </div>
+
+            {/* Nicht vergessen — Klassen-Notizen */}
+            {(() => {
+              const offene = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId);
+              const addNote = () => {
+                const text = klassenNotizInput.trim();
+                if (!text) return;
+                update((d) => {
+                  d.tasks = d.tasks || [];
+                  d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: klasseId });
+                  return d;
+                });
+                setKlassenNotizInput("");
+              };
+              return (
+                <div>
+                  <div className="t-section mb-2 flex items-center gap-1.5">
+                    <Check size={13} />
+                    Nicht vergessen
+                  </div>
+                  <div className="karte rounded-xl p-4">
+                    {offene.length > 0 && (
+                      <ul className="space-y-1.5 mb-3">
+                        {offene.map((t) => (
+                          <li key={t.id} className="flex items-center gap-2">
+                            <button
+                              onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
+                              className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
+                            >
+                              <span className="w-4 h-4 rounded border border-stone-300 block" />
+                            </button>
+                            <span className="text-sm text-stone-700 leading-tight flex-1">{t.title}</span>
+                            <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        value={klassenNotizInput}
+                        onChange={(e) => setKlassenNotizInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") addNote(); }}
+                        placeholder="Notiz hinzufügen …"
+                        className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                        maxLength={120}
+                      />
+                      <button
+                        onClick={addNote}
+                        disabled={!klassenNotizInput.trim()}
+                        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {faecher.length > 0 && (
               <div>
