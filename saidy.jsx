@@ -3473,6 +3473,7 @@ const HELP_DATA = [
       { q: "Kann ich ein Gespräch von gestern nachträglich eintragen?", a: `Ja. Grünes Plus → „Gespräch notieren" – neben dem Notizfeld gibt es ein Datumsfeld, das standardmäßig auf heute steht. Ändere es auf das gewünschte Datum, dann bleibt der Eintrag im Verlauf an der richtigen Stelle stehen. Dasselbe gilt für „Notiz zu einem Kind".` },
       { q: "Wie bearbeite ich eine:n Schüler:in?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → auf den Namen tippen. Im Profil kannst du Name, Foto und weitere Angaben bearbeiten. Schneller geht es über das Suchfeld „Kind suchen …" oben im Reiter „Klassen".` },
       { q: "Wo trage ich die Fotoerlaubnis ein?", a: `Im Schülerprofil unter „Stammdaten" gibt es das Feld „Fotoerlaubnis" mit drei Optionen: Ja, Nein, Nicht geklärt. Die Klassen-Überblick-Seite zeigt dir automatisch an, bei welchen Kindern keine Erlaubnis vorliegt oder noch nicht geklärt ist – praktisch vor dem Klassenausflug oder der Schulveranstaltung.` },
+      { q: "Kann ich Dokumente an eine Klasse anhängen?", a: `Ja – auf der Klassen-Überblick-Seite gibt es den Bereich „Dokumente". Dort kannst du Fotos und PDFs ablegen, z. B. die Bildrechte-Liste, Elternbriefe oder Klassenlisten. Die Dateien bleiben auf deinem Gerät und sind nicht Teil der normalen Datensicherung.` },
       { q: "Wie lösche ich eine Klasse?", a: `Klasse antippen → Reiter „Überblick" → „Klasse verwalten". Ganz unten im Fenster steht „Diese Klasse löschen". Die Klasse landet mit allen Kindern, Noten und Notizen für 30 Tage im Papierkorb – den findest du im Reiter „Klassen" ganz unten.` },
       { q: "Was sind Dienste?", a: `Dienste sind Aufgaben, die Tu-vi Schüler:innen der Reihe nach zuweist (z. B. Tafeldienst). Anlegen unter „Klassen & Schüler" → Reiter „Dienste", mit einem Tippen weiter zum nächsten Kind.` },
       { q: "Kann ich eigene Dienste anlegen, die es in der Liste nicht gibt?", a: `Ja, jede Bezeichnung ist möglich. Unter „Klassen & Schüler" → Reiter „Dienste" → „Dienst anlegen" ist das oberste Feld frei beschreibbar (bis 50 Zeichen) – trag dort ein, wie der Dienst an deiner Schule wirklich heißt, etwa „Start in den Tag", „Klassenrat" oder „Hofdienst". Die grauen Kästchen darunter sind nur Abkürzungen für häufige Dienste; du musst keinen davon nehmen. Farbe und Anzahl der gleichzeitig eingeteilten Kinder (1 bis 3) legst du im selben Dialog fest, danach rotiert der Dienst automatisch durch die Klasse.` },
@@ -16162,6 +16163,17 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 </div>
               );
             })()}
+
+            {/* Klassen-Dokumente */}
+            <div className="card card-p">
+              <DokumenteBlock
+                scope="class"
+                scopeId={klasseId}
+                documents={data.documents || []}
+                update={update}
+                hinweis="Klassenlisten, Bildrechte-Übersicht, Elternbriefe – alles was zur Klasse gehört. Die Dateien bleiben auf diesem Gerät."
+              />
+            </div>
 
             {faecher.length > 0 && (
               <div>
