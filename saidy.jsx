@@ -1332,6 +1332,7 @@ function sanitizeVollstaendig(imported) {
           .map(([period, zeit]) => [period, {
             start: S_ZEIT(zeit?.start) || "08:00",
             end: S_ZEIT(zeit?.end) || "08:45",
+            ...(zeit?.isPause === true ? { isPause: true } : {}),
           }])
       )
     : {};
@@ -3532,7 +3533,7 @@ const HELP_DATA = [
       { q: "Wie lege ich einen wiederkehrenden Termin an?", a: `Beim Anlegen eines Termins gibt es das Feld „Wiederholung" – dort kannst du Wöchentlich, Alle 2 Wochen oder Monatlich wählen. Der Termin erscheint dann automatisch an allen folgenden Termintagen im Kalender.` },
       { q: "Wie trage ich Schulferien ein?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule". Wähle dort zuerst dein Bundesland, danach erscheint „Schulferien eintragen" – Tu-vi übernimmt alle Ferien automatisch.` },
       { q: "Wie stelle ich meine Stundenlänge ein (45 oder 60 Minuten)?", a: `„Mehr" → „Einstellungen" → „Schuljahr & Schule" → „Stundenlänge". Bei 60 Minuten bietet der Stundenplan 8 Stunden pro Tag an, bei 45 Minuten 12 – so passt ein voller Schultag mit mehr, kürzeren Einheiten hinein. Die Uhrzeiten je Stunde trägst du im Stundenplan über den aufklappbaren Bereich „Uhrzeiten der Stunden" ein, die Einstellung ändert nur, wie viele Stunden zur Auswahl stehen.` },
-      { q: "Wie trage ich meine Mittagspause im Stundenplan ein?", a: `Im Stundenplan ganz unten den Bereich „Uhrzeiten der Stunden" aufklappen – dort steht die Mittagspause als erste Zeile, oberhalb der einzelnen Stunden. Start- und Endzeit eintragen, fertig: Die Pause erscheint danach als eigenes Band quer über alle Wochentage im Raster. Ein Tipp auf das ×-Symbol daneben entfernt sie wieder. Da Tu-vi nur eine schulweite Mittagszeit kennt (wie auch die Stunden-Uhrzeiten selbst gilt sie für alle Wochentage gleich), lässt sich pro Tag keine abweichende Zeit hinterlegen.` },
+      { q: "Wie trage ich meine Mittagspause im Stundenplan ein?", a: `Im Stundenplan ganz unten den Bereich „Uhrzeiten der Stunden" aufklappen – dort steht die Mittagspause als erste Zeile, oberhalb der einzelnen Stunden. Start- und Endzeit eintragen, fertig: Die Pause erscheint danach als eigenes Band quer über alle Wochentage im Raster. Ein Tipp auf das ×-Symbol daneben entfernt sie wieder. Da Tu-vi nur eine schulweite Mittagszeit kennt (wie auch die Stunden-Uhrzeiten selbst gilt sie für alle Wochentage gleich), lässt sich pro Tag keine abweichende Zeit hinterlegen. Außerdem kannst du einzelne Stundenzeilen als Pause markieren: In „Uhrzeiten der Stunden" auf das Tassen-Symbol neben einer Stunde tippen – dann wird diese Stunde im Raster als Pause dargestellt und es lassen sich dort keine Fächer eintragen.` },
       { q: "Wie trage ich Pausenaufsichten ein?", a: `Im Stundenplan ganz unten den Bereich „Aufsichten" aufklappen und auf „Aufsicht eintragen" tippen. Wochentag, Start- und Endzeit sowie ein kurzer Ort (z. B. „Schulhof" oder „Pausenhalle") reichen – die Zeiten sind frei wählbar und nicht an die Stundenraster-Zeiten gebunden, eine Aufsicht kann also auch nur eine Hälfte der Mittagspause oder zwei halbe Pausen lang gehen. Eingetragene Aufsichten erscheinen als eigene, gestrichelte Kästchen im Stundenplan-Raster und lassen sich dort direkt antippen, um sie zu bearbeiten oder zu löschen.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
       { q: "Wie importiere ich Termine aus Apple Kalender oder Google Calendar?", a: `Öffne „Mehr" → „Kalender" → oben rechts „ICS importieren". Wähle eine .ics-Datei – das Standardformat, das Apple Kalender, Google Calendar und Outlook beim Exportieren erzeugen. So exportierst du aus Apple Kalender: Am Mac „Ablage" → „Exportieren …", dort den Kalender als .ics speichern; auf iPhone/iPad gibt es keinen direkten Export, nutze dafür iCloud.com am Computer. Aus Google Calendar: „Einstellungen" → Kalender wählen → „Kalender exportieren". Tu-vi legt für jeden Termin in der Datei einen Eintrag an, Duplikate (gleicher Titel + gleiches Datum) werden automatisch übersprungen. Wiederkehrende Termine (wöchentlich, alle zwei Wochen, monatlich) werden ebenfalls erkannt. Es ist kein Live-Sync – bei neuen Terminen im Apple Kalender musst du erneut exportieren und importieren.` },
@@ -10026,6 +10027,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
      angelegt und sind meistens fuer bald gemeint. */
   const heuteStr = isoDate(new Date());
   const offeneAufgaben = (data.tasks || []).filter((t) => !t.done && (!t.showFrom || t.showFrom <= heuteStr));
+  const vorausgeplant = (data.tasks || []).filter((t) => !t.done && t.showFrom && t.showFrom > heuteStr).length;
   const aufgabenRang = (t) => {
     const heute = isoDate(new Date());
     if (t.dueDate && t.dueDate < heute) return 0;
@@ -10768,6 +10770,9 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             </ul>
           ) : (
             <p className="text-xs text-stone-400 mb-1">Nichts offen</p>
+          )}
+          {vorausgeplant > 0 && (
+            <p className="text-[11px] text-stone-400 flex items-center gap-1 mt-1"><EyeOff size={10} /> {vorausgeplant} vorausgeplant</p>
           )}
 
           <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-stone-100">
@@ -17670,12 +17675,22 @@ function StundenplanTab({ data, update }) {
     setEditingCell(null);
   }
 
-  function setPeriodTime(period, start, end) {
+  function setPeriodTime(period, start, end, isPause) {
     update((d) => {
-      d.periodTimes = { ...(d.periodTimes || {}), [period]: { start, end } };
+      const prev = d.periodTimes?.[period] || {};
+      d.periodTimes = { ...(d.periodTimes || {}), [period]: { start, end, ...(isPause ? { isPause: true } : {}) } };
       return d;
     });
     setEditingTime(null);
+  }
+
+  function togglePause(period) {
+    update((d) => {
+      if (!d.periodTimes?.[period]) return d;
+      const pt = d.periodTimes[period];
+      if (pt.isPause) { delete pt.isPause; } else { pt.isPause = true; }
+      return d;
+    });
   }
 
   function setMittagspauseZeit(start, end, label) {
@@ -17709,20 +17724,22 @@ function StundenplanTab({ data, update }) {
      Start/Ende, "Luecken" (Freistunden) entstehen dadurch von selbst, ganz
      ohne eigene Erkennung. Stunden ohne gesetzte Uhrzeit landen unten in
      der einfachen Liste, bis eine Zeit eingetragen ist. */
-  const zeitStunden = periods
+  const alleZeitStunden = periods
     .map((p) => ({ p, pt: data.periodTimes?.[p] }))
     .filter((x) => {
       const s = hmZuMin(x.pt?.start), e = hmZuMin(x.pt?.end);
       return s != null && e != null && e > s;
     })
     .sort((a, b) => hmZuMin(a.pt.start) - hmZuMin(b.pt.start));
-  const periodsOhneZeit = periods.filter((p) => !zeitStunden.some((z) => z.p === p));
+  const zeitStunden = alleZeitStunden.filter((x) => !x.pt.isPause);
+  const pausenStunden = alleZeitStunden.filter((x) => x.pt.isPause);
+  const periodsOhneZeit = periods.filter((p) => !alleZeitStunden.some((z) => z.p === p));
 
   // Mittagspause und Aufsichten haben eigene, freie Uhrzeiten (nicht an
   // Stunden gebunden) - sie fliessen mit in Rasterhoehe und Randlinien ein,
   // damit z.B. eine Aufsicht ausserhalb der Unterrichtszeit nicht abgeschnitten wird.
   const randZeiten = [
-    ...zeitStunden.flatMap((z) => [z.pt.start, z.pt.end]),
+    ...alleZeitStunden.flatMap((z) => [z.pt.start, z.pt.end]),
     ...(mittagspause ? [mittagspause.start, mittagspause.end] : []),
     ...aufsichten.flatMap((a) => [a.start, a.end]),
   ];
@@ -17911,6 +17928,15 @@ function StundenplanTab({ data, update }) {
                 );
               })}
               {mittagspause && hmZuMin(mittagspause.end) > hmZuMin(mittagspause.start) && <MittagspauseBand />}
+              {pausenStunden.map(({ p, pt }) => {
+                const top = (hmZuMin(pt.start) - tagStart) * STUNDENPLAN_PX_PRO_MIN;
+                const hoehe = (hmZuMin(pt.end) - hmZuMin(pt.start)) * STUNDENPLAN_PX_PRO_MIN;
+                return (
+                  <div key={`pause-${p}`} className="absolute bg-stone-50 rounded-md flex items-center justify-center opacity-80 pointer-events-none" style={{ top, height: hoehe, left: "10%", right: 0 }}>
+                    <span className="text-[10px] text-stone-400 flex items-center gap-1"><Coffee size={10} /> Pause · {pt.start}–{pt.end}</span>
+                  </div>
+                );
+              })}
               {DAYS.map((day, i) => (
                 <div key={day} className="absolute top-0 bottom-0" style={{ left: `${10 + i * 18}%`, width: "18%" }}>
                   {bloeckeFuerTag(day).map((block) => (
@@ -18005,12 +18031,21 @@ function StundenplanTab({ data, update }) {
                 const pt = data.periodTimes?.[p];
                 return (
                   <li key={p} className="flex items-center gap-3 px-2 py-1.5">
-                    <span className="text-xs font-semibold text-stone-500 tabular-nums w-5">{p}.</span>
+                    <span className={`text-xs font-semibold tabular-nums w-5 ${pt?.isPause ? "text-stone-300" : "text-stone-500"}`}>{p}.</span>
                     {editingTime === p ? (
-                      <PeriodTimeEditor initial={pt} onSave={(start, end) => setPeriodTime(p, start, end)} onCancel={() => setEditingTime(null)} />
+                      <PeriodTimeEditor initial={pt} onSave={(start, end) => setPeriodTime(p, start, end, pt?.isPause)} onCancel={() => setEditingTime(null)} />
                     ) : (
-                      <button onClick={() => setEditingTime(p)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text py-1">
-                        {pt ? `${pt.start} – ${pt.end}` : <span className="text-stone-400">Uhrzeit eintragen</span>}
+                      <button onClick={() => setEditingTime(p)} className={`flex-1 text-left text-sm hover:akzent-text py-1 ${pt?.isPause ? "text-stone-400" : "text-stone-700"}`}>
+                        {pt ? <>{pt.start} – {pt.end}{pt.isPause && <span className="text-stone-400 text-xs ml-1.5">(Pause)</span>}</> : <span className="text-stone-400">Uhrzeit eintragen</span>}
+                      </button>
+                    )}
+                    {pt && !editingTime && (
+                      <button
+                        onClick={() => togglePause(p)}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full border shrink-0 ${pt.isPause ? "akzent-ton akzent-rand akzent-text font-medium" : "border-stone-200 text-stone-400 hover:text-stone-600"}`}
+                        title={pt.isPause ? "Als Unterrichtsstunde markieren" : "Als Pause markieren"}
+                      >
+                        <Coffee size={10} className="inline" />
                       </button>
                     )}
                   </li>
@@ -18700,7 +18735,19 @@ function TaskModal({ data, initial, defaultListId, onSave, onClose }) {
   const [dueDate, setDueDate] = useState(initial?.dueDate ? initial.dueDate.slice(0, 10) : isoDate(new Date()));
   const [dueTime, setDueTime] = useState(initial?.dueDate ? initial.dueDate.slice(11, 16) : "12:00");
   const [useShowFrom, setUseShowFrom] = useState(!!initial?.showFrom);
-  const [showFromDate, setShowFromDate] = useState(initial?.showFrom ? initial.showFrom.slice(0, 10) : isoDate(new Date()));
+  const defaultShowFrom = () => {
+    if (initial?.showFrom) return initial.showFrom.slice(0, 10);
+    if (useDue && dueDate) {
+      const d = new Date(dueDate); d.setDate(d.getDate() - 7);
+      const v = isoDate(d);
+      return v > isoDate(new Date()) ? v : isoDate(new Date());
+    }
+    const m = new Date(); m.setDate(m.getDate() + 1);
+    return isoDate(m);
+  };
+  const [showFromDate, setShowFromDate] = useState(defaultShowFrom);
+
+  const showFromWarnung = useShowFrom && useDue && showFromDate > dueDate;
 
   function save() {
     if (!title.trim()) return;
@@ -18791,18 +18838,23 @@ function TaskModal({ data, initial, defaultListId, onSave, onClose }) {
               <div className="flex gap-2">
                 <input type="date" className={inputCls} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
                 <input type="time" className={inputCls} value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
-                <button onClick={() => setUseDue(false)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={16} /></button>
+                <button onClick={() => setUseDue(false)} className="text-stone-300 hover:text-red-500 shrink-0"><X size={16} /></button>
               </div>
             )}
           </Field>
 
-          <Field label="Anzeigen ab (optional)">
+          <Field label="Sichtbar ab (optional)">
             {!useShowFrom ? (
-              <Button variant="subtle" onClick={() => setUseShowFrom(true)} className="w-full justify-center text-xs">Erst ab einem bestimmten Datum anzeigen</Button>
+              <Button variant="subtle" onClick={() => { setShowFromDate(defaultShowFrom()); setUseShowFrom(true); }} className="w-full justify-center text-xs">Erst später anzeigen</Button>
             ) : (
-              <div className="flex gap-2 items-center">
-                <input type="date" className={inputCls} value={showFromDate} onChange={(e) => setShowFromDate(e.target.value)} />
-                <button onClick={() => setUseShowFrom(false)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={16} /></button>
+              <div className="space-y-1">
+                <div className="flex gap-2 items-center">
+                  <input type="date" className={inputCls} value={showFromDate} onChange={(e) => setShowFromDate(e.target.value)} />
+                  <button onClick={() => setUseShowFrom(false)} className="text-stone-300 hover:text-red-500 shrink-0"><X size={16} /></button>
+                </div>
+                {showFromWarnung && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1"><AlertTriangle size={12} /> Liegt nach dem Fälligkeitsdatum — die Aufgabe wäre schon überfällig.</p>
+                )}
               </div>
             )}
           </Field>
