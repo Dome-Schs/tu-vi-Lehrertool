@@ -15525,8 +15525,10 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
 function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele, absences, documents, tasks, update, onOpenStudent, onClose }) {
   const [klassenNotiz, setKlassenNotiz] = useState("");
   const [notizDatum, setNotizDatum] = useState("");
+  const [notizFaellig, setNotizFaellig] = useState("");
   const [editNotizId, setEditNotizId] = useState(null);
   const [editNotizText, setEditNotizText] = useState("");
+  const [confirmDeleteNotiz, setConfirmDeleteNotiz] = useState(null);
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const cutoff14Iso = (() => { const d = new Date(today); d.setDate(d.getDate() - 14); return d.toISOString().slice(0, 10); })();
 
@@ -15632,11 +15634,12 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
               if (!text) return;
               update((d) => {
                 d.tasks = d.tasks || [];
-                d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: cls.id, showFrom: notizDatum || undefined });
+                d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: cls.id, showFrom: notizDatum || undefined, dueDate: notizFaellig || undefined });
                 return d;
               });
               setKlassenNotiz("");
               setNotizDatum("");
+              setNotizFaellig("");
             };
             const saveEdit = (id) => {
               const text = editNotizText.trim();
@@ -15688,7 +15691,25 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
                           {t.showFrom && editNotizId !== t.id && (
                             <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
                           )}
-                          <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                          {t.dueDate && (
+                            <span className={`text-[10px] shrink-0 px-1.5 py-0.5 rounded-full font-medium ${(() => {
+                              const diff = Math.ceil((localDate(t.dueDate) - new Date(new Date().toDateString())) / 86400000);
+                              if (diff < 0) return "bg-red-100 text-red-700";
+                              if (diff === 0) return "bg-red-100 text-red-700";
+                              if (diff <= 3) return "bg-amber-100 text-amber-700";
+                              return "bg-stone-100 text-stone-500";
+                            })()}`} title="Fällig">
+                              {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                            </span>
+                          )}
+                          {confirmDeleteNotiz === t.id ? (
+                            <span className="flex items-center gap-1 shrink-0">
+                              <button onClick={() => { update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; }); setConfirmDeleteNotiz(null); }} className="text-[10px] text-red-600 font-medium px-1.5 py-0.5 bg-red-50 rounded press-scale">Ja</button>
+                              <button onClick={() => setConfirmDeleteNotiz(null)} className="text-[10px] text-stone-500 px-1.5 py-0.5 press-scale">Nein</button>
+                            </span>
+                          ) : (
+                            <button onClick={() => setConfirmDeleteNotiz(t.id)} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                          )}
                         </li>
                       );
                     })}
@@ -15709,11 +15730,15 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
                     <button onClick={addNote} disabled={!klassenNotiz.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={16} /></button>
                   </div>
                   {klassenNotiz.trim() && (
-                    <div className="flex items-center gap-2 pl-0.5">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-0.5">
                       <button onClick={() => setNotizDatum(notizDatum ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizDatum ? "akzent-text" : "text-stone-400"}`}>
                         <CalendarDays size={11} /> {notizDatum ? "Sichtbar ab:" : "Erst später anzeigen"}
                       </button>
                       {notizDatum && <input type="date" value={notizDatum} onChange={(e) => setNotizDatum(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
+                      <button onClick={() => setNotizFaellig(notizFaellig ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizFaellig ? "text-red-600" : "text-stone-400"}`}>
+                        <Clock size={11} /> {notizFaellig ? "Fällig bis:" : "Fälligkeit setzen"}
+                      </button>
+                      {notizFaellig && <input type="date" value={notizFaellig} onChange={(e) => setNotizFaellig(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
                     </div>
                   )}
                 </div>
@@ -16054,8 +16079,10 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [activeTab, setActiveTab] = useState(initialTab || "ueberblick");
   const [klassenNotizInput, setKlassenNotizInput] = useState("");
   const [notizDatumVB, setNotizDatumVB] = useState("");
+  const [notizFaelligVB, setNotizFaelligVB] = useState("");
   const [editNotizIdVB, setEditNotizIdVB] = useState(null);
   const [editNotizTextVB, setEditNotizTextVB] = useState("");
+  const [confirmDeleteNotizVB, setConfirmDeleteNotizVB] = useState(null);
   const [neueListeName, setNeueListeName] = useState("");
   const [openChecklistId, setOpenChecklistId] = useState(null);
   const [neuesFeldName, setNeuesFeldName] = useState("");
@@ -16252,11 +16279,12 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 if (!text) return;
                 update((d) => {
                   d.tasks = d.tasks || [];
-                  d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: klasseId, showFrom: notizDatumVB || undefined });
+                  d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: klasseId, showFrom: notizDatumVB || undefined, dueDate: notizFaelligVB || undefined });
                   return d;
                 });
                 setKlassenNotizInput("");
                 setNotizDatumVB("");
+                setNotizFaelligVB("");
               };
               const saveEditVB = (id) => {
                 const text = editNotizTextVB.trim();
@@ -16415,7 +16443,25 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                       {t.showFrom && editNotizIdVB !== t.id && (
                                         <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
                                       )}
-                                      <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                                      {t.dueDate && (
+                                        <span className={`text-[10px] shrink-0 px-1.5 py-0.5 rounded-full font-medium ${(() => {
+                                          const diff = Math.ceil((localDate(t.dueDate) - new Date(new Date().toDateString())) / 86400000);
+                                          if (diff < 0) return "bg-red-100 text-red-700";
+                                          if (diff === 0) return "bg-red-100 text-red-700";
+                                          if (diff <= 3) return "bg-amber-100 text-amber-700";
+                                          return "bg-stone-100 text-stone-500";
+                                        })()}`} title="Fällig">
+                                          {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                                        </span>
+                                      )}
+                                      {confirmDeleteNotizVB === t.id ? (
+                                        <span className="flex items-center gap-1 shrink-0">
+                                          <button onClick={() => { update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; }); setConfirmDeleteNotizVB(null); }} className="text-[10px] text-red-600 font-medium px-1.5 py-0.5 bg-red-50 rounded press-scale">Ja</button>
+                                          <button onClick={() => setConfirmDeleteNotizVB(null)} className="text-[10px] text-stone-500 px-1.5 py-0.5 press-scale">Nein</button>
+                                        </span>
+                                      ) : (
+                                        <button onClick={() => setConfirmDeleteNotizVB(t.id)} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                                      )}
                                     </li>
                                   );
                                 })}
@@ -16436,11 +16482,15 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                 <button onClick={addNote} disabled={!klassenNotizInput.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={16} /></button>
                               </div>
                               {klassenNotizInput.trim() && (
-                                <div className="flex items-center gap-2 pl-0.5">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-0.5">
                                   <button onClick={() => setNotizDatumVB(notizDatumVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizDatumVB ? "akzent-text" : "text-stone-400"}`}>
                                     <CalendarDays size={11} /> {notizDatumVB ? "Sichtbar ab:" : "Erst später anzeigen"}
                                   </button>
                                   {notizDatumVB && <input type="date" value={notizDatumVB} onChange={(e) => setNotizDatumVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
+                                  <button onClick={() => setNotizFaelligVB(notizFaelligVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizFaelligVB ? "text-red-600" : "text-stone-400"}`}>
+                                    <Clock size={11} /> {notizFaelligVB ? "Fällig bis:" : "Fälligkeit setzen"}
+                                  </button>
+                                  {notizFaelligVB && <input type="date" value={notizFaelligVB} onChange={(e) => setNotizFaelligVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
                                 </div>
                               )}
                             </div>
