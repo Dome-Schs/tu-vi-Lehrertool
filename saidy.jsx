@@ -1140,6 +1140,7 @@ function sanitizeImport(imported) {
     klassenFelder: map("klassenFelder", (f) => ({ ...f, label: S_TEXT(f.label, 100), classId: S_TEXT(f.classId, 50), typ: "auswahl", optionen: S_LISTE(f.optionen).map((o) => S_TEXT(o, 100)).filter(Boolean), createdAt: S_DATUM(f.createdAt) || isoDate(new Date()) })),
     feldWerte: map("feldWerte", (v) => ({ ...v, feldId: S_TEXT(v.feldId, 50), schuelerId: S_TEXT(v.schuelerId, 50), wert: S_TEXT(v.wert, 100) })),
     dismissedAttention: map("dismissedAttention", (d) => ({ id: S_TEXT(d.id, 100), date: S_DATUM(d.date) })).filter((d) => d.date),
+    calendarToken: typeof raw.calendarToken === "string" ? raw.calendarToken.slice(0, 64) : undefined,
     lessonTopics: map("lessonTopics", (t) => ({ ...t, text: S_TEXT(t.text, 300), date: S_DATUM(t.date) })),
     duties: map("duties", (d) => ({
       ...d, name: S_TEXT(d.name, 100), color: S_FARBE(d.color),
@@ -3539,6 +3540,7 @@ const HELP_DATA = [
       { q: "Wie trage ich meine Mittagspause im Stundenplan ein?", a: `Im Stundenplan ganz unten den Bereich „Uhrzeiten der Stunden" aufklappen – dort steht die Mittagspause als erste Zeile, oberhalb der einzelnen Stunden. Start- und Endzeit eintragen, fertig: Die Pause erscheint danach als eigenes Band quer über alle Wochentage im Raster. Ein Tipp auf das ×-Symbol daneben entfernt sie wieder. Da Tu-vi nur eine schulweite Mittagszeit kennt (wie auch die Stunden-Uhrzeiten selbst gilt sie für alle Wochentage gleich), lässt sich pro Tag keine abweichende Zeit hinterlegen. Außerdem kannst du einzelne Stundenzeilen als Pause markieren: In „Uhrzeiten der Stunden" auf das Tassen-Symbol neben einer Stunde tippen – dann wird diese Stunde im Raster als Pause dargestellt und es lassen sich dort keine Fächer eintragen.` },
       { q: "Wie trage ich Pausenaufsichten ein?", a: `Im Stundenplan ganz unten den Bereich „Aufsichten" aufklappen und auf „Aufsicht eintragen" tippen. Wochentag, Start- und Endzeit sowie ein kurzer Ort (z. B. „Schulhof" oder „Pausenhalle") reichen – die Zeiten sind frei wählbar und nicht an die Stundenraster-Zeiten gebunden, eine Aufsicht kann also auch nur eine Hälfte der Mittagspause oder zwei halbe Pausen lang gehen. Eingetragene Aufsichten erscheinen als eigene, gestrichelte Kästchen im Stundenplan-Raster und lassen sich dort direkt antippen, um sie zu bearbeiten oder zu löschen.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
+      { q: "Kann ich meinen Tu-vi-Kalender in Apple Kalender oder Google Calendar anzeigen?", a: `Ja – unter „Mehr" → „Kalender" ganz unten findest du „Kalender abonnieren". Tippe auf „Abo-Link erstellen", kopiere die URL und trage sie in deiner Kalender-App als Abo ein (Apple: Einstellungen → Kalender → Accounts → Kalenderabo hinzufügen; Google: Weitere Kalender → Per URL). Deine Termine, Klassenarbeiten und Aufgaben mit Fälligkeitsdatum werden dann automatisch synchronisiert. Apple aktualisiert das Abo alle paar Stunden. Der Link ist nur für dich – über „Link neu generieren" kannst du ihn jederzeit ungültig machen und einen neuen erstellen.` },
       { q: "Wie importiere ich Termine aus Apple Kalender oder Google Calendar?", a: `Öffne „Mehr" → „Kalender" → oben rechts „ICS importieren". Wähle eine .ics-Datei – das Standardformat, das Apple Kalender, Google Calendar und Outlook beim Exportieren erzeugen. So exportierst du aus Apple Kalender: Am Mac „Ablage" → „Exportieren …", dort den Kalender als .ics speichern; auf iPhone/iPad gibt es keinen direkten Export, nutze dafür iCloud.com am Computer. Aus Google Calendar: „Einstellungen" → Kalender wählen → „Kalender exportieren". Tu-vi legt für jeden Termin in der Datei einen Eintrag an, Duplikate (gleicher Titel + gleiches Datum) werden automatisch übersprungen. Wiederkehrende Termine (wöchentlich, alle zwei Wochen, monatlich) werden ebenfalls erkannt. Es ist kein Live-Sync – bei neuen Terminen im Apple Kalender musst du erneut exportieren und importieren.` },
     ],
   },
@@ -19131,6 +19133,83 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
           <Button onClick={() => { addEvent(); setShowForm(false); }} className="w-full justify-center mt-3"><Plus size={15} /> Anlegen</Button>
         </Card>
       )}
+
+      {/* Kalender-Abo (Apple / Google Calendar) */}
+      {(() => {
+        const FEED_BASE = "https://jroaqcucjczmbqyjfsie.supabase.co/functions/v1/calendar-feed";
+        const token = data.calendarToken;
+        const feedUrl = token ? `${FEED_BASE}?token=${token}` : null;
+        const [copied, setCopied] = useState(false);
+        const [showAbo, setShowAbo] = useState(false);
+
+        const generateToken = () => {
+          const arr = new Uint8Array(24);
+          crypto.getRandomValues(arr);
+          const tok = Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+          update((d) => { d.calendarToken = tok; return d; });
+        };
+
+        const copyUrl = () => {
+          if (!feedUrl) return;
+          navigator.clipboard?.writeText(feedUrl).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          });
+        };
+
+        return (
+          <Card className="p-4">
+            <button onClick={() => setShowAbo(!showAbo)} className="w-full flex items-center gap-2 text-left">
+              <CalendarDays size={15} className="text-stone-500 shrink-0" />
+              <span className="text-sm font-semibold text-stone-800 flex-1">Kalender abonnieren</span>
+              <ChevronRight size={14} className={`text-stone-300 transition-transform duration-200 ${showAbo ? "rotate-90" : ""}`} />
+            </button>
+            {showAbo && (
+              <div className="mt-3 pt-3 border-t border-stone-100 space-y-3">
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  Erstelle einen Abo-Link, den du in Apple Kalender, Google Calendar oder Outlook einträgst.
+                  Deine Termine, Klassenarbeiten und Aufgaben werden dann automatisch synchronisiert.
+                </p>
+                {!token ? (
+                  <button onClick={generateToken} className="w-full py-2 rounded-xl text-sm font-semibold akzent-flaeche press-scale">
+                    Abo-Link erstellen
+                  </button>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <input
+                        readOnly
+                        value={feedUrl}
+                        className="flex-1 min-w-0 text-[11px] text-stone-500 input-base py-1.5 px-2 font-mono select-all"
+                        onClick={(e) => e.target.select()}
+                      />
+                      <button onClick={copyUrl} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium akzent-ton akzent-text press-scale flex items-center gap-1">
+                        <Copy size={12} /> {copied ? "Kopiert!" : "Kopieren"}
+                      </button>
+                    </div>
+                    <div className="rounded-xl bg-stone-50 p-3 space-y-2">
+                      <p className="text-xs font-medium text-stone-700">So gehts:</p>
+                      <ol className="text-xs text-stone-500 space-y-1 list-decimal list-inside">
+                        <li><strong>Apple:</strong> Einstellungen → Kalender → Accounts → Kalenderabo hinzufügen → URL einfügen</li>
+                        <li><strong>Google:</strong> calendar.google.com → Weitere Kalender (+) → Per URL → URL einfügen</li>
+                        <li><strong>Outlook:</strong> Kalender → Kalender hinzufügen → Aus dem Internet abonnieren → URL einfügen</li>
+                      </ol>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (confirm("Neuen Link erstellen? Der alte Link funktioniert dann nicht mehr.")) generateToken();
+                      }}
+                      className="text-[11px] text-stone-400 hover:text-red-500 flex items-center gap-1"
+                    >
+                      <RefreshCw size={10} /> Link neu generieren
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </Card>
+        );
+      })()}
     </div>
   );
 }
