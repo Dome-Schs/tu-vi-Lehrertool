@@ -22,7 +22,7 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
-  Sun, Moon, SunMoon, Coffee, Eye, EyeOff,
+  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
@@ -6612,7 +6612,7 @@ export default function App() {
             else if (welche === "foerderziele") setShowFoerderziele(true);
             else if (welche === "geburtstage") setShowGeburtstage(true);
           }} />}
-          {tab === "stundenplan" && <StundenplanTab data={activeData} update={update} />}
+          {tab === "stundenplan" && <StundenplanTab data={activeData} update={update} onOpenFach={goToFach} />}
           {tab === "kalender" && <KalenderTab data={activeData} update={update} autoOpenForm={kalenderAutoForm} onAutoFormConsumed={() => setKalenderAutoForm(false)} />}
           {tab === "aufgaben" && <AufgabenTab data={activeData} update={update} />}
           {tab === "noten" && <NotenTab data={activeData} update={update} halbjahr={halbjahr} initialFachId={notenFachId} onConsumeInitial={() => setNotenFachId(null)} />}
@@ -18112,7 +18112,7 @@ function FaecherTab({ data, update, onOpenFach }) {
 
 /* ---------- Stundenplan ---------- */
 
-function StundenplanTab({ data, update }) {
+function StundenplanTab({ data, update, onOpenFach }) {
   const isColor = data.settings?.colorMode === true;
   const periods = stundenplanZeilen(data.settings);
   const [editingCell, setEditingCell] = useState(null); // {day, period}
@@ -18258,15 +18258,20 @@ function StundenplanTab({ data, update }) {
         }}
       >
         {fach && fach.color && <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: fach.color }} />}
-        {/* Bei einer Doppelstunde bleibt es EIN Kasten (Vorbild), aber innen
-            liegen zwei Klickflaechen uebereinander, damit sich jede Haelfte
-            weiterhin einzeln bearbeiten laesst - z.B. wenn nur die zweite
-            Stunde ein anderes Fach bekommen soll. */}
+        {fach && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditingCell({ day: block.day, period: block.startPeriod }); }}
+            className="absolute top-0.5 right-0.5 w-4 h-4 rounded flex items-center justify-center z-10 opacity-40 hover:opacity-100"
+            aria-label="Fach ändern"
+          >
+            <Pencil size={8} />
+          </button>
+        )}
         <button
-          onClick={() => setEditingCell({ day: block.day, period: block.startPeriod })}
+          onClick={() => fach && onOpenFach ? onOpenFach(fach.id) : setEditingCell({ day: block.day, period: block.startPeriod })}
           className="absolute left-0 right-0 top-0 flex flex-col items-start justify-center px-1.5 pl-2"
           style={{ height: istDoppelt ? haelfte : hoehe }}
-          aria-label={fach ? `${DAY_LABELS[block.day]}, Stunde ${block.startPeriod}: ${cls?.name} ${fach.subject} bearbeiten` : `${DAY_LABELS[block.day]}, Stunde ${block.startPeriod}: Fach eintragen`}
+          aria-label={fach ? `${DAY_LABELS[block.day]}, Stunde ${block.startPeriod}: ${cls?.name} ${fach.subject} öffnen` : `${DAY_LABELS[block.day]}, Stunde ${block.startPeriod}: Fach eintragen`}
         >
           {fach ? (
             <>
@@ -18283,10 +18288,10 @@ function StundenplanTab({ data, update }) {
                 sind (z.B. um nur die zweite Stunde zu vertreten). */}
             <div className="absolute left-1 right-1 pointer-events-none border-t border-dashed" style={{ top: haelfte, borderColor: "currentColor", opacity: 0.35 }} />
             <button
-              onClick={() => setEditingCell({ day: block.day, period: block.endPeriod })}
+              onClick={() => fach && onOpenFach ? onOpenFach(fach.id) : setEditingCell({ day: block.day, period: block.endPeriod })}
               className="absolute left-0 right-0 bottom-0"
               style={{ height: haelfte }}
-              aria-label={`${cls?.name || ""} ${fach?.subject || ""} - zweite Stunde bearbeiten`}
+              aria-label={`${cls?.name || ""} ${fach?.subject || ""} - zweite Stunde öffnen`}
             />
           </>
         )}
