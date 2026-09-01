@@ -3476,7 +3476,6 @@ const HELP_DATA = [
       { q: "Wie trage ich eine Stunde am Wochenende oder in den Ferien nach?", a: `Übersicht → grünes Plus → „Stunde nachtragen". Wenn heute keine Stunde im Plan steht, öffnet sich automatisch der Nachtragen-Picker: Klasse wählen → Fach wählen → Datum wählen → weiter. Danach landest du in der normalen Stundenerfassung – auch für alte Stunden.` },
       { q: "Kann ich ein Gespräch von gestern nachträglich eintragen?", a: `Ja. Grünes Plus → „Gespräch notieren" – neben dem Notizfeld gibt es ein Datumsfeld, das standardmäßig auf heute steht. Ändere es auf das gewünschte Datum, dann bleibt der Eintrag im Verlauf an der richtigen Stelle stehen. Dasselbe gilt für „Notiz zu einem Kind".` },
       { q: "Wie bearbeite ich eine:n Schüler:in?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → auf den Namen tippen. Im Profil kannst du Name, Foto und weitere Angaben bearbeiten. Schneller geht es über das Suchfeld „Kind suchen …" oben im Reiter „Klassen".` },
-      { q: "Wo trage ich die Fotoerlaubnis ein?", a: `Im Schülerprofil unter „Stammdaten" gibt es das Feld „Fotoerlaubnis" mit drei Optionen: Ja, Nein, Nicht geklärt. Die Klassen-Überblick-Seite zeigt dir automatisch an, bei welchen Kindern keine Erlaubnis vorliegt oder noch nicht geklärt ist – praktisch vor dem Klassenausflug oder der Schulveranstaltung.` },
       { q: "Kann ich Dokumente an eine Klasse anhängen?", a: `Ja – auf der Klassen-Überblick-Seite gibt es den Bereich „Dokumente". Dort kannst du Fotos und PDFs ablegen, z. B. die Bildrechte-Liste, Elternbriefe oder Klassenlisten. Die Dateien bleiben auf deinem Gerät und sind nicht Teil der normalen Datensicherung.` },
       { q: "Wie lösche ich eine Klasse?", a: `Klasse antippen → Reiter „Überblick" → „Klasse verwalten". Ganz unten im Fenster steht „Diese Klasse löschen". Die Klasse landet mit allen Kindern, Noten und Notizen für 30 Tage im Papierkorb – den findest du im Reiter „Klassen" ganz unten.` },
       { q: "Was sind Dienste?", a: `Dienste sind Aufgaben, die Tu-vi Schüler:innen der Reihe nach zuweist (z. B. Tafeldienst). Anlegen unter „Klassen & Schüler" → Reiter „Dienste", mit einem Tippen weiter zum nächsten Kind.` },
@@ -3550,7 +3549,7 @@ const HELP_DATA = [
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Diese Klassen-Notizen erscheinen dann auch auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
       { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Abhak-Listen". Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Auch im Briefing wird dich Tu-vi daran erinnern. Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
-      { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Du legst sie im Klassen-Dashboard unter „Eigene Merkmale" an: gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Mensa-Teilnahme" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
+      { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Du legst sie im Klassen-Dashboard unter „Eigene Merkmale" an: gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Fotoerlaubnis" mit „Ja, Nein, Nicht geklärt", „Mensa" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung auf einen Blick und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
     ],
   },
   {
@@ -14157,24 +14156,6 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                     <input placeholder="z. B. Frau Mustermann" value={s.parentName || ""} maxLength={100}
                       onChange={(e) => onUpdateField(s.id, "parentName", e.target.value)} className="input-base w-full" />
                   </div>
-                  <div>
-                    <div className="t-caption mb-1">Fotoerlaubnis</div>
-                    <div className="flex gap-1.5">
-                      {[
-                        { key: "ja", label: "Ja", cls: "bg-emerald-100 text-emerald-700 border-emerald-300" },
-                        { key: "nein", label: "Nein", cls: "bg-red-100 text-red-700 border-red-300" },
-                        { key: "", label: "Nicht geklärt", cls: "bg-stone-100 text-stone-500 border-stone-200" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.key}
-                          onClick={() => onUpdateField(s.id, "fotoErlaubnis", opt.key || null)}
-                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${(s.fotoErlaubnis || "") === opt.key ? opt.cls + " ring-1 ring-offset-1 ring-current font-semibold" : "bg-white text-stone-400 border-stone-200"}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                   {klassenFelder.length > 0 && (
                     <div>
                       <div className="t-caption mb-2">Eigene Merkmale</div>
@@ -16336,40 +16317,6 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                     </div>
                     {archiviert.length > 0 && (
                       <p className="text-[11px] text-stone-400">{archiviert.length} archiviert</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Fotoerlaubnis-Übersicht */}
-            {(() => {
-              const ohneErlaubnis = students.filter((s) => s.fotoErlaubnis === "nein");
-              const nichtGeklaert = students.filter((s) => !s.fotoErlaubnis);
-              if (!ohneErlaubnis.length && !nichtGeklaert.length) return null;
-              return (
-                <div>
-                  <div className="t-section mb-2 flex items-center gap-1.5">
-                    <Camera size={13} />
-                    Fotoerlaubnis
-                  </div>
-                  <div className="karte rounded-xl p-4 space-y-2">
-                    {ohneErlaubnis.length > 0 && (
-                      <div className="flex items-start gap-2">
-                        <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1.5" />
-                        <span className="text-sm text-stone-700">
-                          <span className="font-medium text-red-700">Keine Erlaubnis:</span>{" "}
-                          {ohneErlaubnis.map((s) => s.name.split(" ")[0]).join(", ")}
-                        </span>
-                      </div>
-                    )}
-                    {nichtGeklaert.length > 0 && (
-                      <div className="flex items-start gap-2">
-                        <span className="w-2 h-2 rounded-full bg-stone-300 shrink-0 mt-1.5" />
-                        <span className="text-sm text-stone-500">
-                          {nichtGeklaert.length} × nicht geklärt
-                        </span>
-                      </div>
                     )}
                   </div>
                 </div>
