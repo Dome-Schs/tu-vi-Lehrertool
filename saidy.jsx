@@ -16030,6 +16030,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [neuesFeldName, setNeuesFeldName] = useState("");
   const [neuesFeldOptionen, setNeuesFeldOptionen] = useState("");
   const [expandedFeldId, setExpandedFeldId] = useState(null);
+  const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
   const cls = data.classes.find((c) => c.id === klasseId);
@@ -16204,10 +16205,17 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
               </button>
             </div>
 
-            {/* Nicht vergessen — Klassen-Notizen */}
+            {/* Klassen-Werkzeuge — Akkordeon */}
             {(() => {
               const heuteStr = isoDate(new Date());
-              const alle = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId);
+              const alleNotizen = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId);
+              const sichtbareNotizen = alleNotizen.filter((t) => !t.showFrom || t.showFrom <= heuteStr);
+              const listen = (data.checklisten || []).filter((c) => c.classId === klasseId && !c.archivedAt);
+              const archiviert = (data.checklisten || []).filter((c) => c.classId === klasseId && c.archivedAt);
+              const felder = (data.klassenFelder || []).filter((f) => f.classId === klasseId);
+              const werte = data.feldWerte || [];
+              const offeneAbgaben = listen.reduce((s, cl) => s + students.length - cl.erledigt.filter((id) => students.some((st) => st.id === id)).length, 0);
+
               const addNote = () => {
                 const text = klassenNotizInput.trim();
                 if (!text) return;
@@ -16225,93 +16233,6 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 update((d) => { const t = d.tasks.find((x) => x.id === id); if (t) t.title = text; return d; });
                 setEditNotizIdVB(null);
               };
-              return (
-                <div>
-                  <div className="t-section mb-2 flex items-center gap-1.5">
-                    <Check size={13} />
-                    Nicht vergessen
-                  </div>
-                  <div className="karte rounded-xl p-4">
-                    {alle.length > 0 ? (
-                      <ul className="space-y-1.5 mb-3">
-                        {alle.map((t) => {
-                          const istZukunft = t.showFrom && t.showFrom > heuteStr;
-                          return (
-                            <li key={t.id} className={`flex items-center gap-2 ${istZukunft ? "opacity-50" : ""}`}>
-                              <button
-                                onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
-                                className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
-                              >
-                                <span className="w-4 h-4 rounded border border-stone-300 block" />
-                              </button>
-                              {editNotizIdVB === t.id ? (
-                                <input
-                                  autoFocus
-                                  value={editNotizTextVB}
-                                  onChange={(e) => setEditNotizTextVB(e.target.value)}
-                                  onKeyDown={(e) => { if (e.key === "Enter") saveEditVB(t.id); if (e.key === "Escape") setEditNotizIdVB(null); }}
-                                  onBlur={() => saveEditVB(t.id)}
-                                  className="flex-1 min-w-0 text-sm input-base py-0.5"
-                                  maxLength={120}
-                                />
-                              ) : (
-                                <button onClick={() => { setEditNotizIdVB(t.id); setEditNotizTextVB(t.title); }} className="text-sm text-stone-700 leading-tight flex-1 text-left truncate hover:text-stone-900">
-                                  {t.title}
-                                </button>
-                              )}
-                              {istZukunft && (
-                                <span className="text-[10px] text-stone-400 shrink-0 flex items-center gap-0.5" title={`Sichtbar ab ${t.showFrom}`}>
-                                  <EyeOff size={10} /> {localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
-                                </span>
-                              )}
-                              <button onClick={() => {
-                                const hat = !!t.showFrom;
-                                if (hat) { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) delete x.showFrom; return d; }); }
-                                else { const morgen = new Date(); morgen.setDate(morgen.getDate() + 1); update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = isoDate(morgen); return d; }); }
-                              }} className="text-stone-300 hover:text-stone-600 shrink-0 p-1" title={t.showFrom ? "Datum entfernen" : "Datum setzen"}>
-                                <CalendarDays size={12} />
-                              </button>
-                              {t.showFrom && editNotizIdVB !== t.id && (
-                                <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
-                              )}
-                              <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : (
-                      <p className="text-xs text-stone-400 mb-3">Keine Notizen für diese Klasse.</p>
-                    )}
-                    <div className="pt-2 border-t border-stone-100 space-y-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          value={klassenNotizInput}
-                          onChange={(e) => setKlassenNotizInput(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter") addNote(); }}
-                          placeholder="Notiz hinzufügen …"
-                          className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
-                          maxLength={120}
-                        />
-                        <button onClick={addNote} disabled={!klassenNotizInput.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={16} /></button>
-                      </div>
-                      {klassenNotizInput.trim() && (
-                        <div className="flex items-center gap-2 pl-0.5">
-                          <button onClick={() => setNotizDatumVB(notizDatumVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizDatumVB ? "akzent-text" : "text-stone-400"}`}>
-                            <CalendarDays size={11} /> {notizDatumVB ? "Sichtbar ab:" : "Erst später anzeigen"}
-                          </button>
-                          {notizDatumVB && <input type="date" value={notizDatumVB} onChange={(e) => setNotizDatumVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Abhak-Listen */}
-            {(() => {
-              const listen = (data.checklisten || []).filter((c) => c.classId === klasseId && !c.archivedAt);
-              const archiviert = (data.checklisten || []).filter((c) => c.classId === klasseId && c.archivedAt);
               const addListe = () => {
                 const name = neueListeName.trim();
                 if (!name) return;
@@ -16344,81 +16265,6 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 if (openChecklistId === listeId) setOpenChecklistId(null);
               };
               const openCl = listen.find((c) => c.id === openChecklistId);
-              return (
-                <div>
-                  <div className="t-section mb-2 flex items-center gap-1.5">
-                    <ClipboardCheck size={13} />
-                    Abhak-Listen
-                  </div>
-                  <div className="karte rounded-xl p-4 space-y-3">
-                    {listen.length > 0 && (
-                      <ul className="space-y-1.5">
-                        {listen.map((cl) => {
-                          const total = students.length;
-                          const done = cl.erledigt.filter((id) => students.some((s) => s.id === id)).length;
-                          const offen = total - done;
-                          return (
-                            <li key={cl.id} className="flex items-center gap-2">
-                              <button onClick={() => setOpenChecklistId(openChecklistId === cl.id ? null : cl.id)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text truncate">
-                                <span className="font-medium">{cl.title}</span>
-                                {offen > 0
-                                  ? <span className="text-red-600 font-semibold ml-1.5">— noch {offen} offen</span>
-                                  : <span className="text-emerald-600 ml-1.5">✓ alle erledigt</span>
-                                }
-                              </button>
-                              {offen === 0 && (
-                                <button onClick={() => archivListe(cl.id)} className="text-stone-300 hover:text-stone-500 shrink-0" title="Archivieren"><FolderCheck size={14} /></button>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                    {openCl && (
-                      <div className="border-t border-stone-100 pt-3 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-stone-500">{openCl.title}</span>
-                          <div className="flex gap-1">
-                            <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={13} /></button>
-                            <button onClick={() => setOpenChecklistId(null)} className="text-stone-300 hover:text-stone-500 p-1"><X size={13} /></button>
-                          </div>
-                        </div>
-                        {students.map((s) => {
-                          const checked = openCl.erledigt.includes(s.id);
-                          return (
-                            <button key={s.id} onClick={() => toggleStudent(openCl.id, s.id)} className="w-full flex items-center gap-2 py-1 press-scale text-left">
-                              <span className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${checked ? "akzent-flaeche border-transparent" : "border-stone-300"}`}>
-                                {checked && <Check size={12} className="text-white" />}
-                              </span>
-                              <span className={`text-sm ${checked ? "text-stone-400 line-through" : "text-stone-700"}`}>{s.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1.5 pt-1 border-t border-stone-100">
-                      <input
-                        value={neueListeName}
-                        onChange={(e) => setNeueListeName(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") addListe(); }}
-                        placeholder="Neue Liste erstellen …"
-                        className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
-                        maxLength={100}
-                      />
-                      <button onClick={addListe} disabled={!neueListeName.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={14} /></button>
-                    </div>
-                    {archiviert.length > 0 && (
-                      <p className="text-[11px] text-stone-400">{archiviert.length} archiviert</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Eigene Merkmale */}
-            {(() => {
-              const felder = (data.klassenFelder || []).filter((f) => f.classId === klasseId);
-              const werte = data.feldWerte || [];
               const addFeld = () => {
                 const label = neuesFeldName.trim();
                 const opts = neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean);
@@ -16448,92 +16294,277 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                   return d;
                 });
               };
+
+              const toggleSection = (key) => setOpenUeberblickSection((prev) => prev === key ? null : key);
+
+              const sections = [
+                {
+                  key: "notizen",
+                  icon: Check,
+                  label: "Nicht vergessen",
+                  badge: sichtbareNotizen.length > 0 ? `${sichtbareNotizen.length}` : null,
+                  badgeColor: sichtbareNotizen.length > 0 ? "text-red-600" : "",
+                },
+                {
+                  key: "checklisten",
+                  icon: ClipboardCheck,
+                  label: "Abhak-Listen",
+                  badge: listen.length > 0 ? (offeneAbgaben > 0 ? `${offeneAbgaben} offen` : `${listen.length} Listen`) : null,
+                  badgeColor: offeneAbgaben > 0 ? "text-red-600" : "text-stone-400",
+                },
+                {
+                  key: "merkmale",
+                  icon: Bookmark,
+                  label: "Eigene Merkmale",
+                  badge: felder.length > 0 ? `${felder.length}` : null,
+                  badgeColor: "text-stone-400",
+                },
+              ];
+
               return (
-                <div>
-                  <div className="t-section mb-2 flex items-center gap-1.5">
-                    <Bookmark size={13} />
-                    Eigene Merkmale
-                  </div>
-                  <div className="karte rounded-xl p-4 space-y-3">
-                    {felder.length > 0 && (
-                      <ul className="space-y-2">
-                        {felder.map((f) => {
-                          const expanded = expandedFeldId === f.id;
-                          const verteilung = f.optionen.map((o) => ({
-                            label: o,
-                            count: students.filter((s) => werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert === o).length,
-                          }));
-                          const ohneWert = students.length - verteilung.reduce((s, v) => s + v.count, 0);
-                          return (
-                            <li key={f.id}>
-                              <button onClick={() => setExpandedFeldId(expanded ? null : f.id)} className="w-full text-left flex items-center gap-2 py-1">
-                                <ChevronRight size={14} className={`text-stone-400 shrink-0 transition-transform ${expanded ? "rotate-90" : ""}`} />
-                                <span className="font-medium text-sm text-stone-700 flex-1 truncate">{f.label}</span>
-                                <span className="text-[11px] text-stone-400 shrink-0">
-                                  {verteilung.map((v) => `${v.label}: ${v.count}`).join(" · ")}
-                                  {ohneWert > 0 && ` · offen: ${ohneWert}`}
-                                </span>
-                              </button>
-                              {expanded && (
-                                <div className="ml-5 mt-1 space-y-1.5">
-                                  {students.map((s) => {
-                                    const val = werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert || "";
-                                    return (
-                                      <div key={s.id} className="flex items-center gap-2">
-                                        <span className="text-sm text-stone-600 flex-1 truncate">{s.name}</span>
-                                        <div className="flex gap-1 shrink-0">
-                                          {f.optionen.map((o) => (
-                                            <button
-                                              key={o}
-                                              onClick={() => setWert(f.id, s.id, val === o ? "" : o)}
-                                              className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${val === o ? "akzent-flaeche text-white border-transparent font-semibold" : "bg-white text-stone-400 border-stone-200 hover:border-stone-400"}`}
-                                            >
-                                              {o}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                  <button onClick={() => deleteFeld(f.id)} className="text-[11px] text-stone-400 hover:text-red-500 mt-1 flex items-center gap-1">
-                                    <Trash2 size={11} /> Merkmal löschen
+                <div className="karte rounded-xl divide-y divide-stone-100 overflow-hidden">
+                  {sections.map((sec) => {
+                    const isOpen = openUeberblickSection === sec.key;
+                    const Icon = sec.icon;
+                    return (
+                      <div key={sec.key}>
+                        <button
+                          onClick={() => toggleSection(sec.key)}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 active:bg-stone-100 transition-colors"
+                        >
+                          <span className="w-7 h-7 rounded-lg akzent-ton flex items-center justify-center shrink-0">
+                            <Icon size={14} />
+                          </span>
+                          <span className="text-sm font-medium text-stone-800 flex-1">{sec.label}</span>
+                          {sec.badge && <span className={`text-xs font-semibold tnum shrink-0 ${sec.badgeColor}`}>{sec.badge}</span>}
+                          <ChevronRight size={14} className={`text-stone-300 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
+                        </button>
+
+                        {isOpen && sec.key === "notizen" && (
+                          <div className="px-4 pb-4 pt-1">
+                            {alleNotizen.length > 0 ? (
+                              <ul className="space-y-1.5 mb-3">
+                                {alleNotizen.map((t) => {
+                                  const istZukunft = t.showFrom && t.showFrom > heuteStr;
+                                  return (
+                                    <li key={t.id} className={`flex items-center gap-2 ${istZukunft ? "opacity-50" : ""}`}>
+                                      <button
+                                        onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
+                                        className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
+                                      >
+                                        <span className="w-4 h-4 rounded border border-stone-300 block" />
+                                      </button>
+                                      {editNotizIdVB === t.id ? (
+                                        <input
+                                          autoFocus
+                                          value={editNotizTextVB}
+                                          onChange={(e) => setEditNotizTextVB(e.target.value)}
+                                          onKeyDown={(e) => { if (e.key === "Enter") saveEditVB(t.id); if (e.key === "Escape") setEditNotizIdVB(null); }}
+                                          onBlur={() => saveEditVB(t.id)}
+                                          className="flex-1 min-w-0 text-sm input-base py-0.5"
+                                          maxLength={120}
+                                        />
+                                      ) : (
+                                        <button onClick={() => { setEditNotizIdVB(t.id); setEditNotizTextVB(t.title); }} className="text-sm text-stone-700 leading-tight flex-1 text-left truncate hover:text-stone-900">
+                                          {t.title}
+                                        </button>
+                                      )}
+                                      {istZukunft && (
+                                        <span className="text-[10px] text-stone-400 shrink-0 flex items-center gap-0.5" title={`Sichtbar ab ${t.showFrom}`}>
+                                          <EyeOff size={10} /> {localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                                        </span>
+                                      )}
+                                      <button onClick={() => {
+                                        const hat = !!t.showFrom;
+                                        if (hat) { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) delete x.showFrom; return d; }); }
+                                        else { const morgen = new Date(); morgen.setDate(morgen.getDate() + 1); update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = isoDate(morgen); return d; }); }
+                                      }} className="text-stone-300 hover:text-stone-600 shrink-0 p-1" title={t.showFrom ? "Datum entfernen" : "Datum setzen"}>
+                                        <CalendarDays size={12} />
+                                      </button>
+                                      {t.showFrom && editNotizIdVB !== t.id && (
+                                        <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
+                                      )}
+                                      <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            ) : (
+                              <p className="text-xs text-stone-400 mb-3">Keine Notizen.</p>
+                            )}
+                            <div className="pt-2 border-t border-stone-100 space-y-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  value={klassenNotizInput}
+                                  onChange={(e) => setKlassenNotizInput(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === "Enter") addNote(); }}
+                                  placeholder="Notiz hinzufügen …"
+                                  className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                                  maxLength={120}
+                                />
+                                <button onClick={addNote} disabled={!klassenNotizInput.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={16} /></button>
+                              </div>
+                              {klassenNotizInput.trim() && (
+                                <div className="flex items-center gap-2 pl-0.5">
+                                  <button onClick={() => setNotizDatumVB(notizDatumVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizDatumVB ? "akzent-text" : "text-stone-400"}`}>
+                                    <CalendarDays size={11} /> {notizDatumVB ? "Sichtbar ab:" : "Erst später anzeigen"}
                                   </button>
+                                  {notizDatumVB && <input type="date" value={notizDatumVB} onChange={(e) => setNotizDatumVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
                                 </div>
                               )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                    <div className="pt-2 border-t border-stone-100 space-y-2">
-                      <div className="text-xs text-stone-500">Neues Merkmal anlegen</div>
-                      <input
-                        value={neuesFeldName}
-                        onChange={(e) => setNeuesFeldName(e.target.value)}
-                        placeholder="Name, z. B. Mensa-Teilnahme"
-                        className="input-base w-full text-sm"
-                        maxLength={100}
-                      />
-                      <input
-                        value={neuesFeldOptionen}
-                        onChange={(e) => setNeuesFeldOptionen(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") addFeld(); }}
-                        placeholder="Optionen, z. B. Ja, Nein"
-                        className="input-base w-full text-sm"
-                        maxLength={200}
-                      />
-                      <button
-                        onClick={addFeld}
-                        disabled={!neuesFeldName.trim() || neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean).length < 2}
-                        className="w-full py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-30 press-scale"
-                      >
-                        + Merkmal anlegen
-                      </button>
-                    </div>
-                    {!felder.length && (
-                      <p className="text-xs text-stone-400">Lege eigene Auswahl-Merkmale an, die du pro Kind setzen kannst — z. B. „Mensa: Ja / Nein" oder „AG: Theater / Sport / Keine".</p>
-                    )}
-                  </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {isOpen && sec.key === "checklisten" && (
+                          <div className="px-4 pb-4 pt-1 space-y-3">
+                            {listen.length > 0 && (
+                              <ul className="space-y-1.5">
+                                {listen.map((cl) => {
+                                  const total = students.length;
+                                  const done = cl.erledigt.filter((id) => students.some((s) => s.id === id)).length;
+                                  const offen = total - done;
+                                  return (
+                                    <li key={cl.id} className="flex items-center gap-2">
+                                      <button onClick={() => setOpenChecklistId(openChecklistId === cl.id ? null : cl.id)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text truncate">
+                                        <span className="font-medium">{cl.title}</span>
+                                        {offen > 0
+                                          ? <span className="text-red-600 font-semibold ml-1.5">— noch {offen} offen</span>
+                                          : <span className="text-emerald-600 ml-1.5">✓ alle erledigt</span>
+                                        }
+                                      </button>
+                                      {offen === 0 && (
+                                        <button onClick={() => archivListe(cl.id)} className="text-stone-300 hover:text-stone-500 shrink-0" title="Archivieren"><FolderCheck size={14} /></button>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
+                            {openCl && (
+                              <div className="border-t border-stone-100 pt-3 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-stone-500">{openCl.title}</span>
+                                  <div className="flex gap-1">
+                                    <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={13} /></button>
+                                    <button onClick={() => setOpenChecklistId(null)} className="text-stone-300 hover:text-stone-500 p-1"><X size={13} /></button>
+                                  </div>
+                                </div>
+                                {students.map((s) => {
+                                  const checked = openCl.erledigt.includes(s.id);
+                                  return (
+                                    <button key={s.id} onClick={() => toggleStudent(openCl.id, s.id)} className="w-full flex items-center gap-2 py-1 press-scale text-left">
+                                      <span className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${checked ? "akzent-flaeche border-transparent" : "border-stone-300"}`}>
+                                        {checked && <Check size={12} className="text-white" />}
+                                      </span>
+                                      <span className={`text-sm ${checked ? "text-stone-400 line-through" : "text-stone-700"}`}>{s.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1.5 pt-1 border-t border-stone-100">
+                              <input
+                                value={neueListeName}
+                                onChange={(e) => setNeueListeName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") addListe(); }}
+                                placeholder="Neue Liste erstellen …"
+                                className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                                maxLength={100}
+                              />
+                              <button onClick={addListe} disabled={!neueListeName.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={14} /></button>
+                            </div>
+                            {archiviert.length > 0 && (
+                              <p className="text-[11px] text-stone-400">{archiviert.length} archiviert</p>
+                            )}
+                          </div>
+                        )}
+
+                        {isOpen && sec.key === "merkmale" && (
+                          <div className="px-4 pb-4 pt-1 space-y-3">
+                            {felder.length > 0 && (
+                              <ul className="space-y-2">
+                                {felder.map((f) => {
+                                  const expanded = expandedFeldId === f.id;
+                                  const verteilung = f.optionen.map((o) => ({
+                                    label: o,
+                                    count: students.filter((s) => werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert === o).length,
+                                  }));
+                                  const ohneWert = students.length - verteilung.reduce((s, v) => s + v.count, 0);
+                                  return (
+                                    <li key={f.id}>
+                                      <button onClick={() => setExpandedFeldId(expanded ? null : f.id)} className="w-full text-left flex items-center gap-2 py-1">
+                                        <ChevronRight size={14} className={`text-stone-400 shrink-0 transition-transform ${expanded ? "rotate-90" : ""}`} />
+                                        <span className="font-medium text-sm text-stone-700 flex-1 truncate">{f.label}</span>
+                                        <span className="text-[11px] text-stone-400 shrink-0">
+                                          {verteilung.map((v) => `${v.label}: ${v.count}`).join(" · ")}
+                                          {ohneWert > 0 && ` · offen: ${ohneWert}`}
+                                        </span>
+                                      </button>
+                                      {expanded && (
+                                        <div className="ml-5 mt-1 space-y-1.5">
+                                          {students.map((s) => {
+                                            const val = werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert || "";
+                                            return (
+                                              <div key={s.id} className="flex items-center gap-2">
+                                                <span className="text-sm text-stone-600 flex-1 truncate">{s.name}</span>
+                                                <div className="flex gap-1 shrink-0">
+                                                  {f.optionen.map((o) => (
+                                                    <button
+                                                      key={o}
+                                                      onClick={() => setWert(f.id, s.id, val === o ? "" : o)}
+                                                      className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${val === o ? "akzent-flaeche text-white border-transparent font-semibold" : "bg-white text-stone-400 border-stone-200 hover:border-stone-400"}`}
+                                                    >
+                                                      {o}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                          <button onClick={() => deleteFeld(f.id)} className="text-[11px] text-stone-400 hover:text-red-500 mt-1 flex items-center gap-1">
+                                            <Trash2 size={11} /> Merkmal löschen
+                                          </button>
+                                        </div>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
+                            <div className="pt-2 border-t border-stone-100 space-y-2">
+                              <div className="text-xs text-stone-500">Neues Merkmal anlegen</div>
+                              <input
+                                value={neuesFeldName}
+                                onChange={(e) => setNeuesFeldName(e.target.value)}
+                                placeholder="Name, z. B. Mensa-Teilnahme"
+                                className="input-base w-full text-sm"
+                                maxLength={100}
+                              />
+                              <input
+                                value={neuesFeldOptionen}
+                                onChange={(e) => setNeuesFeldOptionen(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") addFeld(); }}
+                                placeholder="Optionen, z. B. Ja, Nein"
+                                className="input-base w-full text-sm"
+                                maxLength={200}
+                              />
+                              <button
+                                onClick={addFeld}
+                                disabled={!neuesFeldName.trim() || neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean).length < 2}
+                                className="w-full py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-30 press-scale"
+                              >
+                                + Merkmal anlegen
+                              </button>
+                            </div>
+                            {!felder.length && (
+                              <p className="text-xs text-stone-400">Lege eigene Auswahl-Merkmale an, die du pro Kind setzen kannst.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}
