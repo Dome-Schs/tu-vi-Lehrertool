@@ -10368,6 +10368,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
           zeigt sie stattdessen den ganzen Tag. Kein „großes Nichts" mehr. */}
       {isToday && currentUnit && (() => {
         const { fach, cls, startZeit, endZeit, topic, cd } = lessonInfo(currentUnit);
+        if (!fach) return null;
         const restMin = minsUntilHM(endZeit);
         const entsch = offeneEntschKlasse(cls?.id);
         const rueckgaben = offeneRueckgabenKlasse(cls?.id);
@@ -10578,6 +10579,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         const zielDatum = nextUnit ? selStr : morgenUnit.datum;
         const istMorgen = !nextUnit;
         const { fach, cls, startZeit, endZeit, topic } = lessonInfo(unit);
+        if (!fach) return null;
         const bisStart = !istMorgen ? minsUntilHM(startZeit) : null;
         const fachMaterial = fach?.material || [];
         const stunde = stundenInhalt(fach?.id, zielDatum);
@@ -10971,14 +10973,14 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       )}
 
       {/* ───────── Danach heute – kompakte Liste der restlichen Stunden ───────── */}
-      {isToday && danachUnits.length > 0 && (
+      {isToday && danachUnits.filter((u) => data.faecher.some((f) => f.id === u.fachId)).length > 0 && (
         <div style={{ order: orderOf("danach") }}>
           <div className="flex items-center justify-between mb-1.5 px-1">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Danach heute</span>
             <button onClick={() => onNavigate?.("stundenplan")} className="text-[11px] text-stone-400 hover:text-stone-600">Stundenplan →</button>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-white divide-y divide-stone-100 overflow-hidden">
-            {danachUnits.map((unit) => {
+            {danachUnits.filter((unit) => data.faecher.some((f) => f.id === unit.fachId)).map((unit) => {
               const { fach, cls, startZeit, endZeit, topic } = lessonInfo(unit);
               const stunde = stundenInhalt(fach?.id, selStr);
               const chips = [
@@ -11096,7 +11098,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       {/* Feiertagsfall Heute: kein Unterricht mehr UND morgen auch nichts geplant –
           erst dann greift der sanfte Hinweis. Sonst uebernimmt die NAECHSTES-Karte
           bereits die Vorschau auf morgen. */}
-      {isToday && !currentUnit && !nextUnit && !morgenUnit && danachUnits.length === 0 && (
+      {isToday && !(currentUnit && data.faecher.some((f) => f.id === currentUnit.fachId)) && !(nextUnit && data.faecher.some((f) => f.id === nextUnit.fachId)) && !morgenUnit && danachUnits.filter((u) => data.faecher.some((f) => f.id === u.fachId)).length === 0 && (
         <Card className="px-3 py-3 text-xs text-stone-500" style={{ order: orderOf("danach") }}>
           {dayUnits.length === 0 ? "Heute kein regulärer Unterricht." : "Alle Stunden für heute vorbei."}
         </Card>
