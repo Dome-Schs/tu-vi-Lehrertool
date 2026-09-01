@@ -1137,6 +1137,8 @@ function sanitizeImport(imported) {
     tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), showFrom: S_DATUM(t.showFrom) || undefined, done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined })),
     taskLists: map("taskLists", (l) => ({ ...l, name: S_TEXT(l.name, 100), icon: S_TEXT(l.icon, 50) })),
     checklisten: map("checklisten", (c) => ({ ...c, title: S_TEXT(c.title, 200), classId: S_TEXT(c.classId, 50), erledigt: S_LISTE(c.erledigt).filter((x) => typeof x === "string"), createdAt: S_DATUM(c.createdAt) || isoDate(new Date()), archivedAt: S_DATUM(c.archivedAt) || undefined })),
+    klassenFelder: map("klassenFelder", (f) => ({ ...f, label: S_TEXT(f.label, 100), classId: S_TEXT(f.classId, 50), typ: "auswahl", optionen: S_LISTE(f.optionen).map((o) => S_TEXT(o, 100)).filter(Boolean), createdAt: S_DATUM(f.createdAt) || isoDate(new Date()) })),
+    feldWerte: map("feldWerte", (v) => ({ ...v, feldId: S_TEXT(v.feldId, 50), schuelerId: S_TEXT(v.schuelerId, 50), wert: S_TEXT(v.wert, 100) })),
     lessonTopics: map("lessonTopics", (t) => ({ ...t, text: S_TEXT(t.text, 300), date: S_DATUM(t.date) })),
     duties: map("duties", (d) => ({
       ...d, name: S_TEXT(d.name, 100), color: S_FARBE(d.color),
@@ -3548,6 +3550,7 @@ const HELP_DATA = [
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Diese Klassen-Notizen erscheinen dann auch auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
       { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Abhak-Listen". Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Auch im Briefing wird dich Tu-vi daran erinnern. Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
+      { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Du legst sie im Klassen-Dashboard unter „Eigene Merkmale" an: gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Mensa-Teilnahme" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
     ],
   },
   {
@@ -12704,7 +12707,7 @@ function DokumenteAllgemein({ data, update, onClose }) {
 }
 
 /* Eigenständiges Fenster für die Schülerliste einer Klasse – bewusst getrennt von der Klassenübersicht */
-function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, timetable = [], incidents, documents, graduierungVerlauf, update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
+function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, absences, timetable = [], incidents, documents, graduierungVerlauf, klassenFelder = [], feldWerte = [], update, settings, notenfarben, selectedStudent, setSelectedStudent, onDeleteStudent, onUpdateField, onAddNote, newNote, setNewNote, gespraechDraft, setGespraechDraft, onAddGespraech, onDeleteNote, onAddFoerderZiel, onToggleFoerderZiel, onDeleteFoerderZiel, onOpenAdd, onOpenOverview, onClose }) {
   const [photoError, setPhotoError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmDeleteZielId, setConfirmDeleteZielId] = useState(null);
@@ -14172,6 +14175,40 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                       ))}
                     </div>
                   </div>
+                  {klassenFelder.length > 0 && (
+                    <div>
+                      <div className="t-caption mb-2">Eigene Merkmale</div>
+                      <div className="space-y-2">
+                        {klassenFelder.map((f) => {
+                          const wert = feldWerte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert || "";
+                          return (
+                            <div key={f.id} className="flex items-center gap-2">
+                              <span className="text-sm text-stone-600 flex-1 truncate">{f.label}</span>
+                              <div className="flex gap-1 shrink-0">
+                                {f.optionen.map((o) => (
+                                  <button
+                                    key={o}
+                                    onClick={() => {
+                                      update((d) => {
+                                        d.feldWerte = d.feldWerte || [];
+                                        const ex = d.feldWerte.find((v) => v.feldId === f.id && v.schuelerId === s.id);
+                                        if (ex) { ex.wert = ex.wert === o ? "" : o; }
+                                        else { d.feldWerte.push({ id: uid(), feldId: f.id, schuelerId: s.id, wert: o }); }
+                                        return d;
+                                      });
+                                    }}
+                                    className={`text-xs px-2.5 py-1 rounded-full border transition-all ${wert === o ? "akzent-flaeche text-white border-transparent font-semibold" : "bg-white text-stone-400 border-stone-200"}`}
+                                  >
+                                    {o}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <div className="t-caption mb-1 flex items-center gap-1.5">
                       Besonderheiten / Vorerkrankungen
@@ -15963,6 +16000,9 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [klassenNotizInput, setKlassenNotizInput] = useState("");
   const [neueListeName, setNeueListeName] = useState("");
   const [openChecklistId, setOpenChecklistId] = useState(null);
+  const [neuesFeldName, setNeuesFeldName] = useState("");
+  const [neuesFeldOptionen, setNeuesFeldOptionen] = useState("");
+  const [expandedFeldId, setExpandedFeldId] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
   const cls = data.classes.find((c) => c.id === klasseId);
@@ -16330,6 +16370,129 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                           {nichtGeklaert.length} × nicht geklärt
                         </span>
                       </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Eigene Merkmale */}
+            {(() => {
+              const felder = (data.klassenFelder || []).filter((f) => f.classId === klasseId);
+              const werte = data.feldWerte || [];
+              const addFeld = () => {
+                const label = neuesFeldName.trim();
+                const opts = neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean);
+                if (!label || opts.length < 2) return;
+                update((d) => {
+                  d.klassenFelder = d.klassenFelder || [];
+                  d.klassenFelder.push({ id: uid(), classId: klasseId, label, typ: "auswahl", optionen: opts, createdAt: isoDate(new Date()) });
+                  return d;
+                });
+                setNeuesFeldName("");
+                setNeuesFeldOptionen("");
+              };
+              const deleteFeld = (feldId) => {
+                update((d) => {
+                  d.klassenFelder = (d.klassenFelder || []).filter((f) => f.id !== feldId);
+                  d.feldWerte = (d.feldWerte || []).filter((v) => v.feldId !== feldId);
+                  return d;
+                });
+                if (expandedFeldId === feldId) setExpandedFeldId(null);
+              };
+              const setWert = (feldId, schuelerId, val) => {
+                update((d) => {
+                  d.feldWerte = d.feldWerte || [];
+                  const ex = d.feldWerte.find((v) => v.feldId === feldId && v.schuelerId === schuelerId);
+                  if (ex) { ex.wert = val; }
+                  else if (val) { d.feldWerte.push({ id: uid(), feldId, schuelerId, wert: val }); }
+                  return d;
+                });
+              };
+              return (
+                <div>
+                  <div className="t-section mb-2 flex items-center gap-1.5">
+                    <Bookmark size={13} />
+                    Eigene Merkmale
+                  </div>
+                  <div className="karte rounded-xl p-4 space-y-3">
+                    {felder.length > 0 && (
+                      <ul className="space-y-2">
+                        {felder.map((f) => {
+                          const expanded = expandedFeldId === f.id;
+                          const verteilung = f.optionen.map((o) => ({
+                            label: o,
+                            count: students.filter((s) => werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert === o).length,
+                          }));
+                          const ohneWert = students.length - verteilung.reduce((s, v) => s + v.count, 0);
+                          return (
+                            <li key={f.id}>
+                              <button onClick={() => setExpandedFeldId(expanded ? null : f.id)} className="w-full text-left flex items-center gap-2 py-1">
+                                <ChevronRight size={14} className={`text-stone-400 shrink-0 transition-transform ${expanded ? "rotate-90" : ""}`} />
+                                <span className="font-medium text-sm text-stone-700 flex-1 truncate">{f.label}</span>
+                                <span className="text-[11px] text-stone-400 shrink-0">
+                                  {verteilung.map((v) => `${v.label}: ${v.count}`).join(" · ")}
+                                  {ohneWert > 0 && ` · offen: ${ohneWert}`}
+                                </span>
+                              </button>
+                              {expanded && (
+                                <div className="ml-5 mt-1 space-y-1.5">
+                                  {students.map((s) => {
+                                    const val = werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert || "";
+                                    return (
+                                      <div key={s.id} className="flex items-center gap-2">
+                                        <span className="text-sm text-stone-600 flex-1 truncate">{s.name}</span>
+                                        <div className="flex gap-1 shrink-0">
+                                          {f.optionen.map((o) => (
+                                            <button
+                                              key={o}
+                                              onClick={() => setWert(f.id, s.id, val === o ? "" : o)}
+                                              className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${val === o ? "akzent-flaeche text-white border-transparent font-semibold" : "bg-white text-stone-400 border-stone-200 hover:border-stone-400"}`}
+                                            >
+                                              {o}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  <button onClick={() => deleteFeld(f.id)} className="text-[11px] text-stone-400 hover:text-red-500 mt-1 flex items-center gap-1">
+                                    <Trash2 size={11} /> Merkmal löschen
+                                  </button>
+                                </div>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    <div className="pt-2 border-t border-stone-100 space-y-2">
+                      <div className="text-xs text-stone-500">Neues Merkmal anlegen</div>
+                      <input
+                        value={neuesFeldName}
+                        onChange={(e) => setNeuesFeldName(e.target.value)}
+                        placeholder="Name, z. B. Mensa-Teilnahme"
+                        className="input-base w-full text-sm"
+                        maxLength={100}
+                      />
+                      <input
+                        value={neuesFeldOptionen}
+                        onChange={(e) => setNeuesFeldOptionen(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") addFeld(); }}
+                        placeholder="Optionen, z. B. Ja, Nein"
+                        className="input-base w-full text-sm"
+                        maxLength={200}
+                      />
+                      <button
+                        onClick={addFeld}
+                        disabled={!neuesFeldName.trim() || neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean).length < 2}
+                        className="w-full py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-30 press-scale"
+                      >
+                        + Merkmal anlegen
+                      </button>
+                    </div>
+                    {!felder.length && (
+                      <p className="text-xs text-stone-400">Lege eigene Auswahl-Merkmale an, die du pro Kind setzen kannst — z. B. „Mensa: Ja / Nein" oder „AG: Theater / Sport / Keine".</p>
                     )}
                   </div>
                 </div>
@@ -17441,6 +17604,8 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
           incidents={data.incidents || []}
           documents={data.documents || []}
           graduierungVerlauf={data.graduierungVerlauf || []}
+          klassenFelder={(data.klassenFelder || []).filter((f) => f.classId === klasseId)}
+          feldWerte={data.feldWerte || []}
           update={update}
           settings={data.settings || {}}
           notenfarben={data.settings?.notenfarben !== false}
