@@ -3547,7 +3547,7 @@ const HELP_DATA = [
       { q: "Wie lege ich eine Aufgabe an?", a: `Tippe unten auf „Mehr" → „Aufgaben". Wähle eine Liste und tippe auf „Aufgabe hinzufügen" – dort gibt es Titel, Farbe, ein Fälligkeitsdatum und ein optionales „Anzeigen ab"-Datum. Für ein schnelles To-do zwischendurch reicht das Feld „Aufgabe hinzufügen …" in der Kachel „Nicht vergessen" auf der Übersicht.` },
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
-      { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Diese Klassen-Notizen erscheinen dann auch auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
+      { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Du kannst jede Notiz nachträglich bearbeiten (Text antippen) und über das Kalender-Symbol ein Sichtbar-ab-Datum setzen — die Notiz taucht dann erst ab diesem Tag in der Übersicht auf, ist aber in der Klasse schon sichtbar (ausgegraut). Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
       { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Abhak-Listen". Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Auch im Briefing wird dich Tu-vi daran erinnern. Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
       { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Du legst sie im Klassen-Dashboard unter „Eigene Merkmale" an: gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Fotoerlaubnis" mit „Ja, Nein, Nicht geklärt", „Mensa" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung auf einen Blick und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
     ],
@@ -15493,6 +15493,9 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
 
 function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele, absences, documents, tasks, update, onOpenStudent, onClose }) {
   const [klassenNotiz, setKlassenNotiz] = useState("");
+  const [notizDatum, setNotizDatum] = useState("");
+  const [editNotizId, setEditNotizId] = useState(null);
+  const [editNotizText, setEditNotizText] = useState("");
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const cutoff14Iso = (() => { const d = new Date(today); d.setDate(d.getDate() - 14); return d.toISOString().slice(0, 10); })();
 
@@ -15591,59 +15594,97 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
             Nicht vergessen
           </div>
           {(() => {
-            const offene = (tasks || []).filter((t) => !t.done && t.classId === cls.id && (!t.showFrom || t.showFrom <= isoDate(new Date())));
+            const heuteStr = isoDate(new Date());
+            const alle = (tasks || []).filter((t) => !t.done && t.classId === cls.id);
+            const addNote = () => {
+              const text = klassenNotiz.trim();
+              if (!text) return;
+              update((d) => {
+                d.tasks = d.tasks || [];
+                d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: cls.id, showFrom: notizDatum || undefined });
+                return d;
+              });
+              setKlassenNotiz("");
+              setNotizDatum("");
+            };
+            const saveEdit = (id) => {
+              const text = editNotizText.trim();
+              if (!text) return;
+              update((d) => { const t = d.tasks.find((x) => x.id === id); if (t) t.title = text; return d; });
+              setEditNotizId(null);
+            };
             return (
               <>
-                {offene.length > 0 && (
+                {alle.length > 0 ? (
                   <ul className="space-y-1.5 mb-2">
-                    {offene.map((t) => (
-                      <li key={t.id} className="flex items-center gap-2">
-                        <button
-                          onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
-                          className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
-                        >
-                          <span className="w-4 h-4 rounded border border-stone-300 block" />
-                        </button>
-                        <span className="text-sm text-stone-700 leading-tight flex-1">{t.title}</span>
-                        <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
-                      </li>
-                    ))}
+                    {alle.map((t) => {
+                      const istZukunft = t.showFrom && t.showFrom > heuteStr;
+                      return (
+                        <li key={t.id} className={`flex items-center gap-2 ${istZukunft ? "opacity-50" : ""}`}>
+                          <button
+                            onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
+                            className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
+                          >
+                            <span className="w-4 h-4 rounded border border-stone-300 block" />
+                          </button>
+                          {editNotizId === t.id ? (
+                            <input
+                              autoFocus
+                              value={editNotizText}
+                              onChange={(e) => setEditNotizText(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter") saveEdit(t.id); if (e.key === "Escape") setEditNotizId(null); }}
+                              onBlur={() => saveEdit(t.id)}
+                              className="flex-1 min-w-0 text-sm input-base py-0.5"
+                              maxLength={120}
+                            />
+                          ) : (
+                            <button onClick={() => { setEditNotizId(t.id); setEditNotizText(t.title); }} className="text-sm text-stone-700 leading-tight flex-1 text-left truncate hover:text-stone-900">
+                              {t.title}
+                            </button>
+                          )}
+                          {istZukunft && (
+                            <span className="text-[10px] text-stone-400 shrink-0 flex items-center gap-0.5" title={`Sichtbar ab ${t.showFrom}`}>
+                              <EyeOff size={10} /> {localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                            </span>
+                          )}
+                          <button onClick={() => {
+                            const hat = !!t.showFrom;
+                            if (hat) { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) delete x.showFrom; return d; }); }
+                            else { const morgen = new Date(); morgen.setDate(morgen.getDate() + 1); update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = isoDate(morgen); return d; }); }
+                          }} className="text-stone-300 hover:text-stone-600 shrink-0 p-1" title={t.showFrom ? "Datum entfernen" : "Datum setzen"}>
+                            <CalendarDays size={12} />
+                          </button>
+                          {t.showFrom && editNotizId !== t.id && (
+                            <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
+                          )}
+                          <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                        </li>
+                      );
+                    })}
                   </ul>
+                ) : (
+                  <p className="text-xs text-stone-400 mb-2">Keine Notizen für diese Klasse.</p>
                 )}
-                {!offene.length && <p className="text-xs text-stone-400 mb-2">Keine Notizen für diese Klasse.</p>}
-                <div className="flex items-center gap-1.5 pt-2 border-t border-stone-100">
-                  <input
-                    value={klassenNotiz}
-                    onChange={(e) => setKlassenNotiz(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && klassenNotiz.trim()) {
-                        update((d) => {
-                          d.tasks = d.tasks || [];
-                          d.tasks.push({ id: uid(), title: klassenNotiz.trim(), color: TASK_COLORS[0], done: false, classId: cls.id });
-                          return d;
-                        });
-                        setKlassenNotiz("");
-                      }
-                    }}
-                    placeholder="Notiz hinzufügen …"
-                    className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
-                    maxLength={120}
-                  />
-                  <button
-                    onClick={() => {
-                      if (!klassenNotiz.trim()) return;
-                      update((d) => {
-                        d.tasks = d.tasks || [];
-                        d.tasks.push({ id: uid(), title: klassenNotiz.trim(), color: TASK_COLORS[0], done: false, classId: cls.id });
-                        return d;
-                      });
-                      setKlassenNotiz("");
-                    }}
-                    disabled={!klassenNotiz.trim()}
-                    className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"
-                  >
-                    <Plus size={16} />
-                  </button>
+                <div className="pt-2 border-t border-stone-100 space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      value={klassenNotiz}
+                      onChange={(e) => setKlassenNotiz(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") addNote(); }}
+                      placeholder="Notiz hinzufügen …"
+                      className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                      maxLength={120}
+                    />
+                    <button onClick={addNote} disabled={!klassenNotiz.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={16} /></button>
+                  </div>
+                  {klassenNotiz.trim() && (
+                    <div className="flex items-center gap-2 pl-0.5">
+                      <button onClick={() => setNotizDatum(notizDatum ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizDatum ? "akzent-text" : "text-stone-400"}`}>
+                        <CalendarDays size={11} /> {notizDatum ? "Sichtbar ab:" : "Erst später anzeigen"}
+                      </button>
+                      {notizDatum && <input type="date" value={notizDatum} onChange={(e) => setNotizDatum(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
+                    </div>
+                  )}
                 </div>
               </>
             );
@@ -15981,6 +16022,9 @@ function NotenLineChart({ muendlich, schriftlich, w = 320, h = 160 }) {
 function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onClose, onOpenStudent, onFachActions, onOpenSchueler, onOpenSitzplan, onOpenDashboard, onUmbenennen, onOpenFach }) {
   const [activeTab, setActiveTab] = useState(initialTab || "ueberblick");
   const [klassenNotizInput, setKlassenNotizInput] = useState("");
+  const [notizDatumVB, setNotizDatumVB] = useState("");
+  const [editNotizIdVB, setEditNotizIdVB] = useState(null);
+  const [editNotizTextVB, setEditNotizTextVB] = useState("");
   const [neueListeName, setNeueListeName] = useState("");
   const [openChecklistId, setOpenChecklistId] = useState(null);
   const [neuesFeldName, setNeuesFeldName] = useState("");
@@ -16162,16 +16206,24 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
 
             {/* Nicht vergessen — Klassen-Notizen */}
             {(() => {
-              const offene = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId && (!t.showFrom || t.showFrom <= isoDate(new Date())));
+              const heuteStr = isoDate(new Date());
+              const alle = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId);
               const addNote = () => {
                 const text = klassenNotizInput.trim();
                 if (!text) return;
                 update((d) => {
                   d.tasks = d.tasks || [];
-                  d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: klasseId });
+                  d.tasks.push({ id: uid(), title: text, color: TASK_COLORS[0], done: false, classId: klasseId, showFrom: notizDatumVB || undefined });
                   return d;
                 });
                 setKlassenNotizInput("");
+                setNotizDatumVB("");
+              };
+              const saveEditVB = (id) => {
+                const text = editNotizTextVB.trim();
+                if (!text) return;
+                update((d) => { const t = d.tasks.find((x) => x.id === id); if (t) t.title = text; return d; });
+                setEditNotizIdVB(null);
               };
               return (
                 <div>
@@ -16180,38 +16232,76 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                     Nicht vergessen
                   </div>
                   <div className="karte rounded-xl p-4">
-                    {offene.length > 0 && (
+                    {alle.length > 0 ? (
                       <ul className="space-y-1.5 mb-3">
-                        {offene.map((t) => (
-                          <li key={t.id} className="flex items-center gap-2">
-                            <button
-                              onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
-                              className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
-                            >
-                              <span className="w-4 h-4 rounded border border-stone-300 block" />
-                            </button>
-                            <span className="text-sm text-stone-700 leading-tight flex-1">{t.title}</span>
-                            <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
-                          </li>
-                        ))}
+                        {alle.map((t) => {
+                          const istZukunft = t.showFrom && t.showFrom > heuteStr;
+                          return (
+                            <li key={t.id} className={`flex items-center gap-2 ${istZukunft ? "opacity-50" : ""}`}>
+                              <button
+                                onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
+                                className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
+                              >
+                                <span className="w-4 h-4 rounded border border-stone-300 block" />
+                              </button>
+                              {editNotizIdVB === t.id ? (
+                                <input
+                                  autoFocus
+                                  value={editNotizTextVB}
+                                  onChange={(e) => setEditNotizTextVB(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === "Enter") saveEditVB(t.id); if (e.key === "Escape") setEditNotizIdVB(null); }}
+                                  onBlur={() => saveEditVB(t.id)}
+                                  className="flex-1 min-w-0 text-sm input-base py-0.5"
+                                  maxLength={120}
+                                />
+                              ) : (
+                                <button onClick={() => { setEditNotizIdVB(t.id); setEditNotizTextVB(t.title); }} className="text-sm text-stone-700 leading-tight flex-1 text-left truncate hover:text-stone-900">
+                                  {t.title}
+                                </button>
+                              )}
+                              {istZukunft && (
+                                <span className="text-[10px] text-stone-400 shrink-0 flex items-center gap-0.5" title={`Sichtbar ab ${t.showFrom}`}>
+                                  <EyeOff size={10} /> {localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                                </span>
+                              )}
+                              <button onClick={() => {
+                                const hat = !!t.showFrom;
+                                if (hat) { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) delete x.showFrom; return d; }); }
+                                else { const morgen = new Date(); morgen.setDate(morgen.getDate() + 1); update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = isoDate(morgen); return d; }); }
+                              }} className="text-stone-300 hover:text-stone-600 shrink-0 p-1" title={t.showFrom ? "Datum entfernen" : "Datum setzen"}>
+                                <CalendarDays size={12} />
+                              </button>
+                              {t.showFrom && editNotizIdVB !== t.id && (
+                                <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
+                              )}
+                              <button onClick={() => update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; })} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
+                            </li>
+                          );
+                        })}
                       </ul>
+                    ) : (
+                      <p className="text-xs text-stone-400 mb-3">Keine Notizen für diese Klasse.</p>
                     )}
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        value={klassenNotizInput}
-                        onChange={(e) => setKlassenNotizInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") addNote(); }}
-                        placeholder="Notiz hinzufügen …"
-                        className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
-                        maxLength={120}
-                      />
-                      <button
-                        onClick={addNote}
-                        disabled={!klassenNotizInput.trim()}
-                        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"
-                      >
-                        <Plus size={16} />
-                      </button>
+                    <div className="pt-2 border-t border-stone-100 space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          value={klassenNotizInput}
+                          onChange={(e) => setKlassenNotizInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") addNote(); }}
+                          placeholder="Notiz hinzufügen …"
+                          className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                          maxLength={120}
+                        />
+                        <button onClick={addNote} disabled={!klassenNotizInput.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={16} /></button>
+                      </div>
+                      {klassenNotizInput.trim() && (
+                        <div className="flex items-center gap-2 pl-0.5">
+                          <button onClick={() => setNotizDatumVB(notizDatumVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizDatumVB ? "akzent-text" : "text-stone-400"}`}>
+                            <CalendarDays size={11} /> {notizDatumVB ? "Sichtbar ab:" : "Erst später anzeigen"}
+                          </button>
+                          {notizDatumVB && <input type="date" value={notizDatumVB} onChange={(e) => setNotizDatumVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
