@@ -3428,6 +3428,16 @@ const TIPP_KARTEN = [
   { id: 124, titel: "Mach die mündliche Note überprüfbar", warum: `Die sonstige Mitarbeit macht in vielen Fächern den größeren Teil der Zeugnisnote aus, wird aber oft am Halbjahresende aus der Erinnerung geschätzt. Die Urteilsforschung zeigt, dass solche Gesamteindrücke anfällig für Halo- und Reihenfolgeeffekte sind. Wenige regelmäßige Notizen schlagen die beste Erinnerung.`, umsetzung: [`Zu Beginn des Halbjahres zwei bis vier Kriterien nennen, die zählen (z. B. fachliche Beiträge, Kontinuität, Zusammenarbeit).`, `Nicht jede Stunde alle bewerten – pro Stunde drei bis fünf Lernende gezielt beobachten und notieren.`, `Beobachtung und Bewertung trennen: erst festhalten, was passiert ist, später einordnen.`, `Nach etwa sechs Wochen eine kurze Zwischenrückmeldung geben, damit es am Zeugnistag keine Überraschung gibt.`, `Bei Rückfragen von Eltern auf die Notizen zurückgreifen, nicht auf den Gesamteindruck.`], merksatz: `Was du nicht notiert hast, kannst du am Zeugnistag nicht begründen.`, kategorie: "Diagnostik", quelle: "Ingenkamp – Fragwürdigkeit der Zensurengebung; Black & Wiliam – Formative Assessment" },
 ];
 
+const urgencyInfo = (dateStr) => {
+  if (!dateStr) return { cls: "", label: "" };
+  const diff = Math.ceil((localDate(dateStr) - new Date(new Date().toDateString())) / 86400000);
+  if (diff < 0) return { cls: "bg-red-100 text-red-700", label: `${Math.abs(diff)} ${Math.abs(diff) === 1 ? "Tag" : "Tage"} überfällig` };
+  if (diff === 0) return { cls: "bg-red-100 text-red-700", label: "heute" };
+  if (diff === 1) return { cls: "bg-amber-100 text-amber-700", label: "morgen" };
+  if (diff <= 3) return { cls: "bg-amber-100 text-amber-700", label: `in ${diff} Tagen` };
+  return { cls: "", label: "" };
+};
+
 const HELP_DATA = [
   {
     category: "Erste Schritte",
@@ -3550,7 +3560,7 @@ const HELP_DATA = [
       { q: "Wie lege ich eine Aufgabe an?", a: `Tippe unten auf „Mehr" → „Aufgaben". Wähle eine Liste und tippe auf „Aufgabe hinzufügen" – dort gibt es Titel, Farbe, ein Fälligkeitsdatum und ein optionales „Anzeigen ab"-Datum. Für ein schnelles To-do zwischendurch reicht das Feld „Aufgabe hinzufügen …" in der Kachel „Nicht vergessen" auf der Übersicht.` },
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
-      { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Fälligkeit setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben). Beim Löschen (×) erscheint eine „Ja/Nein"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
+      { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
       { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Klasse antippen → Reiter „Überblick" → den Bereich „Abhak-Listen" aufklappen. Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Die Zahl der offenen Abgaben steht als Hinweis direkt am Bereichstitel. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
       { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Klasse antippen → Reiter „Überblick" → den Bereich „Eigene Merkmale" aufklappen. Gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Fotoerlaubnis" mit „Ja, Nein, Nicht geklärt", „Mensa" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung auf einen Blick und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
     ],
@@ -15693,21 +15703,29 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
                           {t.showFrom && editNotizId !== t.id && (
                             <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
                           )}
-                          {t.dueDate && (
-                            <span className={`text-[10px] shrink-0 px-1.5 py-0.5 rounded-full font-medium ${(() => {
-                              const diff = Math.ceil((localDate(t.dueDate) - new Date(new Date().toDateString())) / 86400000);
-                              if (diff < 0) return "bg-red-100 text-red-700";
-                              if (diff === 0) return "bg-red-100 text-red-700";
-                              if (diff <= 3) return "bg-amber-100 text-amber-700";
-                              return "bg-stone-100 text-stone-500";
-                            })()}`} title="Fällig">
-                              {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
-                            </span>
-                          )}
+                          {t.dueDate && (() => {
+                            const urg = urgencyInfo(t.dueDate);
+                            return (
+                              <span className="flex items-center gap-1 shrink-0">
+                                <button onClick={() => {
+                                  const hat = !!t.dueDate;
+                                  if (hat) { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) delete x.dueDate; return d; }); }
+                                  else { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.dueDate = isoDate(new Date()); return d; }); }
+                                }} className="text-stone-300 hover:text-stone-600 shrink-0 p-1" title={t.dueDate ? "Frist entfernen" : "Frist setzen"}>
+                                  <Clock size={12} />
+                                </button>
+                                <input type="date" value={t.dueDate} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.dueDate = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
+                                <span className={`text-[11px] shrink-0 px-2 py-0.5 rounded-full font-medium ${urg.cls || "bg-stone-100 text-stone-500"}`} title="Fällig">
+                                  {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                                  {urg.label ? ` · ${urg.label}` : ""}
+                                </span>
+                              </span>
+                            );
+                          })()}
                           {confirmDeleteNotiz === t.id ? (
-                            <span className="flex items-center gap-1 shrink-0">
-                              <button onClick={() => { update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; }); setConfirmDeleteNotiz(null); }} className="text-[10px] text-red-600 font-medium px-1.5 py-0.5 bg-red-50 rounded press-scale">Ja</button>
-                              <button onClick={() => setConfirmDeleteNotiz(null)} className="text-[10px] text-stone-500 px-1.5 py-0.5 press-scale">Nein</button>
+                            <span className="flex items-center gap-2 shrink-0">
+                              <button onClick={() => { update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; }); setConfirmDeleteNotiz(null); }} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                              <button onClick={() => setConfirmDeleteNotiz(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
                             </span>
                           ) : (
                             <button onClick={() => setConfirmDeleteNotiz(t.id)} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
@@ -15737,10 +15755,13 @@ function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele,
                         <CalendarDays size={11} /> {notizDatum ? "Sichtbar ab:" : "Erst später anzeigen"}
                       </button>
                       {notizDatum && <input type="date" value={notizDatum} onChange={(e) => setNotizDatum(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
-                      <button onClick={() => setNotizFaellig(notizFaellig ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizFaellig ? "text-red-600" : "text-stone-400"}`}>
-                        <Clock size={11} /> {notizFaellig ? "Fällig bis:" : "Fälligkeit setzen"}
+                      <button onClick={() => setNotizFaellig(notizFaellig ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizFaellig ? "akzent-text" : "text-stone-400"}`}>
+                        <Clock size={11} /> {notizFaellig ? "Erledigen bis:" : "Frist setzen"}
                       </button>
                       {notizFaellig && <input type="date" value={notizFaellig} onChange={(e) => setNotizFaellig(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
+                      {notizDatum && notizFaellig && notizDatum > notizFaellig && (
+                        <span className="text-[10px] text-amber-600">⚠ Sichtbar-ab liegt nach der Frist</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -16445,21 +16466,29 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                       {t.showFrom && editNotizIdVB !== t.id && (
                                         <input type="date" value={t.showFrom} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.showFrom = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
                                       )}
-                                      {t.dueDate && (
-                                        <span className={`text-[10px] shrink-0 px-1.5 py-0.5 rounded-full font-medium ${(() => {
-                                          const diff = Math.ceil((localDate(t.dueDate) - new Date(new Date().toDateString())) / 86400000);
-                                          if (diff < 0) return "bg-red-100 text-red-700";
-                                          if (diff === 0) return "bg-red-100 text-red-700";
-                                          if (diff <= 3) return "bg-amber-100 text-amber-700";
-                                          return "bg-stone-100 text-stone-500";
-                                        })()}`} title="Fällig">
-                                          {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
-                                        </span>
-                                      )}
+                                      {t.dueDate && (() => {
+                                        const urg = urgencyInfo(t.dueDate);
+                                        return (
+                                          <span className="flex items-center gap-1 shrink-0">
+                                            <button onClick={() => {
+                                              const hat = !!t.dueDate;
+                                              if (hat) { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) delete x.dueDate; return d; }); }
+                                              else { update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.dueDate = isoDate(new Date()); return d; }); }
+                                            }} className="text-stone-300 hover:text-stone-600 shrink-0 p-1" title={t.dueDate ? "Frist entfernen" : "Frist setzen"}>
+                                              <Clock size={12} />
+                                            </button>
+                                            <input type="date" value={t.dueDate} onChange={(e) => update((d) => { const x = d.tasks.find((x) => x.id === t.id); if (x) x.dueDate = e.target.value || undefined; return d; })} className="text-[10px] text-stone-400 border-none bg-transparent w-20 shrink-0" />
+                                            <span className={`text-[11px] shrink-0 px-2 py-0.5 rounded-full font-medium ${urg.cls || "bg-stone-100 text-stone-500"}`} title="Fällig">
+                                              {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                                              {urg.label ? ` · ${urg.label}` : ""}
+                                            </span>
+                                          </span>
+                                        );
+                                      })()}
                                       {confirmDeleteNotizVB === t.id ? (
-                                        <span className="flex items-center gap-1 shrink-0">
-                                          <button onClick={() => { update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; }); setConfirmDeleteNotizVB(null); }} className="text-[10px] text-red-600 font-medium px-1.5 py-0.5 bg-red-50 rounded press-scale">Ja</button>
-                                          <button onClick={() => setConfirmDeleteNotizVB(null)} className="text-[10px] text-stone-500 px-1.5 py-0.5 press-scale">Nein</button>
+                                        <span className="flex items-center gap-2 shrink-0">
+                                          <button onClick={() => { update((d) => { d.tasks = d.tasks.filter((x) => x.id !== t.id); return d; }); setConfirmDeleteNotizVB(null); }} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                                          <button onClick={() => setConfirmDeleteNotizVB(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
                                         </span>
                                       ) : (
                                         <button onClick={() => setConfirmDeleteNotizVB(t.id)} className="text-stone-300 hover:text-red-500 shrink-0 p-1"><X size={13} /></button>
@@ -16489,10 +16518,13 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                     <CalendarDays size={11} /> {notizDatumVB ? "Sichtbar ab:" : "Erst später anzeigen"}
                                   </button>
                                   {notizDatumVB && <input type="date" value={notizDatumVB} onChange={(e) => setNotizDatumVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
-                                  <button onClick={() => setNotizFaelligVB(notizFaelligVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizFaelligVB ? "text-red-600" : "text-stone-400"}`}>
-                                    <Clock size={11} /> {notizFaelligVB ? "Fällig bis:" : "Fälligkeit setzen"}
+                                  <button onClick={() => setNotizFaelligVB(notizFaelligVB ? "" : isoDate(new Date()))} className={`text-[11px] flex items-center gap-1 ${notizFaelligVB ? "akzent-text" : "text-stone-400"}`}>
+                                    <Clock size={11} /> {notizFaelligVB ? "Erledigen bis:" : "Frist setzen"}
                                   </button>
                                   {notizFaelligVB && <input type="date" value={notizFaelligVB} onChange={(e) => setNotizFaelligVB(e.target.value)} className="text-[11px] input-base py-0 px-1.5" />}
+                                  {notizDatumVB && notizFaelligVB && notizDatumVB > notizFaelligVB && (
+                                    <span className="text-[10px] text-amber-600">⚠ Sichtbar-ab liegt nach der Frist</span>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -18263,10 +18295,10 @@ function StundenplanTab({ data, update, onOpenFach }) {
         {fach && (
           <button
             onClick={(e) => { e.stopPropagation(); setEditingCell({ day: block.day, period: block.startPeriod }); }}
-            className="absolute top-0.5 right-0.5 w-4 h-4 rounded flex items-center justify-center z-10 opacity-40 hover:opacity-100"
+            className="absolute -top-1 -right-1 w-8 h-8 rounded flex items-center justify-center z-10 opacity-60 active:opacity-100"
             aria-label="Fach ändern"
           >
-            <Pencil size={8} />
+            <Pencil size={12} />
           </button>
         )}
         <button
@@ -18887,16 +18919,6 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
     reader.readAsText(file);
   }
 
-  const urgencyInfo = (dateStr) => {
-    if (!dateStr) return { cls: "", label: "" };
-    const diff = Math.ceil((localDate(dateStr) - new Date(new Date().toDateString())) / 86400000);
-    if (diff < 0) return { cls: "bg-red-100 text-red-700", label: `${Math.abs(diff)}d überfällig` };
-    if (diff === 0) return { cls: "bg-red-100 text-red-700", label: "heute" };
-    if (diff === 1) return { cls: "bg-amber-100 text-amber-700", label: "morgen" };
-    if (diff <= 3) return { cls: "bg-amber-50 text-amber-600", label: `in ${diff} Tagen` };
-    return { cls: "", label: "" };
-  };
-
   const sorted = [...data.events]
     .map((e) => ({ ...e, _eff: e.recurrence ? nextOccurrence(e) : e.date }))
     .filter((e) => !filterDate || isEventOnDate(e, filterDate))
@@ -19486,11 +19508,15 @@ function AufgabenTab({ data, update }) {
                     <EyeOff size={10} /> ab {localDate(t.showFrom).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
                   </span>
                 )}
-                {t.dueDate && (
-                  <span className={`text-xs rounded-full px-2.5 py-1 shrink-0 ${!t.done && localDate(t.dueDate) < new Date() ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
-                    {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}{t.dueDate.length > 10 ? `, ${t.dueDate.slice(11, 16)}` : ""}
-                  </span>
-                )}
+                {t.dueDate && (() => {
+                  const urg = !t.done ? urgencyInfo(t.dueDate) : { cls: "", label: "" };
+                  return (
+                    <span className={`text-xs rounded-full px-2 py-0.5 shrink-0 font-medium ${urg.cls || "bg-stone-100 text-stone-600"}`}>
+                      {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}{t.dueDate.length > 10 ? `, ${t.dueDate.slice(11, 16)}` : ""}
+                      {urg.label ? ` · ${urg.label}` : ""}
+                    </span>
+                  );
+                })()}
                 <button onClick={() => removeTask(t.id)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={14} /></button>
               </li>
             );
