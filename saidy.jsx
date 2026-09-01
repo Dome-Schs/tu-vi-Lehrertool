@@ -16580,24 +16580,6 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
               />
             </div>
 
-            {faecher.length > 0 && (
-              <div>
-                <div className="t-section mb-2">Noten nach Fach</div>
-                <div className="karte rounded-xl divide-y divide-stone-100 overflow-hidden">
-                  {faecher.map((f) => (
-                    <button
-                      key={f.id}
-                      onClick={() => onOpenFach?.(f.id)}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 active:bg-stone-100 transition-colors"
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: isColor && f.color ? f.color : "#C0BBA8" }} />
-                      <span className="flex-1 text-sm text-stone-700 truncate">{f.subject}</span>
-                      <ChevronRight size={15} className="text-stone-300 shrink-0" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
