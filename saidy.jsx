@@ -1136,6 +1136,7 @@ function sanitizeImport(imported) {
     })).filter((t) => t.day && t.period !== null),
     tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), showFrom: S_DATUM(t.showFrom) || undefined, done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined })),
     taskLists: map("taskLists", (l) => ({ ...l, name: S_TEXT(l.name, 100), icon: S_TEXT(l.icon, 50) })),
+    checklisten: map("checklisten", (c) => ({ ...c, title: S_TEXT(c.title, 200), classId: S_TEXT(c.classId, 50), erledigt: S_LISTE(c.erledigt).filter((x) => typeof x === "string"), createdAt: S_DATUM(c.createdAt) || isoDate(new Date()), archivedAt: S_DATUM(c.archivedAt) || undefined })),
     lessonTopics: map("lessonTopics", (t) => ({ ...t, text: S_TEXT(t.text, 300), date: S_DATUM(t.date) })),
     duties: map("duties", (d) => ({
       ...d, name: S_TEXT(d.name, 100), color: S_FARBE(d.color),
@@ -3546,6 +3547,7 @@ const HELP_DATA = [
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Nicht vergessen". Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Diese Klassen-Notizen erscheinen dann auch auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
+      { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Öffne das Klassen-Dashboard (Klasse antippen) und scrolle zum Bereich „Abhak-Listen". Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Auch im Briefing wird dich Tu-vi daran erinnern. Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
     ],
   },
   {
@@ -9675,6 +9677,23 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
       }
     }
 
+    /* Abhak-Listen */
+    const briefChecklisten = (data.checklisten || [])
+      .filter((c) => !c.archivedAt)
+      .map((c) => {
+        const cls = data.classes.find((x) => x.id === c.classId);
+        const total = data.students.filter((s) => s.classId === c.classId && !s.deletedAt).length;
+        const done = c.erledigt.filter((id) => data.students.some((s) => s.id === id && s.classId === c.classId && !s.deletedAt)).length;
+        return { ...c, cls, offen: total - done };
+      })
+      .filter((c) => c.offen > 0);
+    briefChecklisten.forEach((c) => {
+      satz.push({
+        text: `Bei ${c.cls?.name || "einer Klasse"} fehlen noch ${c.offen} Abgaben für „${c.title}“.`,
+        urgent: false,
+      });
+    });
+
     /* Backup-Status und Förderziele stehen bewusst nicht im Briefing:
        Der Backup-Hinweis hat bereits ein eigenes Band über dem Dashboard,
        offene Förderziele sind kein Tagesgeschehen. */
@@ -10043,6 +10062,16 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
   const aufgabenUeberfaellig = offeneAufgaben.filter((t) => aufgabenRang(t) === 0).length;
   const aufgabenHeute = offeneAufgaben.filter((t) => aufgabenRang(t) === 1).length;
   const aufgabenDringend = aufgabenUeberfaellig + aufgabenHeute;
+
+  const offeneChecklisten = (data.checklisten || [])
+    .filter((c) => !c.archivedAt)
+    .map((c) => {
+      const cls = data.classes.find((x) => x.id === c.classId);
+      const total = data.students.filter((s) => s.classId === c.classId && !s.deletedAt).length;
+      const done = c.erledigt.filter((id) => data.students.some((s) => s.id === id && s.classId === c.classId && !s.deletedAt)).length;
+      return { ...c, cls, total, done, offen: total - done };
+    })
+    .filter((c) => c.offen > 0);
 
   const [showAttentionSheet, setShowAttentionSheet] = useState(false);
   const [showNichtVergessen, setShowNichtVergessen] = useState(false);
@@ -10775,6 +10804,18 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             <p className="text-[11px] text-stone-400 flex items-center gap-1 mt-1"><EyeOff size={10} /> {vorausgeplant} vorausgeplant</p>
           )}
 
+          {offeneChecklisten.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-stone-100 space-y-1">
+              {offeneChecklisten.map((c) => (
+                <div key={c.id} className="flex items-center gap-2 text-sm text-stone-600">
+                  <ListChecks size={13} className="text-stone-400 shrink-0" />
+                  <span className="truncate flex-1">{c.cls?.name || "?"}: {c.title}</span>
+                  <span className="shrink-0"> — noch <span className="text-red-600 font-semibold">{c.offen}</span> offen</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-stone-100">
             <input
               value={neueAufgabe}
@@ -10838,6 +10879,21 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               </ul>
             ) : (
               <p className="text-sm text-stone-400 py-4">Nichts offen.</p>
+            )}
+            {offeneChecklisten.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-stone-100">
+                <div className="text-xs font-medium text-stone-500 mb-2">Offene Listen</div>
+                <ul className="space-y-2">
+                  {offeneChecklisten.map((c) => (
+                    <li key={c.id} className="flex items-center gap-2 text-sm text-stone-700">
+                      <ListChecks size={14} className="text-stone-400 shrink-0" />
+                      <span className="flex-1 truncate">{c.cls?.name || "?"}: {c.title}</span>
+                      <span className="shrink-0 text-red-600 font-semibold">{c.offen}</span>
+                      <span className="text-stone-400 text-xs shrink-0">offen</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             <button
               onClick={() => { setShowNichtVergessen(false); onNavigate?.("aufgaben"); }}
@@ -15905,6 +15961,8 @@ function NotenLineChart({ muendlich, schriftlich, w = 320, h = 160 }) {
 function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onClose, onOpenStudent, onFachActions, onOpenSchueler, onOpenSitzplan, onOpenDashboard, onUmbenennen, onOpenFach }) {
   const [activeTab, setActiveTab] = useState(initialTab || "ueberblick");
   const [klassenNotizInput, setKlassenNotizInput] = useState("");
+  const [neueListeName, setNeueListeName] = useState("");
+  const [openChecklistId, setOpenChecklistId] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
   const cls = data.classes.find((c) => c.id === klasseId);
@@ -16132,6 +16190,113 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                         <Plus size={16} />
                       </button>
                     </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Abhak-Listen */}
+            {(() => {
+              const listen = (data.checklisten || []).filter((c) => c.classId === klasseId && !c.archivedAt);
+              const archiviert = (data.checklisten || []).filter((c) => c.classId === klasseId && c.archivedAt);
+              const addListe = () => {
+                const name = neueListeName.trim();
+                if (!name) return;
+                update((d) => {
+                  d.checklisten = d.checklisten || [];
+                  d.checklisten.push({ id: uid(), title: name, classId: klasseId, erledigt: [], createdAt: isoDate(new Date()) });
+                  return d;
+                });
+                setNeueListeName("");
+              };
+              const toggleStudent = (listeId, studentId) => {
+                update((d) => {
+                  const cl = (d.checklisten || []).find((c) => c.id === listeId);
+                  if (!cl) return d;
+                  if (cl.erledigt.includes(studentId)) { cl.erledigt = cl.erledigt.filter((x) => x !== studentId); }
+                  else { cl.erledigt.push(studentId); }
+                  return d;
+                });
+              };
+              const archivListe = (listeId) => {
+                update((d) => {
+                  const cl = (d.checklisten || []).find((c) => c.id === listeId);
+                  if (cl) cl.archivedAt = isoDate(new Date());
+                  return d;
+                });
+                if (openChecklistId === listeId) setOpenChecklistId(null);
+              };
+              const loeschListe = (listeId) => {
+                update((d) => { d.checklisten = (d.checklisten || []).filter((c) => c.id !== listeId); return d; });
+                if (openChecklistId === listeId) setOpenChecklistId(null);
+              };
+              const openCl = listen.find((c) => c.id === openChecklistId);
+              return (
+                <div>
+                  <div className="t-section mb-2 flex items-center gap-1.5">
+                    <ClipboardCheck size={13} />
+                    Abhak-Listen
+                  </div>
+                  <div className="karte rounded-xl p-4 space-y-3">
+                    {listen.length > 0 && (
+                      <ul className="space-y-1.5">
+                        {listen.map((cl) => {
+                          const total = students.length;
+                          const done = cl.erledigt.filter((id) => students.some((s) => s.id === id)).length;
+                          const offen = total - done;
+                          return (
+                            <li key={cl.id} className="flex items-center gap-2">
+                              <button onClick={() => setOpenChecklistId(openChecklistId === cl.id ? null : cl.id)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text truncate">
+                                <span className="font-medium">{cl.title}</span>
+                                {offen > 0
+                                  ? <span className="text-red-600 font-semibold ml-1.5">— noch {offen} offen</span>
+                                  : <span className="text-emerald-600 ml-1.5">✓ alle erledigt</span>
+                                }
+                              </button>
+                              {offen === 0 && (
+                                <button onClick={() => archivListe(cl.id)} className="text-stone-300 hover:text-stone-500 shrink-0" title="Archivieren"><FolderCheck size={14} /></button>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    {openCl && (
+                      <div className="border-t border-stone-100 pt-3 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-stone-500">{openCl.title}</span>
+                          <div className="flex gap-1">
+                            <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={13} /></button>
+                            <button onClick={() => setOpenChecklistId(null)} className="text-stone-300 hover:text-stone-500 p-1"><X size={13} /></button>
+                          </div>
+                        </div>
+                        {students.map((s) => {
+                          const checked = openCl.erledigt.includes(s.id);
+                          return (
+                            <button key={s.id} onClick={() => toggleStudent(openCl.id, s.id)} className="w-full flex items-center gap-2 py-1 press-scale text-left">
+                              <span className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${checked ? "akzent-flaeche border-transparent" : "border-stone-300"}`}>
+                                {checked && <Check size={12} className="text-white" />}
+                              </span>
+                              <span className={`text-sm ${checked ? "text-stone-400 line-through" : "text-stone-700"}`}>{s.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 pt-1 border-t border-stone-100">
+                      <input
+                        value={neueListeName}
+                        onChange={(e) => setNeueListeName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") addListe(); }}
+                        placeholder="Neue Liste erstellen …"
+                        className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
+                        maxLength={100}
+                      />
+                      <button onClick={addListe} disabled={!neueListeName.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={14} /></button>
+                    </div>
+                    {archiviert.length > 0 && (
+                      <p className="text-[11px] text-stone-400">{archiviert.length} archiviert</p>
+                    )}
                   </div>
                 </div>
               );
