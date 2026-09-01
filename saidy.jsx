@@ -18830,6 +18830,16 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
     reader.readAsText(file);
   }
 
+  const urgencyInfo = (dateStr) => {
+    if (!dateStr) return { cls: "", label: "" };
+    const diff = Math.ceil((localDate(dateStr) - new Date(new Date().toDateString())) / 86400000);
+    if (diff < 0) return { cls: "bg-red-100 text-red-700", label: `${Math.abs(diff)}d überfällig` };
+    if (diff === 0) return { cls: "bg-red-100 text-red-700", label: "heute" };
+    if (diff === 1) return { cls: "bg-amber-100 text-amber-700", label: "morgen" };
+    if (diff <= 3) return { cls: "bg-amber-50 text-amber-600", label: `in ${diff} Tagen` };
+    return { cls: "", label: "" };
+  };
+
   const sorted = [...data.events]
     .map((e) => ({ ...e, _eff: e.recurrence ? nextOccurrence(e) : e.date }))
     .filter((e) => !filterDate || isEventOnDate(e, filterDate))
@@ -18970,9 +18980,15 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                       <RefreshCw size={9} />{RECURRENCE_LABELS[e.recurrence]}
                     </span>
                   )}
-                  <span className="text-stone-400 text-xs">
-                    {new Date(e._eff || e.date).toLocaleDateString("de-DE")}{e.time ? `, ${e.time}` : ""}
-                  </span>
+                  {(() => {
+                    const urg = !e.recurrence ? urgencyInfo(e._eff || e.date) : { cls: "", label: "" };
+                    return (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${urg.cls || "text-stone-400"}`}>
+                        {new Date(e._eff || e.date).toLocaleDateString("de-DE")}{e.time ? `, ${e.time}` : ""}
+                        {urg.label ? ` · ${urg.label}` : ""}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
               <button onClick={() => remove(e.id)} className="text-stone-300 hover:text-red-500 shrink-0 mt-0.5"><Trash2 size={14} /></button>
@@ -18997,12 +19013,18 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                 <span className="w-2.5 h-2.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: t.color }} />
                 <div className="flex-1 min-w-0">
                   <div className="text-stone-800 leading-snug">{t.title}</div>
-                  <div className="mt-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${localDate(t.dueDate) < new Date() ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
-                      {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
-                      {t.dueDate.length > 10 ? `, ${t.dueDate.slice(11, 16)}` : ""}
-                    </span>
-                  </div>
+                  {(() => {
+                    const urg = urgencyInfo(t.dueDate.slice(0, 10));
+                    return (
+                      <div className="mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${urg.cls || "bg-stone-100 text-stone-600"}`}>
+                          {localDate(t.dueDate).toLocaleDateString("de-DE", { day: "numeric", month: "short" })}
+                          {t.dueDate.length > 10 ? `, ${t.dueDate.slice(11, 16)}` : ""}
+                          {urg.label ? ` · ${urg.label}` : ""}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </li>
             ))}
