@@ -1139,6 +1139,7 @@ function sanitizeImport(imported) {
     checklisten: map("checklisten", (c) => ({ ...c, title: S_TEXT(c.title, 200), classId: S_TEXT(c.classId, 50), erledigt: S_LISTE(c.erledigt).filter((x) => typeof x === "string"), createdAt: S_DATUM(c.createdAt) || isoDate(new Date()), archivedAt: S_DATUM(c.archivedAt) || undefined })),
     klassenFelder: map("klassenFelder", (f) => ({ ...f, label: S_TEXT(f.label, 100), classId: S_TEXT(f.classId, 50), typ: "auswahl", optionen: S_LISTE(f.optionen).map((o) => S_TEXT(o, 100)).filter(Boolean), createdAt: S_DATUM(f.createdAt) || isoDate(new Date()) })),
     feldWerte: map("feldWerte", (v) => ({ ...v, feldId: S_TEXT(v.feldId, 50), schuelerId: S_TEXT(v.schuelerId, 50), wert: S_TEXT(v.wert, 100) })),
+    dismissedAttention: map("dismissedAttention", (d) => ({ id: S_TEXT(d.id, 100), date: S_DATUM(d.date) })).filter((d) => d.date),
     lessonTopics: map("lessonTopics", (t) => ({ ...t, text: S_TEXT(t.text, 300), date: S_DATUM(t.date) })),
     duties: map("duties", (d) => ({
       ...d, name: S_TEXT(d.name, 100), color: S_FARBE(d.color),
@@ -10038,7 +10039,8 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         icon: AlertTriangle,
       });
     });
-    return items;
+    const dismissed = (data.dismissedAttention || []).filter((d) => d.date === todayStr);
+    return items.filter((it) => !dismissed.some((d) => d.id === it.id));
   })();
 
   /* Fuer die Heute-Seite zaehlt, was heute dran ist. Ueberfaellige zuerst,
@@ -10076,6 +10078,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     .filter((c) => c.offen > 0);
 
   const [showAttentionSheet, setShowAttentionSheet] = useState(false);
+  const [confirmDismissId, setConfirmDismissId] = useState(null);
   const [showNichtVergessen, setShowNichtVergessen] = useState(false);
   const [neueAufgabe, setNeueAufgabe] = useState("");
   const [matFehltForm, setMatFehltForm] = useState(null);
@@ -10911,33 +10914,61 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
 
       {/* Aufmerksamkeit-Sheet – volle Liste beim Klick auf die Kachel */}
       {showAttentionSheet && (
-        <div className="fixed inset-0 bg-stone-900/40 z-50 flex items-end md:items-center justify-center" onClick={() => setShowAttentionSheet(false)}>
+        <div className="fixed inset-0 bg-stone-900/40 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowAttentionSheet(false); setConfirmDismissId(null); }}>
           <div className="bg-white w-full md:max-w-md rounded-t-2xl md:rounded-2xl shadow-xl p-4 pb-[max(2rem,env(safe-area-inset-bottom))] max-h-[85vh] overflow-y-auto sheet" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <div className="font-semibold text-stone-800">Deine Aufmerksamkeit</div>
-              <button onClick={() => setShowAttentionSheet(false)} className="w-9 h-9 flex items-center justify-center text-stone-400"><X size={18} /></button>
+              <button onClick={() => { setShowAttentionSheet(false); setConfirmDismissId(null); }} className="w-9 h-9 flex items-center justify-center text-stone-400"><X size={18} /></button>
             </div>
-            <ul className="space-y-2">
-              {attentionItems.map((it) => {
-                const Icon = it.icon || AlertCircle;
-                return (
-                  <li key={it.id}>
-                    <button
-                      onClick={() => { it.onClick?.(); setShowAttentionSheet(false); }}
-                      disabled={!it.onClick}
-                      className="w-full flex items-start gap-3 py-2 text-left press-scale disabled:cursor-default"
-                    >
-                      <Icon size={16} className="shrink-0 text-stone-400 mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm text-stone-800 leading-tight">{it.titel}</div>
-                        {it.sub && <div className="text-[11px] text-stone-500 mt-0.5">{it.sub}</div>}
-                      </div>
-                      {it.onClick && <ChevronRight size={14} className="text-stone-300 shrink-0 mt-0.5" />}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            {attentionItems.length ? (
+              <ul className="space-y-1">
+                {attentionItems.map((it) => {
+                  const Icon = it.icon || AlertCircle;
+                  const confirming = confirmDismissId === it.id;
+                  return (
+                    <li key={it.id} className="rounded-xl hover:bg-stone-50 transition-colors">
+                      {confirming ? (
+                        <div className="px-3 py-2.5">
+                          <p className="text-sm text-stone-700 mb-2">Diesen Hinweis für heute ausblenden?</p>
+                          <p className="text-xs text-stone-500 mb-3 leading-relaxed">{it.titel}</p>
+                          <div className="flex gap-2">
+                            <button onClick={() => setConfirmDismissId(null)} className="flex-1 py-1.5 rounded-lg text-sm text-stone-600 bg-stone-100 press-scale">Abbrechen</button>
+                            <button onClick={() => {
+                              update((d) => {
+                                d.dismissedAttention = (d.dismissedAttention || []).filter((x) => x.date >= todayStr);
+                                d.dismissedAttention.push({ id: it.id, date: todayStr });
+                                return d;
+                              });
+                              setConfirmDismissId(null);
+                            }} className="flex-1 py-1.5 rounded-lg text-sm text-white bg-red-500 press-scale">Ausblenden</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-3 px-3 py-2">
+                          <button
+                            onClick={() => { if (it.onClick) { it.onClick(); setShowAttentionSheet(false); } }}
+                            disabled={!it.onClick}
+                            className="flex-1 flex items-start gap-3 text-left press-scale disabled:cursor-default min-w-0"
+                          >
+                            <Icon size={16} className="shrink-0 text-stone-400 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm text-stone-800 leading-tight">{it.titel}</div>
+                              {it.sub && <div className="text-[11px] text-stone-500 mt-0.5">{it.sub}</div>}
+                            </div>
+                            {it.onClick && <ChevronRight size={14} className="text-stone-300 shrink-0 mt-0.5" />}
+                          </button>
+                          <button onClick={() => setConfirmDismissId(it.id)} className="shrink-0 p-1.5 text-stone-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors" title="Ausblenden">
+                            <EyeOff size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-sm text-stone-400 py-4 text-center">Alles erledigt.</p>
+            )}
           </div>
         </div>
       )}
