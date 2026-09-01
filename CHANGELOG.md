@@ -5,6 +5,39 @@ Format: Nutzersicht, auf Deutsch, für Lehrerinnen und Lehrer.
 
 ---
 
+## [1.5] – 01.09.2026
+
+### Neu
+- **Aufmerksamkeit ausblenden**: Hinweise unter „Deine Aufmerksamkeit" lassen sich jetzt für den aktuellen Tag ausblenden — mit einer kurzen Bestätigung, damit nichts aus Versehen verschwindet. Am nächsten Tag taucht der Hinweis wieder auf, falls er noch relevant ist.
+- **Dringlichkeitsfarben im Kalender**: Termine und Aufgaben zeigen jetzt farblich an, wie nah sie rücken. Rot bedeutet „heute oder überfällig", Orange heißt „noch 1–3 Tage" — so sieht man auf einen Blick, was zuerst erledigt werden muss.
+- **Fälligkeitsdatum bei „Nicht vergessen"**: Beim Anlegen einer Notiz kann jetzt optional ein Fälligkeitsdatum gesetzt werden. Die Notiz bekommt dann ein farbiges Badge, das zeigt, wie dringend sie ist.
+- **Stundenplan — Fach direkt öffnen**: Ein Tipp auf eine belegte Stunde im Stundenplan navigiert direkt zum Fach im Noten-Tab. Zum Ändern der Zuweisung gibt es jetzt ein eigenes Stift-Symbol — so kommt man nicht mehr versehentlich in die Bearbeitung.
+
+### Verbessert
+- **Klassen-Überblick aufgeräumt**: „Nicht vergessen", „Abhak-Listen" und „Eigene Merkmale" sind jetzt in einem Akkordeon zusammengefasst. Jeder Bereich ist einzeln aufklappbar und zeigt per Badge direkt an, wie viele Einträge vorhanden oder offen sind. Die Seite ist dadurch deutlich übersichtlicher.
+- **„Nicht vergessen" — Lösch-Bestätigung**: Notizen können nicht mehr versehentlich gelöscht werden. Vor dem Löschen fragt Saidy jetzt mit Ja/Nein nach.
+- **„Noten nach Fach" aus dem Klassen-Überblick entfernt**: Der Block war doppelt, weil dieselbe Information schon über den Noten-Tab erreichbar ist. Die Seite ist dadurch kürzer und klarer.
+
+### Für die „Was ist neu?"-Ansicht in der App
+
+```json
+{
+  "version": "1.5",
+  "date": "01.09.2026",
+  "title": "Aufgeräumter Klassen-Überblick und Dringlichkeitsfarben",
+  "highlights": [
+    "Der Klassen-Überblick ist aufgeräumt: „Nicht vergessen", „Abhak-Listen" und „Eigene Merkmale" stecken jetzt in einem Akkordeon mit Badges.",
+    "Termine und Aufgaben im Kalender zeigen farblich an, wie nah sie rücken — rot heißt heute oder überfällig, orange noch 1–3 Tage.",
+    "Hinweise unter „Deine Aufmerksamkeit" lassen sich jetzt für den aktuellen Tag ausblenden.",
+    "Notizen unter „Nicht vergessen" bekommen ein optionales Fälligkeitsdatum mit farbigem Badge.",
+    "Ein Tipp auf eine Stunde im Stundenplan öffnet direkt das Fach im Noten-Tab.",
+    "Notizen können nicht mehr versehentlich gelöscht werden — es kommt jetzt eine Bestätigung."
+  ]
+}
+```
+
+---
+
 ## [1.4] – 06.08.2026
 
 ### Neu
