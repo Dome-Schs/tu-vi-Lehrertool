@@ -22,7 +22,7 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
-  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil,
+  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil, Dumbbell,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
@@ -3465,8 +3465,8 @@ const HELP_DATA = [
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
       { q: `Was steht im Reiter „Verwaltung" bei den Klassen?`, a: `Drei Übersichten über alle Klassen hinweg: Entschuldigungen, Förderziele und Geburtstage. Der Unterschied zu den Kacheln auf der Startseite: Diese Listen lassen sich auch dann öffnen, wenn gerade nichts offen ist – etwa um im Elterngespräch nachzusehen, wann ein Kind zuletzt eine Entschuldigung abgegeben hat.` },
       { q: "Kann Tu-vi dunkel oder hell dargestellt werden?", a: `Ja, du entscheidest das selbst: „Mehr" → „Einstellungen" → „Darstellung" → ganz oben unter „Erscheinungsbild" stehen drei Knöpfe. „Hell" und „Dunkel" gelten fest, unabhängig davon, wie dein Gerät eingestellt ist – du kannst Tu-vi also hell nutzen, obwohl dein iPhone im Dunkelmodus läuft. „Automatisch" übernimmt die Einstellung des Geräts und wechselt abends mit, wenn dieses auf dunkel umschaltet. Voreingestellt ist „Automatisch". Die Wahl gilt jeweils nur auf dem Gerät, an dem du sie triffst – am Mac hell und am iPhone dunkel ist also möglich. Ausdrucke (Schülerakte, Berichte, Notenlisten) sind immer hell, damit sie auf Papier lesbar bleiben.` },
-      { q: "Wie ist die Heute-Seite aufgebaut?", a: `Von oben nach unten priorisiert – die App zeigt nicht alles auf einmal, sondern das was gerade zählt: (1) Kopf mit der Wortmarke „Tu-vi", Begrüßung, Datum und rechts dem Sternchen für den Farb-Modus. (2) „JETZT" – die große Karte für die laufende Stunde, mit Restzeit, Fach & Klasse, Thema, den zu dieser Stunde gehörenden offenen Punkten (Entschuldigungen, „heute Klassenarbeit"-Warnung) und dem Material aus dem Fach. Ein „Stunde öffnen"-Knopf springt in die Schnellerfassung. (3) „ALS NÄCHSTES" – die nächste Stunde, mit „in X Min." oder „in X Std." und – das ist der eigentliche Trick – den Material-Chips unter „Vorher mitnehmen", damit du in der aktuellen Stunde schon weißt, was du gleich einsammeln musst (z. B. „12 Volleybälle · 6 Hütchen · Leibchen"). (4) Zweispaltig „X Dinge brauchen deine Aufmerksamkeit" (Sheet mit allen Signalen) und „Nicht vergessen" (persönliche Aufgabenliste mit +-Feld zum sofort Ergänzen). (5) „Danach heute" – die restlichen Stunden als kompakte Zeilenliste. (6) Kleine Wochentagsleiste zum Vor- und Zurückblättern. (7) Wochenrückblick von Freitag 12 Uhr bis Sonntag Nacht, falls aktiv. (8) Unterrichtstipp des Tages, falls in den Einstellungen aktiv.` },
-      { q: "Was zeigen die Karten JETZT und ALS NÄCHSTES?", a: `Beide Karten führen dich durch den aktuellen Moment. JETZT ist die dominante Karte für die laufende Stunde: Fach·Klasse·Thema groß, darunter die konkret zu dieser Stunde relevanten Punkte – Zahl der offenen Entschuldigungen dieser Klasse, „Heute: [Klassenarbeit-Titel]" wenn eine Prüfung ansteht, verknüpfte Aufgaben, und ganz wichtig: das Material, das du für dieses Fach eingetragen hast (Feld „Immer mitnehmen" im Fach-Editor). Rechts oben läuft die Restzeit. „Stunde öffnen" springt in die Schnellerfassung. Die ALS-NÄCHSTES-Karte ist etwas kleiner: Anfangszeit + „in X Std. Y Min.", Fach·Klasse·Raum, Thema falls hinterlegt, und die Material-Chips als „Vorher mitnehmen". Der Sinn: du bist noch in Mathe, siehst aber schon dass du gleich zwölf Volleybälle brauchst, und kannst sie auf dem Weg mitnehmen.` },
+      { q: "Wie ist die Heute-Seite aufgebaut?", a: `Von oben nach unten priorisiert – die App zeigt nicht alles auf einmal, sondern das was gerade zählt: (1) Kopf mit der Wortmarke „Tu-vi", Begrüßung, Datum und rechts dem Sternchen für den Farb-Modus. (2) „JETZT" – die große Karte für die laufende Stunde, mit Restzeit, Fach & Klasse, Thema, den zu dieser Stunde gehörenden offenen Punkten (Entschuldigungen, „heute Klassenarbeit"-Warnung) und dem Material aus dem Fach. Ein „Stunde öffnen"-Knopf springt in die Schnellerfassung. (3) „ALS NÄCHSTES" – die nächste Stunde, mit „in X Min." oder „in X Std." und – das ist der eigentliche Trick – den Material-Chips unter „Vorher mitnehmen", damit du in der aktuellen Stunde schon weißt, was du gleich einsammeln musst (z. B. „12 Volleybälle · 6 Hütchen · Leibchen"). (4) Zweispaltig „X Dinge brauchen deine Aufmerksamkeit" (Sheet mit allen Signalen) und „Nicht vergessen" (persönliche Aufgabenliste mit +-Feld zum sofort Ergänzen, Titel in Orange). (5) „Danach heute" – die restlichen Stunden als kompakte Zeilenliste, rechts jeweils ein Material-Symbol (Hantel für Sport, Blatt für andere Fächer): orange wenn Material oder Vor-Aufgaben hinterlegt sind, grau wenn nicht. Antippen öffnet die Vorbereitung. (6) Kleine Wochentagsleiste zum Vor- und Zurückblättern. (7) Wochenrückblick von Freitag 12 Uhr bis Sonntag Nacht, falls aktiv. (8) Unterrichtstipp des Tages, falls in den Einstellungen aktiv.` },
+      { q: "Was zeigen die Karten JETZT und ALS NÄCHSTES?", a: `Beide Karten führen dich durch den aktuellen Moment. JETZT ist die dominante Karte für die laufende Stunde: Fach·Klasse·Thema groß, darunter die konkret zu dieser Stunde relevanten Punkte – Zahl der offenen Entschuldigungen dieser Klasse, „Heute: [Klassenarbeit-Titel]" wenn eine Prüfung ansteht, verknüpfte Aufgaben, und ganz wichtig: das Material, das du für dieses Fach eingetragen hast (Feld „Immer mitnehmen" im Fach-Editor). Rechts oben läuft die Restzeit. „Stunde öffnen" springt in die Schnellerfassung. Rechts neben der Stunde steht ein Material-Symbol: ein Blatt-Icon für die meisten Fächer, eine Hantel für Sport. Leuchtet das Symbol orange, liegt Material oder eine Vor-Aufgabe bereit; ist es grau, ist nichts hinterlegt. Ein Tipp darauf öffnet die Vorbereitung. Die ALS-NÄCHSTES-Karte ist etwas kleiner: Anfangszeit + „in X Std. Y Min.", Fach·Klasse·Raum, Thema falls hinterlegt, und die Material-Chips als „Vorher mitnehmen". Der Sinn: du bist noch in Mathe, siehst aber schon dass du gleich zwölf Volleybälle brauchst, und kannst sie auf dem Weg mitnehmen.` },
       { q: `Was steht in der Kachel „X Dinge brauchen deine Aufmerksamkeit"?`, a: `Automatisch erkannte Signale für heute – nur solche die tatsächlich anstehen, sonst verschwindet die Kachel. Sie sammelt: (1) noch nachzutragende Stunden, (2) auffällige Klassen aus dem Klassenradar (kritisch/warnend), (3) dringliche Erinnerungen (Kinder mit vielen Fehltagen, Kinder ohne Eintrag seit 14+ Tagen, wiederholte Vorfälle, offene Zeugnisnoten). Ein Tipp öffnet ein Sheet mit der vollständigen Liste; ein Tipp auf einen Eintrag springt direkt in den passenden Bereich. Einzelne Hinweise lassen sich für den aktuellen Tag ausblenden: auf das Augen-Symbol rechts tippen → „Ausblenden" bestätigen. Am nächsten Tag taucht der Hinweis wieder auf, falls er noch relevant ist. „Nicht vergessen" daneben ist bewusst getrennt: dort stehen nur deine manuell erfassten Aufgaben.` },
       { q: `Warum zeigt „Nicht vergessen" nicht alle Aufgaben?`, a: `Damit die Startseite nicht zur Endlosliste wird. Die Kachel zeigt höchstens drei Aufgaben, und zwar die dringendsten: zuerst überfällige (rot markiert), dann heute fällige (gelb), dann solche ohne Datum, zuletzt spätere. Oben rechts steht „N heute" – oder „N offen", wenn heute nichts fällig ist. Ein Tipp auf die Kachel oder auf „+N weitere" öffnet die vollständige Liste – dort kannst du auch direkt abhaken. Ganz unten in dieser Liste führt „Alle Aufgaben und Listen" in den Aufgaben-Bereich. Erledigte Aufgaben verschwinden aus der Kachel.` },
       { q: "Wie lege ich Material für ein Fach fest, das immer mitzunehmen ist?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen → „Material, Raum & Gewichtung" → im Editor die Sektion „Immer mitnehmen". Trage ein Ding pro Zeile ein und tippe das +-Symbol oder drücke Enter – z. B. „12 Volleybälle", „6 Hütchen", „Leibchen", „Beamer". Die Einträge erscheinen automatisch auf der Heute-Seite: in der JETZT-Karte beim aktiven Fach, und – wichtiger – in der ALS-NÄCHSTES-Karte als Chip-Reihe „Vorher mitnehmen", damit du sie in der Vorstunde noch einsammeln kannst. Kannst du jederzeit über das × am Chip löschen. Wird pro Fach gespeichert, nicht pro Stunde – Sport hat also für jede Sportstunde dieselben Bälle.` },
@@ -10440,19 +10440,14 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                   );
                 })()}
               </div>
-              {/* Klemmbrett-Icon nur zeigen wenn Vorbereitung existiert - dann wirkt
-                  es wie ein Badge ("da liegt was fuer dich bereit"). Sonst weglassen,
-                  damit der Primaer-CTA "Stunde oeffnen" alleine steht. */}
-              {hatVorbereitung && (
-                <button
-                  onClick={() => fach && oeffneVorbereitung(fach, cls, selStr)}
-                  className="shrink-0 w-9 h-9 rounded-full akzent-ton akzent-text flex items-center justify-center press-scale"
-                  aria-label="Vorbereitung ansehen"
-                  title="Vorbereitung ansehen - Thema, Material, Aufgaben"
-                >
-                  <ClipboardCheck size={15} />
-                </button>
-              )}
+              <button
+                onClick={() => fach && oeffneVorbereitung(fach, cls, selStr)}
+                className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center press-scale ${hatVorbereitung ? "bg-amber-50 text-amber-500" : "text-stone-300 hover:text-stone-500"}`}
+                aria-label="Vorbereitung ansehen"
+                title={hatVorbereitung ? "Material & Aufgaben vorbereitet" : "Stunde vorbereiten"}
+              >
+                {/sport/i.test(fach?.subject || "") ? <Dumbbell size={15} /> : <FileText size={15} />}
+              </button>
             </div>
 
             {/* Aufgaben, die zu dieser Stunde gehören */}
@@ -10646,14 +10641,19 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                   );
                 })()}
               </div>
-              <button
-                onClick={() => fach && oeffneVorbereitung(fach, cls, zielDatum)}
-                className="shrink-0 w-9 h-9 rounded-full text-stone-400 hover:text-stone-700 flex items-center justify-center press-scale"
-                aria-label="Stunde vorbereiten"
-                title="Stunde vorbereiten"
-              >
-                <ClipboardCheck size={15} />
-              </button>
+              {(() => {
+                const hatMat = alleMaterial.length > 0 || offeneVor.length > 0;
+                return (
+                  <button
+                    onClick={() => fach && oeffneVorbereitung(fach, cls, zielDatum)}
+                    className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center press-scale ${hatMat ? "bg-amber-50 text-amber-500" : "text-stone-300 hover:text-stone-500"}`}
+                    aria-label="Stunde vorbereiten"
+                    title={hatMat ? "Material & Aufgaben vorbereitet" : "Stunde vorbereiten"}
+                  >
+                    {/sport/i.test(fach?.subject || "") ? <Dumbbell size={15} /> : <FileText size={15} />}
+                  </button>
+                );
+              })()}
             </div>
 
             {alleMaterial.length > 0 && (
@@ -10768,7 +10768,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             className="w-full flex items-center gap-2 mb-2 text-left disabled:cursor-default"
           >
             <Check size={14} className={`${aufgabenDringend ? "text-amber-600" : "text-stone-500"} ${isColor && !aufgabenDringend ? "f-haupt" : ""}`} />
-            <span className="text-sm font-semibold text-stone-800">Nicht vergessen</span>
+            <span className="text-sm font-semibold text-amber-600">Nicht vergessen</span>
             {!!offeneAufgaben.length && (
               <span className="t-caption tnum ml-auto">
                 {aufgabenUeberfaellig
@@ -11063,11 +11063,11 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); fach && oeffneVorbereitung(fach, cls, selStr); }}
-                    className="shrink-0 w-8 h-8 rounded-lg text-stone-300 hover:text-stone-600 flex items-center justify-center press-scale"
+                    className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center press-scale transition-colors ${chipCount > 0 ? "text-amber-500 bg-amber-50" : "text-stone-300 hover:text-stone-500"}`}
                     aria-label={`${fach?.subject} vorbereiten`}
-                    title="Stunde vorbereiten"
+                    title={chipCount > 0 ? `${chipCount} Material/Aufgabe(n) vorbereitet` : "Stunde vorbereiten"}
                   >
-                    <ClipboardCheck size={14} />
+                    {/sport/i.test(fach?.subject || "") ? <Dumbbell size={14} /> : <FileText size={14} />}
                   </button>
                 </div>
               );
@@ -11092,25 +11092,33 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             <div className="rounded-2xl border border-stone-200 bg-white divide-y divide-stone-100 overflow-hidden">
               {dayUnits.map((unit) => {
                 const { fach, cls, startZeit, endZeit, topic } = lessonInfo(unit);
+                const stunde = stundenInhalt(fach?.id, selStr);
+                const matCount = stunde.material.length + stunde.aufgaben.filter((a) => !a.done).length;
                 return (
-                  <button
-                    key={unit.id}
-                    onClick={() => fach && setCaptureLesson?.({ fach, cls, date: selStr })}
-                    className="w-full px-3 py-2.5 flex items-center gap-3 text-left press-scale"
-                  >
+                  <div key={unit.id} className="px-3 py-2.5 flex items-center gap-3">
                     <span className="text-xs text-stone-500 tabular-nums w-[3.5rem] shrink-0 leading-tight">
                       {startZeit}
                       {endZeit && <span className="block text-[10px] text-stone-400">–{endZeit}</span>}
                     </span>
                     <span className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : "var(--linie)" }} />
-                    <div className="min-w-0 flex-1">
+                    <button
+                      onClick={() => fach && setCaptureLesson?.({ fach, cls, date: selStr })}
+                      className="min-w-0 flex-1 text-left press-scale"
+                    >
                       <div className="text-sm font-semibold text-stone-800 truncate">
                         {fach?.subject || "—"}{cls ? <span className="text-stone-400 font-medium"> · {cls.name}</span> : null}
                       </div>
                       {topic?.text && <div className="text-[11px] text-stone-500 truncate">{topic.text}</div>}
-                    </div>
-                    <ChevronRight size={14} className="text-stone-300 shrink-0" />
-                  </button>
+                    </button>
+                    <button
+                      onClick={() => fach && oeffneVorbereitung(fach, cls, selStr)}
+                      className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center press-scale transition-colors ${matCount > 0 ? "text-amber-500 bg-amber-50" : "text-stone-300 hover:text-stone-500"}`}
+                      aria-label={`${fach?.subject} vorbereiten`}
+                      title={matCount > 0 ? `${matCount} Material/Aufgabe(n)` : "Stunde vorbereiten"}
+                    >
+                      {/sport/i.test(fach?.subject || "") ? <Dumbbell size={14} /> : <FileText size={14} />}
+                    </button>
+                  </div>
                 );
               })}
             </div>
