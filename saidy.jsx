@@ -22,7 +22,7 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
-  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil, Dumbbell,
+  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil, Dumbbell, ArrowUpDown,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
@@ -3561,7 +3561,7 @@ const HELP_DATA = [
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
-      { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Klasse antippen → Reiter „Überblick" → den Bereich „Abhak-Listen" aufklappen. Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Die Zahl der offenen Abgaben steht als Hinweis direkt am Bereichstitel. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
+      { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Klasse antippen → Reiter „Überblick" → den Bereich „Abhak-Listen" aufklappen. Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Über das Sortier-Symbol oben rechts in der geöffneten Liste kannst du zwischen Sortierung nach Vorname und Nachname wechseln – die Einstellung gilt auch für Eigene Merkmale. Die Zahl der offenen Abgaben steht als Hinweis direkt am Bereichstitel. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
       { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Klasse antippen → Reiter „Überblick" → den Bereich „Eigene Merkmale" aufklappen. Gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Fotoerlaubnis" mit „Ja, Nein, Nicht geklärt", „Mensa" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung auf einen Blick und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
     ],
   },
@@ -16120,6 +16120,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [neuesFeldName, setNeuesFeldName] = useState("");
   const [neuesFeldOptionen, setNeuesFeldOptionen] = useState("");
   const [expandedFeldId, setExpandedFeldId] = useState(null);
+  const [listenSortVorname, setListenSortVorname] = useState(false);
   const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
@@ -16127,6 +16128,9 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   if (!cls) return null;
   const faecher = data.faecher.filter((f) => f.classId === klasseId);
   const students = data.students.filter((s) => s.classId === klasseId && !s.deletedAt).sort((a, b) => a.name.localeCompare(b.name, "de"));
+  const listenStudents = listenSortVorname
+    ? [...students].sort((a, b) => (a.name.split(" ")[0] || "").localeCompare(b.name.split(" ")[0] || "", "de"))
+    : students;
   const isColor = data.settings?.colorMode === true;
   const heuteStr = isoDate(new Date());
 
@@ -16570,11 +16574,12 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-semibold text-stone-500">{openCl.title}</span>
                                   <div className="flex gap-1">
+                                    <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={13} /></button>
                                     <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={13} /></button>
                                     <button onClick={() => setOpenChecklistId(null)} className="text-stone-300 hover:text-stone-500 p-1"><X size={13} /></button>
                                   </div>
                                 </div>
-                                {students.map((s) => {
+                                {listenStudents.map((s) => {
                                   const checked = openCl.erledigt.includes(s.id);
                                   return (
                                     <button key={s.id} onClick={() => toggleStudent(openCl.id, s.id)} className="w-full flex items-center gap-2 py-1 press-scale text-left">
@@ -16627,7 +16632,10 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                       </button>
                                       {expanded && (
                                         <div className="ml-5 mt-1 space-y-1.5">
-                                          {students.map((s) => {
+                                          <div className="flex justify-end">
+                                            <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={13} /></button>
+                                          </div>
+                                          {listenStudents.map((s) => {
                                             const val = werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert || "";
                                             return (
                                               <div key={s.id} className="flex items-center gap-2">
