@@ -1417,8 +1417,8 @@ function Toggle({ checked, onChange }) {
   );
 }
 
-function Card({ children, className = "", luft = false, style }) {
-  const base = luft ? "karte-luft" : "karte";
+function Card({ children, className = "", luft = false, hero = false, style }) {
+  const base = hero ? "karte-hero" : luft ? "karte-luft" : "karte";
   return <div className={`${base} rounded-xl ${className}`} style={style}>{children}</div>;
 }
 
@@ -10398,6 +10398,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
           /* Im Farbmodus traegt die laufende Stunde die Farbe ihres Fachs -
              damit man ohne Lesen erkennt, worin man gerade steckt. */
           <Card
+            hero
             className="px-4 py-4 space-y-3 ring-2 akzent-rand ring-offset-2 ring-offset-[color:var(--creme)]"
             style={{ order: orderOf("jetzt"), ...(isColor && fach?.color ? { "--tw-ring-color": fach.color } : {}) }}
           >

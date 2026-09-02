@@ -8,6 +8,7 @@
 html, body {
   background-color: var(--creme);
   overscroll-behavior-y: none;
+  font-family: var(--font-body);
 }
 
 /* Formularelemente und Scrollbars vom Browser im passenden Schema rendern
@@ -76,10 +77,15 @@ html, body {
   --sp-card: 1rem;
   --sp-in:   0.75rem;
 
-  /* Schatten */
-  --shadow-card: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
-  --shadow-xl:   0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  /* Typographie */
+  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+
+  /* Schatten — oliv-getönt statt neutral-schwarz */
+  --shadow-card: 0 1px 3px rgba(79,88,68,0.07), 0 1px 2px rgba(79,88,68,0.05);
+  --shadow-md:   0 4px 16px rgba(79,88,68,0.10), 0 1px 4px rgba(79,88,68,0.06);
+  --shadow-xl:   0 8px 32px rgba(79,88,68,0.14), 0 2px 8px rgba(79,88,68,0.08);
+  --shadow-hero: 0 6px 24px rgba(79,88,68,0.12), 0 2px 6px rgba(79,88,68,0.07);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -128,9 +134,10 @@ html, body {
   --s-info: #93C5FD; --s-info-bg: rgba(59,130,246,0.20); --s-info-rand: rgba(147,197,253,0.32);
   --s-neu:  #A6B392; --s-neu-bg:  rgba(166,179,146,0.18);--s-neu-rand:  rgba(166,179,146,0.32);
 
-  --shadow-card: 0 1px 2px rgba(0,0,0,0.5);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.55);
-  --shadow-xl:   0 8px 32px rgba(0,0,0,0.65);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.45);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.50);
+  --shadow-xl:   0 8px 32px rgba(0,0,0,0.60);
+  --shadow-hero: 0 6px 24px rgba(0,0,0,0.55);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -321,6 +328,13 @@ html, body {
 .karte {
   background: var(--karte-warm);
   border: 1px solid var(--linie-fein);
+  box-shadow: var(--shadow-card);
+}
+.karte-hero {
+  background: var(--karte-warm);
+  border: 1px solid var(--linie-fein);
+  box-shadow: var(--shadow-hero);
+  border-radius: 1rem;
 }
 
 /* Icons einheitlich duenner - lucide-react Default ist 2, nach
@@ -372,11 +386,12 @@ svg[stroke-width="2"] { stroke-width: 1.75; }
 
 /* ── Typographie-Hierarchie ──
    Nur Labels, Captions, Section-Header — Lauftext via Tailwind */
-.t-section { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--n-400); }
+.t-section { font-family: var(--font-display); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--n-400); }
 .t-label   { font-size: 0.75rem;   font-weight: 500; color: var(--n-500); line-height: 1.4; }
 .t-value   { font-size: 0.875rem;  font-weight: 500; color: var(--n-800); }
 .t-caption { font-size: 0.6875rem; color: var(--n-400); line-height: 1.4; }
 .t-mono    { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.t-display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
 
 /* ── Eingabefelder (nur diese bekommen Rahmen) ── */
 .input-base {
@@ -423,7 +438,7 @@ svg[stroke-width="2"] { stroke-width: 1.75; }
 
 /* ── Micro-Interactions ── */
 .press-scale { transition: transform 0.12s ease, opacity 0.12s ease; }
-.press-scale:active { transform: scale(0.97); opacity: 0.85; }
+.press-scale:active { transform: scale(0.985); opacity: 0.9; }
 
 /* ── Eingangs-Animationen ── */
 @keyframes slide-up-sheet {
@@ -452,6 +467,15 @@ svg[stroke-width="2"] { stroke-width: 1.75; }
 .anim-item        { animation: item-pop 0.20s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .anim-bg          { animation: fade-in 0.22s ease both; }
 .anim-tab         { animation: fade-in-tab 0.18s ease both; }
+
+/* Display-Font für Überschriften — greift überall, ohne dass
+   jeder JSX-Klassenstring einzeln angefasst werden muss. */
+h1, .text-2xl, .text-xl {
+  font-family: var(--font-display);
+}
+.font-bold, .font-semibold {
+  letter-spacing: -0.01em;
+}
 
 /* Sheet-Titel: dezenter negativer Letter-Spacing wie Apple-Sheets
    (San Francisco kerns Semibold-Ueberschriften optisch enger). */
@@ -540,6 +564,7 @@ svg[stroke-width="2"] { stroke-width: 1.75; }
     --shadow-card: none;
     --shadow-md: none;
     --shadow-xl: none;
+    --shadow-hero: none;
   }
 
   .text-amber-500, .text-amber-600, .text-amber-700,
