@@ -11038,7 +11038,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                     {startZeit}
                     {endZeit && <span className="block text-[10px] text-stone-400">–{endZeit}</span>}
                   </span>
-                  <span className="w-1 self-stretch min-h-[2rem] rounded-full shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : "var(--linie)" }} />
+                  <span className="w-1 self-stretch min-h-[2rem] rounded-full shrink-0" style={{ backgroundColor: fach?.color || "var(--linie)" }} />
                   <button
                     onClick={() => fach && setCaptureLesson?.({ fach, cls, date: selStr })}
                     className="flex-1 min-w-0 text-left press-scale"
@@ -11100,7 +11100,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                       {startZeit}
                       {endZeit && <span className="block text-[10px] text-stone-400">–{endZeit}</span>}
                     </span>
-                    <span className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: isColor && fach?.color ? fach.color : "var(--linie)" }} />
+                    <span className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: fach?.color || "var(--linie)" }} />
                     <button
                       onClick={() => fach && setCaptureLesson?.({ fach, cls, date: selStr })}
                       className="min-w-0 flex-1 text-left press-scale"
