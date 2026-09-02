@@ -3461,7 +3461,7 @@ const HELP_DATA = [
       { q: "Wo finde ich den Papierkorb?", a: `Im Tab „Klassen & Schüler", Reiter „Klassen", ganz unten unter der Klassenliste – als zugeklappte Zeile mit der Anzahl gelöschter Einträge, damit er den Alltag nicht überlagert. Antippen klappt ihn auf. Gelöschte Klassen, Kinder und Fächer bleiben 30 Tage wiederherstellbar, danach werden sie automatisch endgültig entfernt. Eine gelöschte Klasse zählt darin als ein Eintrag, auch wenn ihre Kinder und Fächer mitgelöscht wurden – die stehen als Anzahl bei der Klasse, nicht als eigene Zeilen. Solange nichts gelöscht wurde, erscheint der Papierkorb gar nicht.` },
       { q: "Kann ich etwas aus dem Papierkorb sofort endgültig löschen, ohne 30 Tage zu warten?", a: `Ja. Unter jedem Eintrag im aufgeklappten Papierkorb steht neben „Wiederherstellen" ein roter Link „Jetzt endgültig löschen". Es folgt eine Sicherheitsabfrage, die noch einmal deutlich macht, dass das nicht rückgängig zu machen ist – bei einer Klasse werden auch alle ihre Kinder und Fächer mit sämtlichen zugehörigen Daten (Noten, Notizen, Förderziele, Dokumente, Sitzplan-Einträge, Stundenplan-Einträge) sofort und unwiederbringlich gelöscht. Sinnvoll, wenn eine Löschung endgültig gewollt ist und die 30 Tage nur unnötig Speicher belegen würden.` },
       { q: "Wie lösche ich ein einzelnes Fach, ohne die ganze Klasse zu löschen?", a: `Klasse antippen → Reiter „Unterricht" → Fach antippen, dann auf das ···-Symbol rechts in der Fach-Zeile → „Fach löschen". Genau wie bei Klassen und Kindern landet das Fach für 30 Tage im Papierkorb (Reiter „Klassen", ganz unten) und lässt sich dort wiederherstellen – seine Noten, Zeugnisnoten, Stundenplan-Einträge und Stundenthemen bleiben verknüpft und kommen beim Wiederherstellen automatisch zurück. Solange das Fach im Papierkorb liegt, verschwindet es aus Stundenplan, Notenübersicht und der Übersicht-Seite, so als gäbe es die Stunde gerade nicht.` },
-      { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten"; darunter liegen die drei aufklappbaren Bereiche „Nicht vergessen", „Abhak-Listen" und „Eigene Merkmale". „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
+      { q: "Was passiert, wenn ich eine Klasse antippe?", a: `Die Klasse öffnet sich als Vollbild mit drei Reitern. „Überblick" zeigt Kennzahlen (Anzahl Kinder, Fächer, Klassen-Ø) und führt weiter zu Schüler:innen, Sitzplan, Klassen-Dashboard und „Klasse verwalten"; darunter liegen die zwei aufklappbaren Bereiche „Nicht vergessen" und „Listen" (Checklisten zum Abhaken und Eintragungslisten mit eigenen Dropdown-Optionen pro Kind). „Unterricht" listet die Fächer mit Reihenplanung und Material; klappst du ein Fach auf, stehen darunter „Material, Raum & Gewichtung" und „Noten eintragen". „Noten" ist der direkte Weg zum Eintragen: Fach wählen, Kind antippen, Note vergeben. Früher führte Antippen woandershin als Aufklappen – das Aufklappen gibt es nicht mehr, alles liegt hinter dem einen Antippen.` },
       { q: "Wie trage ich eine Note ein?", a: `Der kürzeste Weg im Alltag ist der Stundenabschluss: Auf der Übersicht in der JETZT-Karte „Stunde öffnen" – dort vergibst du für die ganze Klasse in einem Durchgang Noten. Willst du gezielt nachtragen, gehst du über die Klasse: „Klassen & Schüler" → Klasse antippen → Reiter „Noten" → Fach wählen → Kind antippen. Dort öffnet sich „Neue Note" mit Art (mündlich/schriftlich), Notenwert, Bezeichnung und Datum. Das ist derselbe Weg wie unter „Noten & Berichte", nur dass die Klasse schon feststeht.` },
       { q: `Was steht im Reiter „Verwaltung" bei den Klassen?`, a: `Drei Übersichten über alle Klassen hinweg: Entschuldigungen, Förderziele und Geburtstage. Der Unterschied zu den Kacheln auf der Startseite: Diese Listen lassen sich auch dann öffnen, wenn gerade nichts offen ist – etwa um im Elterngespräch nachzusehen, wann ein Kind zuletzt eine Entschuldigung abgegeben hat.` },
       { q: "Kann Tu-vi dunkel oder hell dargestellt werden?", a: `Ja, du entscheidest das selbst: „Mehr" → „Einstellungen" → „Darstellung" → ganz oben unter „Erscheinungsbild" stehen drei Knöpfe. „Hell" und „Dunkel" gelten fest, unabhängig davon, wie dein Gerät eingestellt ist – du kannst Tu-vi also hell nutzen, obwohl dein iPhone im Dunkelmodus läuft. „Automatisch" übernimmt die Einstellung des Geräts und wechselt abends mit, wenn dieses auf dunkel umschaltet. Voreingestellt ist „Automatisch". Die Wahl gilt jeweils nur auf dem Gerät, an dem du sie triffst – am Mac hell und am iPhone dunkel ist also möglich. Ausdrucke (Schülerakte, Berichte, Notenlisten) sind immer hell, damit sie auf Papier lesbar bleiben.` },
@@ -3561,8 +3561,7 @@ const HELP_DATA = [
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
-      { q: "Was sind Abhak-Listen?", a: `Abhak-Listen helfen dir, klassenweise Dinge einzusammeln – z. B. Büchergeld, Einverständniserklärungen oder Materialabgaben. Klasse antippen → Reiter „Überblick" → den Bereich „Abhak-Listen" aufklappen. Dort kannst du eine neue Liste benennen und dann pro Schüler abhaken, wer erledigt hat. Über das Sortier-Symbol oben rechts in der geöffneten Liste kannst du zwischen Sortierung nach Vorname und Nachname wechseln – die Einstellung gilt auch für Eigene Merkmale. Die Zahl der offenen Abgaben steht als Hinweis direkt am Bereichstitel. Auf der Übersicht unter „Nicht vergessen" siehst du eine kompakte Zusammenfassung: z. B. „5c: Büchergeld — noch 12 offen". Wenn alle abgehakt sind, kannst du die Liste archivieren.` },
-      { q: "Was sind eigene Merkmale?", a: `Eigene Merkmale sind frei definierbare Auswahl-Felder pro Klasse. Klasse antippen → Reiter „Überblick" → den Bereich „Eigene Merkmale" aufklappen. Gib einen Namen und mindestens zwei Optionen (kommagetrennt) ein – z. B. „Fotoerlaubnis" mit „Ja, Nein, Nicht geklärt", „Mensa" mit „Ja, Nein" oder „AG" mit „Theater, Sport, Keine". Im selben Bereich siehst du die Verteilung auf einen Blick und kannst pro Kind den Wert per Klick setzen. Im Schülerprofil unter „Mehr" erscheinen die Merkmale ebenfalls als Auswahl-Buttons.` },
+      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
     ],
   },
   {
@@ -16121,6 +16120,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [neuesFeldOptionen, setNeuesFeldOptionen] = useState("");
   const [expandedFeldId, setExpandedFeldId] = useState(null);
   const [listenSortVorname, setListenSortVorname] = useState(false);
+  const [neuListeArt, setNeuListeArt] = useState(null);
   const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
@@ -16392,6 +16392,19 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
 
               const toggleSection = (key) => setOpenUeberblickSection((prev) => prev === key ? null : key);
 
+              const alleListen = [
+                ...listen.map((cl) => {
+                  const done = cl.erledigt.filter((id) => students.some((s) => s.id === id)).length;
+                  return { ...cl, art: "checkliste", done, total: students.length, offen: students.length - done };
+                }),
+                ...felder.map((f) => {
+                  const eingetragen = students.filter((s) => werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert).length;
+                  return { id: f.id, title: f.label, art: "eintragung", optionen: f.optionen, done: eingetragen, total: students.length, offen: students.length - eingetragen, createdAt: f.createdAt };
+                }),
+              ];
+              const listenGesamt = alleListen.length;
+              const listenOffen = alleListen.reduce((s, l) => s + l.offen, 0);
+
               const sections = [
                 {
                   key: "notizen",
@@ -16401,18 +16414,11 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                   badgeColor: sichtbareNotizen.length > 0 ? "text-red-600" : "",
                 },
                 {
-                  key: "checklisten",
+                  key: "listen",
                   icon: ClipboardCheck,
-                  label: "Abhak-Listen",
-                  badge: listen.length > 0 ? (offeneAbgaben > 0 ? `${offeneAbgaben} offen` : `${listen.length} Listen`) : null,
-                  badgeColor: offeneAbgaben > 0 ? "text-red-600" : "text-stone-400",
-                },
-                {
-                  key: "merkmale",
-                  icon: Bookmark,
-                  label: "Eigene Merkmale",
-                  badge: felder.length > 0 ? `${felder.length}` : null,
-                  badgeColor: "text-stone-400",
+                  label: "Listen",
+                  badge: listenGesamt > 0 ? (listenOffen > 0 ? `${listenOffen} offen` : `${listenGesamt}`) : null,
+                  badgeColor: listenOffen > 0 ? "text-red-600" : "text-stone-400",
                 },
               ];
 
@@ -16544,153 +16550,193 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                           </div>
                         )}
 
-                        {isOpen && sec.key === "checklisten" && (
-                          <div className="px-4 pb-4 pt-1 space-y-3">
-                            {listen.length > 0 && (
-                              <ul className="space-y-1.5">
-                                {listen.map((cl) => {
-                                  const total = students.length;
-                                  const done = cl.erledigt.filter((id) => students.some((s) => s.id === id)).length;
-                                  const offen = total - done;
+                        {isOpen && sec.key === "listen" && (
+                          <div className="px-4 pb-4 pt-2 space-y-2">
+                            {alleListen.length > 0 && (
+                              <ul className="space-y-1">
+                                {alleListen.map((li) => {
+                                  const isActive = li.art === "checkliste" ? openChecklistId === li.id : expandedFeldId === li.id;
+                                  const pct = li.total > 0 ? Math.round((li.done / li.total) * 100) : 0;
                                   return (
-                                    <li key={cl.id} className="flex items-center gap-2">
-                                      <button onClick={() => setOpenChecklistId(openChecklistId === cl.id ? null : cl.id)} className="flex-1 text-left text-sm text-stone-700 hover:akzent-text truncate">
-                                        <span className="font-medium">{cl.title}</span>
-                                        {offen > 0
-                                          ? <span className="text-red-600 font-semibold ml-1.5">— noch {offen} offen</span>
-                                          : <span className="text-emerald-600 ml-1.5">✓ alle erledigt</span>
-                                        }
-                                      </button>
-                                      {offen === 0 && (
-                                        <button onClick={() => archivListe(cl.id)} className="text-stone-300 hover:text-stone-500 shrink-0" title="Archivieren"><FolderCheck size={14} /></button>
-                                      )}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            )}
-                            {openCl && (
-                              <div className="border-t border-stone-100 pt-3 space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-semibold text-stone-500">{openCl.title}</span>
-                                  <div className="flex gap-1">
-                                    <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={13} /></button>
-                                    <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={13} /></button>
-                                    <button onClick={() => setOpenChecklistId(null)} className="text-stone-300 hover:text-stone-500 p-1"><X size={13} /></button>
-                                  </div>
-                                </div>
-                                {listenStudents.map((s) => {
-                                  const checked = openCl.erledigt.includes(s.id);
-                                  return (
-                                    <button key={s.id} onClick={() => toggleStudent(openCl.id, s.id)} className="w-full flex items-center gap-2 py-1 press-scale text-left">
-                                      <span className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${checked ? "akzent-flaeche border-transparent" : "border-stone-300"}`}>
-                                        {checked && <Check size={12} className="text-white" />}
-                                      </span>
-                                      <span className={`text-sm ${checked ? "text-stone-400 line-through" : "text-stone-700"}`}>{s.name}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1.5 pt-1 border-t border-stone-100">
-                              <input
-                                value={neueListeName}
-                                onChange={(e) => setNeueListeName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") addListe(); }}
-                                placeholder="Neue Liste erstellen …"
-                                className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent placeholder:text-stone-400 py-1"
-                                maxLength={100}
-                              />
-                              <button onClick={addListe} disabled={!neueListeName.trim()} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center press-scale disabled:opacity-30 akzent-ton akzent-text"><Plus size={14} /></button>
-                            </div>
-                            {archiviert.length > 0 && (
-                              <p className="text-[11px] text-stone-400">{archiviert.length} archiviert</p>
-                            )}
-                          </div>
-                        )}
-
-                        {isOpen && sec.key === "merkmale" && (
-                          <div className="px-4 pb-4 pt-1 space-y-3">
-                            {felder.length > 0 && (
-                              <ul className="space-y-2">
-                                {felder.map((f) => {
-                                  const expanded = expandedFeldId === f.id;
-                                  const verteilung = f.optionen.map((o) => ({
-                                    label: o,
-                                    count: students.filter((s) => werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert === o).length,
-                                  }));
-                                  const ohneWert = students.length - verteilung.reduce((s, v) => s + v.count, 0);
-                                  return (
-                                    <li key={f.id}>
-                                      <button onClick={() => setExpandedFeldId(expanded ? null : f.id)} className="w-full text-left flex items-center gap-2 py-1">
-                                        <ChevronRight size={14} className={`text-stone-400 shrink-0 transition-transform ${expanded ? "rotate-90" : ""}`} />
-                                        <span className="font-medium text-sm text-stone-700 flex-1 truncate">{f.label}</span>
-                                        <span className="text-[11px] text-stone-400 shrink-0">
-                                          {verteilung.map((v) => `${v.label}: ${v.count}`).join(" · ")}
-                                          {ohneWert > 0 && ` · offen: ${ohneWert}`}
-                                        </span>
-                                      </button>
-                                      {expanded && (
-                                        <div className="ml-5 mt-1 space-y-1.5">
-                                          <div className="flex justify-end">
-                                            <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={13} /></button>
+                                    <li key={li.id}>
+                                      <button
+                                        onClick={() => {
+                                          if (li.art === "checkliste") { setOpenChecklistId(isActive ? null : li.id); setExpandedFeldId(null); }
+                                          else { setExpandedFeldId(isActive ? null : li.id); setOpenChecklistId(null); }
+                                        }}
+                                        className={`w-full text-left rounded-lg px-3 py-2.5 transition-colors ${isActive ? "bg-stone-50" : "hover:bg-stone-50"}`}
+                                      >
+                                        <div className="flex items-center gap-2.5">
+                                          <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${li.art === "checkliste" ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"}`}>
+                                            {li.art === "checkliste" ? <Check size={14} /> : <ClipboardCheck size={14} />}
+                                          </span>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm font-medium text-stone-800 truncate">{li.title}</span>
+                                              <span className={`text-[11px] font-semibold tnum shrink-0 ${li.offen > 0 ? "text-stone-400" : "text-emerald-600"}`}>
+                                                {li.offen > 0 ? `${li.done}/${li.total}` : "✓"}
+                                              </span>
+                                            </div>
+                                            <div className="mt-1 h-1 rounded-full bg-stone-100 overflow-hidden">
+                                              <div className={`h-full rounded-full transition-all ${pct === 100 ? "bg-emerald-400" : "akzent-flaeche"}`} style={{ width: `${pct}%` }} />
+                                            </div>
                                           </div>
-                                          {listenStudents.map((s) => {
-                                            const val = werte.find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert || "";
-                                            return (
-                                              <div key={s.id} className="flex items-center gap-2">
-                                                <span className="text-sm text-stone-600 flex-1 truncate">{s.name}</span>
-                                                <div className="flex gap-1 shrink-0">
-                                                  {f.optionen.map((o) => (
-                                                    <button
-                                                      key={o}
-                                                      onClick={() => setWert(f.id, s.id, val === o ? "" : o)}
-                                                      className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${val === o ? "akzent-flaeche text-white border-transparent font-semibold" : "bg-white text-stone-400 border-stone-200 hover:border-stone-400"}`}
-                                                    >
-                                                      {o}
-                                                    </button>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            );
-                                          })}
-                                          <button onClick={() => deleteFeld(f.id)} className="text-[11px] text-stone-400 hover:text-red-500 mt-1 flex items-center gap-1">
-                                            <Trash2 size={11} /> Merkmal löschen
-                                          </button>
+                                          <ChevronRight size={14} className={`text-stone-300 shrink-0 transition-transform duration-200 ${isActive ? "rotate-90" : ""}`} />
+                                        </div>
+                                      </button>
+
+                                      {isActive && li.art === "checkliste" && openCl && (
+                                        <div className="mt-1 mb-2 mx-1 rounded-lg border border-stone-100 overflow-hidden">
+                                          <div className="flex items-center justify-between px-3 py-2 bg-stone-50/50 border-b border-stone-100">
+                                            <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">Checkliste</span>
+                                            <div className="flex gap-1">
+                                              <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
+                                              <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
+                                              {openCl.erledigt.filter((id) => students.some((s) => s.id === id)).length === students.length && (
+                                                <button onClick={() => archivListe(openCl.id)} className="text-stone-300 hover:text-emerald-500 p-1" title="Archivieren"><FolderCheck size={12} /></button>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="divide-y divide-stone-50">
+                                            {listenStudents.map((s) => {
+                                              const checked = openCl.erledigt.includes(s.id);
+                                              return (
+                                                <button key={s.id} onClick={() => toggleStudent(openCl.id, s.id)} className="w-full flex items-center gap-3 px-3 py-2 press-scale text-left hover:bg-stone-50/50 transition-colors">
+                                                  <StudentAvatar student={s} size={28} />
+                                                  <span className={`text-sm flex-1 truncate ${checked ? "text-stone-400 line-through" : "text-stone-700"}`}>{s.name}</span>
+                                                  <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${checked ? "akzent-flaeche border-transparent" : "border-stone-300"}`}>
+                                                    {checked && <Check size={12} className="text-white" />}
+                                                  </span>
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
                                         </div>
                                       )}
+
+                                      {isActive && li.art === "eintragung" && (() => {
+                                        const feld = felder.find((f) => f.id === li.id);
+                                        if (!feld) return null;
+                                        return (
+                                          <div className="mt-1 mb-2 mx-1 rounded-lg border border-stone-100 overflow-hidden">
+                                            <div className="flex items-center justify-between px-3 py-2 bg-stone-50/50 border-b border-stone-100">
+                                              <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">Eintragungsliste</span>
+                                              <div className="flex gap-1">
+                                                <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
+                                                <button onClick={() => deleteFeld(feld.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
+                                              </div>
+                                            </div>
+                                            <div className="divide-y divide-stone-50">
+                                              {listenStudents.map((s) => {
+                                                const val = werte.find((v) => v.feldId === feld.id && v.schuelerId === s.id)?.wert || "";
+                                                return (
+                                                  <div key={s.id} className="flex items-center gap-3 px-3 py-2">
+                                                    <StudentAvatar student={s} size={28} />
+                                                    <span className="text-sm text-stone-700 flex-1 truncate">{s.name}</span>
+                                                    <select
+                                                      value={val}
+                                                      onChange={(e) => setWert(feld.id, s.id, e.target.value)}
+                                                      className="input-base text-sm shrink-0 max-w-[140px] py-1.5 px-2"
+                                                    >
+                                                      <option value="">—</option>
+                                                      {feld.optionen.map((o) => <option key={o} value={o}>{o}</option>)}
+                                                    </select>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
                                     </li>
                                   );
                                 })}
                               </ul>
                             )}
-                            <div className="pt-2 border-t border-stone-100 space-y-2">
-                              <div className="text-xs text-stone-500">Neues Merkmal anlegen</div>
-                              <input
-                                value={neuesFeldName}
-                                onChange={(e) => setNeuesFeldName(e.target.value)}
-                                placeholder="Name, z. B. Mensa-Teilnahme"
-                                className="input-base w-full text-sm"
-                                maxLength={100}
-                              />
-                              <input
-                                value={neuesFeldOptionen}
-                                onChange={(e) => setNeuesFeldOptionen(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") addFeld(); }}
-                                placeholder="Optionen, z. B. Ja, Nein"
-                                className="input-base w-full text-sm"
-                                maxLength={200}
-                              />
-                              <button
-                                onClick={addFeld}
-                                disabled={!neuesFeldName.trim() || neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean).length < 2}
-                                className="w-full py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-30 press-scale"
-                              >
-                                + Merkmal anlegen
+                            {archiviert.length > 0 && (
+                              <p className="text-[11px] text-stone-400 px-1">{archiviert.length} archiviert</p>
+                            )}
+
+                            {!neuListeArt ? (
+                              <button onClick={() => setNeuListeArt("wahl")} className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-stone-300 text-sm text-stone-500 hover:border-stone-400 hover:text-stone-700 press-scale transition-colors">
+                                <Plus size={14} /> Neue Liste
                               </button>
-                            </div>
-                            {!felder.length && (
-                              <p className="text-xs text-stone-400">Lege eigene Auswahl-Merkmale an, die du pro Kind setzen kannst.</p>
+                            ) : neuListeArt === "wahl" ? (
+                              <div className="rounded-xl border border-stone-200 overflow-hidden">
+                                <div className="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-100">
+                                  <span className="text-xs font-semibold text-stone-500">Welche Art?</span>
+                                  <button onClick={() => setNeuListeArt(null)} className="text-stone-300 hover:text-stone-500 p-0.5"><X size={13} /></button>
+                                </div>
+                                <div className="p-2 grid grid-cols-2 gap-2">
+                                  <button onClick={() => setNeuListeArt("checkliste")} className="flex flex-col items-center gap-1.5 rounded-lg border border-stone-200 p-3 hover:border-stone-400 hover:bg-stone-50 press-scale transition-colors">
+                                    <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><Check size={16} /></span>
+                                    <span className="text-xs font-semibold text-stone-700">Checkliste</span>
+                                    <span className="text-[10px] text-stone-400 text-center leading-tight">Abhaken, wer erledigt hat</span>
+                                  </button>
+                                  <button onClick={() => setNeuListeArt("eintragung")} className="flex flex-col items-center gap-1.5 rounded-lg border border-stone-200 p-3 hover:border-stone-400 hover:bg-stone-50 press-scale transition-colors">
+                                    <span className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><ClipboardCheck size={16} /></span>
+                                    <span className="text-xs font-semibold text-stone-700">Eintragungsliste</span>
+                                    <span className="text-[10px] text-stone-400 text-center leading-tight">Eigene Optionen pro Kind</span>
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="rounded-xl border border-stone-200 overflow-hidden">
+                                <div className="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-100">
+                                  <span className="text-xs font-semibold text-stone-500">
+                                    {neuListeArt === "checkliste" ? "Neue Checkliste" : "Neue Eintragungsliste"}
+                                  </span>
+                                  <button onClick={() => { setNeuListeArt(null); setNeueListeName(""); setNeuesFeldName(""); setNeuesFeldOptionen(""); }} className="text-stone-300 hover:text-stone-500 p-0.5"><X size={13} /></button>
+                                </div>
+                                <div className="p-3 space-y-2">
+                                  {neuListeArt === "checkliste" ? (
+                                    <>
+                                      <input
+                                        autoFocus
+                                        value={neueListeName}
+                                        onChange={(e) => setNeueListeName(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") { addListe(); setNeuListeArt(null); } }}
+                                        placeholder="Name, z. B. Büchergeld"
+                                        className="input-base w-full text-sm"
+                                        maxLength={100}
+                                      />
+                                      <button
+                                        onClick={() => { addListe(); setNeuListeArt(null); }}
+                                        disabled={!neueListeName.trim()}
+                                        className="w-full py-2 rounded-lg text-sm font-semibold akzent-flaeche text-white disabled:opacity-30 press-scale"
+                                      >
+                                        Erstellen
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <input
+                                        autoFocus
+                                        value={neuesFeldName}
+                                        onChange={(e) => setNeuesFeldName(e.target.value)}
+                                        placeholder="Name, z. B. Mensa-Teilnahme"
+                                        className="input-base w-full text-sm"
+                                        maxLength={100}
+                                      />
+                                      <input
+                                        value={neuesFeldOptionen}
+                                        onChange={(e) => setNeuesFeldOptionen(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") { addFeld(); setNeuListeArt(null); } }}
+                                        placeholder="Optionen (Komma-getrennt), z. B. Ja, Nein"
+                                        className="input-base w-full text-sm"
+                                        maxLength={200}
+                                      />
+                                      <button
+                                        onClick={() => { addFeld(); setNeuListeArt(null); }}
+                                        disabled={!neuesFeldName.trim() || neuesFeldOptionen.split(",").map((o) => o.trim()).filter(Boolean).length < 2}
+                                        className="w-full py-2 rounded-lg text-sm font-semibold akzent-flaeche text-white disabled:opacity-30 press-scale"
+                                      >
+                                        Erstellen
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}

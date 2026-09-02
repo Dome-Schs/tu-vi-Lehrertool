@@ -236,7 +236,8 @@ html, body {
     .text-red-800, .text-red-900)                             { color: #FCA5A5 !important; }
   :root[data-theme="dark"] :is(.text-green-700, .text-emerald-500, .text-emerald-600,
     .text-emerald-700, .text-emerald-800, .text-emerald-900)  { color: #6EE7A0 !important; }
-  :root[data-theme="dark"] .text-blue-500                     { color: #93C5FD !important; }
+  :root[data-theme="dark"] :is(.text-blue-500, .text-blue-600) { color: #93C5FD !important; }
+  :root[data-theme="dark"] .bg-blue-50                        { background-color: rgba(59,130,246,0.16) !important; }
   :root[data-theme="dark"] .text-violet-600                   { color: #C4B5FD !important; }
 }
 
