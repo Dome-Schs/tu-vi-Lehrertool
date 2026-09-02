@@ -22,7 +22,7 @@ import {
   FileText, AlarmClock, Bookmark, MessageSquare, Smile, Image as ImageIcon,
   Calculator, PartyPopper, Bell, ShoppingCart, ThumbsDown, Phone, Printer, TrendingUp, TrendingDown, Download, Upload, ShieldCheck, Lock, MoreHorizontal, BarChart2, RefreshCw, Search, GripVertical, Target, Mic,
   Lightbulb, BookOpen, Paperclip, Camera, FolderOpen, Folder, Star, User, LogOut,
-  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil, Dumbbell, ArrowUpDown,
+  Sun, Moon, SunMoon, Coffee, Eye, EyeOff, Pencil, Dumbbell, ArrowUpDown, ChevronUp,
 } from "lucide-react";
 
 /* ---------- Konstanten ---------- */
@@ -16328,6 +16328,19 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 update((d) => { const t = d.tasks.find((x) => x.id === id); if (t) t.title = text; return d; });
                 setEditNotizIdVB(null);
               };
+              const moveNotiz = (id, dir) => {
+                update((d) => {
+                  const klassenTasks = (d.tasks || []).filter((t) => !t.done && t.classId === klasseId);
+                  const idx = klassenTasks.findIndex((t) => t.id === id);
+                  const swapIdx = idx + dir;
+                  if (idx < 0 || swapIdx < 0 || swapIdx >= klassenTasks.length) return d;
+                  const idxA = d.tasks.indexOf(klassenTasks[idx]);
+                  const idxB = d.tasks.indexOf(klassenTasks[swapIdx]);
+                  if (idxA < 0 || idxB < 0) return d;
+                  [d.tasks[idxA], d.tasks[idxB]] = [d.tasks[idxB], d.tasks[idxA]];
+                  return d;
+                });
+              };
               const addListe = () => {
                 const name = neueListeName.trim();
                 if (!name) return;
@@ -16445,10 +16458,14 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                           <div className="px-4 pb-4 pt-1">
                             {alleNotizen.length > 0 ? (
                               <ul className="space-y-1.5 mb-3">
-                                {alleNotizen.map((t) => {
+                                {alleNotizen.map((t, tIdx) => {
                                   const istZukunft = t.showFrom && t.showFrom > heuteStr;
                                   return (
-                                    <li key={t.id} className={`flex items-center gap-2 ${istZukunft ? "opacity-50" : ""}`}>
+                                    <li key={t.id} className={`flex items-center gap-1.5 ${istZukunft ? "opacity-50" : ""}`}>
+                                      <div className="flex flex-col shrink-0 -my-1">
+                                        <button onClick={() => moveNotiz(t.id, -1)} disabled={tIdx === 0} className="p-0.5 text-stone-300 hover:text-stone-600 disabled:opacity-20 press-scale" title="Nach oben"><ChevronUp size={12} /></button>
+                                        <button onClick={() => moveNotiz(t.id, 1)} disabled={tIdx === alleNotizen.length - 1} className="p-0.5 text-stone-300 hover:text-stone-600 disabled:opacity-20 press-scale" title="Nach unten"><ChevronDown size={12} /></button>
+                                      </div>
                                       <button
                                         onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = true; return d; })}
                                         className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
