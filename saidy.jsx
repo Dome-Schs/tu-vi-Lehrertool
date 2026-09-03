@@ -1341,6 +1341,14 @@ function sanitizeVollstaendig(imported) {
       )
     : {};
 
+  const ablauf = isoDate(new Date(Date.now() - 30 * 86400000));
+  if (Array.isArray(merged.checklisten)) merged.checklisten = merged.checklisten.filter((c) => !c.deletedAt || c.deletedAt > ablauf);
+  if (Array.isArray(merged.klassenFelder)) {
+    const entfernt = merged.klassenFelder.filter((f) => f.deletedAt && f.deletedAt <= ablauf).map((f) => f.id);
+    merged.klassenFelder = merged.klassenFelder.filter((f) => !f.deletedAt || f.deletedAt > ablauf);
+    if (entfernt.length && Array.isArray(merged.feldWerte)) merged.feldWerte = merged.feldWerte.filter((v) => !entfernt.includes(v.feldId));
+  }
+
   return { daten: merged, gekuerzt };
 }
 
@@ -3561,7 +3569,7 @@ const HELP_DATA = [
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
-      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Über das Drucker-Symbol in der Toolbar kannst du eine fertige Liste als PDF exportieren, drucken oder per Teilen-Menü weiterleiten. Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
+      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Über das Drucker-Symbol in der Toolbar kannst du eine fertige Liste als PDF exportieren, drucken oder per Teilen-Menü weiterleiten. Gelöschte Listen landen für 30 Tage im Papierkorb und können dort wiederhergestellt oder endgültig gelöscht werden. Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
     ],
   },
   {
@@ -16189,6 +16197,8 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [listenSortVorname, setListenSortVorname] = useState(false);
   const [neuListeArt, setNeuListeArt] = useState(null);
   const [archivOffen, setArchivOffen] = useState(false);
+  const [listenPapierkorbOffen, setListenPapierkorbOffen] = useState(false);
+  const [confirmDeleteListeId, setConfirmDeleteListeId] = useState(null);
   const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
@@ -16372,9 +16382,14 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
               const heuteStr = isoDate(new Date());
               const alleNotizen = (data.tasks || []).filter((t) => !t.done && t.classId === klasseId);
               const sichtbareNotizen = alleNotizen.filter((t) => !t.showFrom || t.showFrom <= heuteStr);
-              const listen = (data.checklisten || []).filter((c) => c.classId === klasseId && !c.archivedAt);
-              const archiviert = (data.checklisten || []).filter((c) => c.classId === klasseId && c.archivedAt);
-              const felder = (data.klassenFelder || []).filter((f) => f.classId === klasseId);
+              const listen = (data.checklisten || []).filter((c) => c.classId === klasseId && !c.archivedAt && !c.deletedAt);
+              const archiviert = (data.checklisten || []).filter((c) => c.classId === klasseId && c.archivedAt && !c.deletedAt);
+              const felder = (data.klassenFelder || []).filter((f) => f.classId === klasseId && !f.deletedAt);
+              const dreissigTageVorher = isoDate(new Date(Date.now() - 30 * 86400000));
+              const papierkorb = [
+                ...(data.checklisten || []).filter((c) => c.classId === klasseId && c.deletedAt).map((c) => ({ ...c, art: "checkliste" })),
+                ...(data.klassenFelder || []).filter((f) => f.classId === klasseId && f.deletedAt).map((f) => ({ ...f, title: f.label, art: "eintragung" })),
+              ].filter((item) => item.deletedAt > dreissigTageVorher);
               const werte = data.feldWerte || [];
               const offeneAbgaben = listen.reduce((s, cl) => s + students.length - cl.erledigt.filter((id) => students.some((st) => st.id === id)).length, 0);
 
@@ -16468,8 +16483,9 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 if (openChecklistId === listeId) setOpenChecklistId(null);
               };
               const loeschListe = (listeId) => {
-                update((d) => { d.checklisten = (d.checklisten || []).filter((c) => c.id !== listeId); return d; });
+                update((d) => { const c = (d.checklisten || []).find((x) => x.id === listeId); if (c) c.deletedAt = isoDate(new Date()); return d; });
                 if (openChecklistId === listeId) setOpenChecklistId(null);
+                setConfirmDeleteListeId(null);
               };
               const openCl = listen.find((c) => c.id === openChecklistId);
               const addFeld = () => {
@@ -16485,12 +16501,9 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 setNeuesFeldOptionen("");
               };
               const deleteFeld = (feldId) => {
-                update((d) => {
-                  d.klassenFelder = (d.klassenFelder || []).filter((f) => f.id !== feldId);
-                  d.feldWerte = (d.feldWerte || []).filter((v) => v.feldId !== feldId);
-                  return d;
-                });
+                update((d) => { const f = (d.klassenFelder || []).find((x) => x.id === feldId); if (f) f.deletedAt = isoDate(new Date()); return d; });
                 if (expandedFeldId === feldId) setExpandedFeldId(null);
+                setConfirmDeleteListeId(null);
               };
               const setWert = (feldId, schuelerId, val) => {
                 update((d) => {
@@ -16709,12 +16722,19 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                               <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
                                               <button onClick={() => listeSpeichern(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF speichern"><Download size={12} /></button>
                                               <button onClick={() => listeTeilen(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF teilen / drucken"><Printer size={12} /></button>
-                                              <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
+                                              <button onClick={() => setConfirmDeleteListeId(confirmDeleteListeId === openCl.id ? null : openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
                                               {openCl.erledigt.filter((id) => students.some((s) => s.id === id)).length === students.length && (
                                                 <button onClick={() => archivListe(openCl.id)} className="text-stone-300 hover:text-emerald-500 p-1" title="Archivieren"><FolderCheck size={12} /></button>
                                               )}
                                             </div>
                                           </div>
+                                          {confirmDeleteListeId === openCl.id && (
+                                            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border-b border-red-100">
+                                              <span className="text-xs text-red-700 flex-1">Liste in den Papierkorb verschieben?</span>
+                                              <button onClick={() => loeschListe(openCl.id)} className="text-xs font-medium text-red-600 bg-white border border-red-200 rounded px-3 py-1.5 press-scale">Löschen</button>
+                                              <button onClick={() => setConfirmDeleteListeId(null)} className="text-xs text-stone-500 px-2 py-1.5 press-scale">Abbrechen</button>
+                                            </div>
+                                          )}
                                           <div className="divide-y divide-stone-50">
                                             {listenStudents.map((s) => {
                                               const checked = openCl.erledigt.includes(s.id);
@@ -16743,9 +16763,16 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                                 <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
                                                 <button onClick={() => listeSpeichern(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF speichern"><Download size={12} /></button>
                                               <button onClick={() => listeTeilen(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF teilen / drucken"><Printer size={12} /></button>
-                                                <button onClick={() => deleteFeld(feld.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
+                                                <button onClick={() => setConfirmDeleteListeId(confirmDeleteListeId === feld.id ? null : feld.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
                                               </div>
                                             </div>
+                                            {confirmDeleteListeId === feld.id && (
+                                              <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border-b border-red-100">
+                                                <span className="text-xs text-red-700 flex-1">Liste in den Papierkorb verschieben?</span>
+                                                <button onClick={() => deleteFeld(feld.id)} className="text-xs font-medium text-red-600 bg-white border border-red-200 rounded px-3 py-1.5 press-scale">Löschen</button>
+                                                <button onClick={() => setConfirmDeleteListeId(null)} className="text-xs text-stone-500 px-2 py-1.5 press-scale">Abbrechen</button>
+                                              </div>
+                                            )}
                                             <div className="divide-y divide-stone-50">
                                               {listenStudents.map((s) => {
                                                 const val = werte.find((v) => v.feldId === feld.id && v.schuelerId === s.id)?.wert || "";
@@ -16789,6 +16816,44 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                         <button onClick={() => { if (confirm("Liste endgültig löschen?")) update((d) => { d.checklisten = d.checklisten.filter((x) => x.id !== ar.id); return d; }); }} className="text-stone-300 hover:text-red-500 p-1" title="Endgültig löschen"><Trash2 size={12} /></button>
                                       </li>
                                     ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+                            {papierkorb.length > 0 && (
+                              <div className="mt-1">
+                                <button onClick={() => setListenPapierkorbOffen(!listenPapierkorbOffen)} className="flex items-center gap-1.5 text-[11px] text-stone-400 hover:text-stone-600 px-1 py-1 transition-colors">
+                                  <ChevronRight size={11} className={`transition-transform duration-200 ${listenPapierkorbOffen ? "rotate-90" : ""}`} />
+                                  <Trash2 size={10} /> {papierkorb.length} im Papierkorb
+                                </button>
+                                {listenPapierkorbOffen && (
+                                  <ul className="mt-1 space-y-1">
+                                    {papierkorb.map((item) => {
+                                      const tage = Math.max(0, 30 - Math.round((Date.now() - new Date(item.deletedAt).getTime()) / 86400000));
+                                      return (
+                                        <li key={item.id} className="flex items-center gap-2 rounded-lg px-3 py-2 bg-stone-50/50">
+                                          <span className="w-6 h-6 rounded-md bg-red-50 text-red-300 flex items-center justify-center shrink-0"><Trash2 size={12} /></span>
+                                          <div className="flex-1 min-w-0">
+                                            <span className="text-sm text-stone-500 truncate block">{item.title}</span>
+                                            <span className="text-[10px] text-stone-400">noch {tage} Tage</span>
+                                          </div>
+                                          <button onClick={() => {
+                                            update((d) => {
+                                              if (item.art === "checkliste") { const c = (d.checklisten || []).find((x) => x.id === item.id); if (c) delete c.deletedAt; }
+                                              else { const f = (d.klassenFelder || []).find((x) => x.id === item.id); if (f) delete f.deletedAt; }
+                                              return d;
+                                            });
+                                          }} className="text-[11px] text-stone-400 hover:text-stone-700 px-2 py-1 rounded hover:bg-stone-100 transition-colors" title="Wiederherstellen">Zurückholen</button>
+                                          <button onClick={() => {
+                                            update((d) => {
+                                              if (item.art === "checkliste") d.checklisten = (d.checklisten || []).filter((x) => x.id !== item.id);
+                                              else { d.klassenFelder = (d.klassenFelder || []).filter((x) => x.id !== item.id); d.feldWerte = (d.feldWerte || []).filter((v) => v.feldId !== item.id); }
+                                              return d;
+                                            });
+                                          }} className="text-stone-300 hover:text-red-500 p-1" title="Endgültig löschen"><X size={12} /></button>
+                                        </li>
+                                      );
+                                    })}
                                   </ul>
                                 )}
                               </div>
