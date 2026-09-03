@@ -12880,6 +12880,7 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
     setBesuchRef(alter || null);
     try { localStorage.setItem(key, isoDate(new Date())); } catch {}
     setShowGraduierungForm(false);
+    setEditingName(false);
   }, [selectedStudent]);
   const [newTag, setNewTag] = useState("");
   const [addingTag, setAddingTag] = useState(false);
@@ -12889,6 +12890,8 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
      versehentlich auf Neustarter zurueckspringt. */
   const [showGraduierungForm, setShowGraduierungForm] = useState(false);
   const [graduierungDraft, setGraduierungDraft] = useState({ stufe: "neustarter", aufProbe: false, begruendung: "" });
+  const [editingName, setEditingName] = useState(false);
+  const [editingNameText, setEditingNameText] = useState("");
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingNoteText, setEditingNoteText] = useState("");
   const [confirmDeleteNoteId, setConfirmDeleteNoteId] = useState(null);
@@ -13434,7 +13437,22 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-stone-900 truncate">{s.name}</span>
+                        {editingName ? (
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <input autoFocus value={editingNameText} onChange={(e) => setEditingNameText(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter" && editingNameText.trim()) { onUpdateField(s.id, "name", editingNameText.trim()); setEditingName(false); } if (e.key === "Escape") setEditingName(false); }}
+                              className="input-base text-lg font-bold flex-1 min-w-0" maxLength={100} />
+                            <button onClick={() => { if (editingNameText.trim()) { onUpdateField(s.id, "name", editingNameText.trim()); setEditingName(false); } }}
+                              className="shrink-0 w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><Check size={16} /></button>
+                            <button onClick={() => setEditingName(false)}
+                              className="shrink-0 w-8 h-8 rounded-lg bg-stone-50 text-stone-400 flex items-center justify-center"><X size={16} /></button>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setEditingName(true); setEditingNameText(s.name || ""); }}
+                            className="text-xl font-bold text-stone-900 truncate hover:text-stone-600 transition-colors flex items-center gap-1.5 group">
+                            {s.name}<Pencil size={13} className="text-stone-300 group-hover:text-stone-500 shrink-0" />
+                          </button>
+                        )}
                         {profileMood && <span className="text-xl shrink-0" title={profileMood.label}>{profileMood.emoji}</span>}
                       </div>
                       <div className="t-label mt-0.5">
@@ -14335,6 +14353,11 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                     <ShieldCheck size={10} className="shrink-0" />
                     Elternkontakte sind personenbezogene Daten – nicht weitergeben (DSGVO).
                   </p>
+                  <div>
+                    <div className="t-caption mb-1">Name</div>
+                    <input placeholder="Vor- und Nachname" value={s.name || ""} maxLength={100}
+                      onChange={(e) => onUpdateField(s.id, "name", e.target.value)} className="input-base w-full" />
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <div className="t-caption mb-1">Geburtstag</div>
