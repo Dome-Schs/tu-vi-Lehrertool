@@ -1134,7 +1134,7 @@ function sanitizeImport(imported) {
       ...t, day: WEEKDAY_KURZ.includes(t.day) ? t.day : null,
       period: Number.isInteger(t.period) && t.period >= 0 && t.period <= 20 ? t.period : null,
     })).filter((t) => t.day && t.period !== null),
-    tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), showFrom: S_DATUM(t.showFrom) || undefined, done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined })),
+    tasks: map("tasks", (t) => ({ ...t, title: S_TEXT(t.title, 300), color: S_FARBE(t.color), dueDate: S_DATUM(t.dueDate), showFrom: S_DATUM(t.showFrom) || undefined, done: t.done === true, classId: S_TEXT(t.classId, 50) || undefined, sortOrder: Number.isFinite(t.sortOrder) ? t.sortOrder : undefined })),
     taskLists: map("taskLists", (l) => ({ ...l, name: S_TEXT(l.name, 100), icon: S_TEXT(l.icon, 50) })),
     checklisten: map("checklisten", (c) => ({ ...c, title: S_TEXT(c.title, 200), classId: S_TEXT(c.classId, 50), erledigt: S_LISTE(c.erledigt).filter((x) => typeof x === "string"), createdAt: S_DATUM(c.createdAt) || isoDate(new Date()), archivedAt: S_DATUM(c.archivedAt) || undefined })),
     klassenFelder: map("klassenFelder", (f) => ({ ...f, label: S_TEXT(f.label, 100), classId: S_TEXT(f.classId, 50), typ: "auswahl", optionen: S_LISTE(f.optionen).map((o) => S_TEXT(o, 100)).filter(Boolean), createdAt: S_DATUM(f.createdAt) || isoDate(new Date()) })),
@@ -10155,7 +10155,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     return 3;
   };
   const aufgabenSortiert = [...offeneAufgaben].sort(
-    (x, y) => aufgabenRang(x) - aufgabenRang(y) || (x.dueDate || "9999").localeCompare(y.dueDate || "9999")
+    (x, y) => (x.sortOrder ?? 999999) - (y.sortOrder ?? 999999) || aufgabenRang(x) - aufgabenRang(y) || (x.dueDate || "9999").localeCompare(y.dueDate || "9999")
   );
   const nichtVergessenItems = aufgabenSortiert.slice(0, 3);
   const nichtVergessenRest = aufgabenSortiert.length - nichtVergessenItems.length;
@@ -10185,6 +10185,84 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
   const [showAttentionSheet, setShowAttentionSheet] = useState(false);
   const [confirmDismissId, setConfirmDismissId] = useState(null);
   const [showNichtVergessen, setShowNichtVergessen] = useState(false);
+  const [dragTaskId, setDragTaskId] = useState(null);
+  const [dragOverIdx, setDragOverIdx] = useState(null);
+  const dragStartIdx = useRef(null);
+  const dragNodeRef = useRef(null);
+  const dragListRef = useRef(null);
+
+  function reorderTasks(fromIdx, toIdx) {
+    if (fromIdx === toIdx) return;
+    const reordered = [...aufgabenSortiert];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    update((d) => {
+      reordered.forEach((t, i) => {
+        const task = d.tasks.find((x) => x.id === t.id);
+        if (task) task.sortOrder = i;
+      });
+      return d;
+    });
+  }
+
+  function handleDragStart(e, idx, taskId) {
+    dragStartIdx.current = idx;
+    setDragTaskId(taskId);
+    setDragOverIdx(idx);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", "");
+    }
+  }
+  function handleDragOver(e, idx) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    setDragOverIdx(idx);
+  }
+  function handleDragEnd() {
+    if (dragStartIdx.current != null && dragOverIdx != null) {
+      reorderTasks(dragStartIdx.current, dragOverIdx);
+    }
+    setDragTaskId(null);
+    setDragOverIdx(null);
+    dragStartIdx.current = null;
+  }
+
+  const touchDragRef = useRef({ startY: 0, curIdx: 0, items: [] });
+  function handleTouchStart(e, idx, taskId) {
+    const touch = e.touches[0];
+    const listEl = dragListRef.current;
+    if (!listEl) return;
+    const items = Array.from(listEl.querySelectorAll("[data-drag-item]"));
+    touchDragRef.current = { startY: touch.clientY, curIdx: idx, items, startIdx: idx };
+    dragStartIdx.current = idx;
+    setDragTaskId(taskId);
+    setDragOverIdx(idx);
+  }
+  function handleTouchMove(e) {
+    if (dragTaskId == null) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const { items, startIdx } = touchDragRef.current;
+    for (let i = 0; i < items.length; i++) {
+      const rect = items[i].getBoundingClientRect();
+      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        if (i !== touchDragRef.current.curIdx) {
+          touchDragRef.current.curIdx = i;
+          setDragOverIdx(i);
+        }
+        break;
+      }
+    }
+  }
+  function handleTouchEnd() {
+    if (dragStartIdx.current != null && dragOverIdx != null) {
+      reorderTasks(dragStartIdx.current, dragOverIdx);
+    }
+    setDragTaskId(null);
+    setDragOverIdx(null);
+    dragStartIdx.current = null;
+  }
   const [neueAufgabe, setNeueAufgabe] = useState("");
   const [matFehltForm, setMatFehltForm] = useState(null);
   /* Kurz-Helfer: oeffnet die Stunde direkt im Vorbereitungs-Tab. Wir
@@ -10964,22 +11042,38 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               <button onClick={() => setShowNichtVergessen(false)} className="w-9 h-9 flex items-center justify-center text-stone-400"><X size={18} /></button>
             </div>
             {aufgabenSortiert.length ? (
-              <ul className="divide-y divide-stone-100">
-                {aufgabenSortiert.map((t) => {
+              <ul className="divide-y divide-stone-100" ref={dragListRef}
+                onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
+              >
+                {aufgabenSortiert.map((t, idx) => {
                   const rang = aufgabenRang(t);
+                  const isDragging = dragTaskId === t.id;
+                  const isOver = dragOverIdx === idx && dragTaskId != null && dragTaskId !== t.id;
                   return (
-                    <li key={t.id} className="flex items-center gap-2 py-2.5">
+                    <li key={t.id} data-drag-item
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx, t.id)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center gap-1.5 py-2.5 transition-all ${isDragging ? "opacity-40" : ""} ${isOver ? "border-t-2 border-[var(--oliv)]" : ""}`}
+                    >
+                      <span
+                        className="shrink-0 w-6 h-8 flex items-center justify-center text-stone-300 cursor-grab active:cursor-grabbing touch-none"
+                        onTouchStart={(e) => handleTouchStart(e, idx, t.id)}
+                      >
+                        <GripVertical size={14} />
+                      </span>
                       <button
                         onClick={() => update((d) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.done = !task.done; return d; })}
                         className="w-7 h-7 shrink-0 flex items-center justify-center press-scale"
-                        aria-label={`„${t.title}" als erledigt markieren`}
+                        aria-label={`„${t.title}“ als erledigt markieren`}
                       >
                         <span
                           className="w-4 h-4 rounded border border-stone-300 block"
                           style={isColor ? { borderColor: "var(--f-haupt)" } : undefined}
                         />
                       </button>
-                      <span className="text-sm text-stone-700 leading-tight flex-1">
+                      <span className="text-sm text-stone-700 leading-tight flex-1 min-w-0 truncate">
                         {t.classId && (() => { const c = data.classes.find((x) => x.id === t.classId); return c ? <span className="font-medium">{c.name}: </span> : null; })()}
                         {t.title}
                       </span>
@@ -19876,15 +19970,39 @@ function AufgabenTab({ data, update }) {
   const [confirmDeleteListId, setConfirmDeleteListId] = useState(null);
   const [renameListId, setRenameListId] = useState(null);
   const [renameListText, setRenameListText] = useState("");
+  const [atDragId, setAtDragId] = useState(null);
+  const [atDragOverIdx, setAtDragOverIdx] = useState(null);
+  const atDragStartIdx = useRef(null);
+  const atDragListRef = useRef(null);
+  const atTouchRef = useRef({ startY: 0, curIdx: 0, items: [] });
 
   const tasks = data.tasks || [];
   const lists = data.taskLists || [];
 
   const visibleTasks = useMemo(() => {
-    if (selected === "erledigt") return tasks.filter((t) => t.done);
-    if (selected === "alle") return tasks.filter((t) => !t.done);
-    return tasks.filter((t) => !t.done && t.listId === selected);
+    const sortFn = (a, b) => (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
+    if (selected === "erledigt") return tasks.filter((t) => t.done).sort(sortFn);
+    if (selected === "alle") return tasks.filter((t) => !t.done).sort(sortFn);
+    return tasks.filter((t) => !t.done && t.listId === selected).sort(sortFn);
   }, [tasks, selected]);
+
+  function atReorder(fromIdx, toIdx) {
+    if (fromIdx === toIdx) return;
+    const reordered = [...visibleTasks];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    update((d) => { reordered.forEach((t, i) => { const task = d.tasks.find((x) => x.id === t.id); if (task) task.sortOrder = i; }); return d; });
+  }
+  function atDragStart(e, idx, id) { atDragStartIdx.current = idx; setAtDragId(id); setAtDragOverIdx(idx); if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", ""); } }
+  function atDragOver(e, idx) { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; setAtDragOverIdx(idx); }
+  function atDragEnd() { if (atDragStartIdx.current != null && atDragOverIdx != null) atReorder(atDragStartIdx.current, atDragOverIdx); setAtDragId(null); setAtDragOverIdx(null); atDragStartIdx.current = null; }
+  function atTouchStart(e, idx, id) {
+    const touch = e.touches[0]; const listEl = atDragListRef.current; if (!listEl) return;
+    atTouchRef.current = { startY: touch.clientY, curIdx: idx, startIdx: idx, items: Array.from(listEl.querySelectorAll("[data-drag-item]")) };
+    atDragStartIdx.current = idx; setAtDragId(id); setAtDragOverIdx(idx);
+  }
+  function atTouchMove(e) { if (atDragId == null) return; e.preventDefault(); const touch = e.touches[0]; const { items } = atTouchRef.current; for (let i = 0; i < items.length; i++) { const rect = items[i].getBoundingClientRect(); if (touch.clientY >= rect.top && touch.clientY <= rect.bottom && i !== atTouchRef.current.curIdx) { atTouchRef.current.curIdx = i; setAtDragOverIdx(i); break; } } }
+  function atTouchEnd() { if (atDragStartIdx.current != null && atDragOverIdx != null) atReorder(atDragStartIdx.current, atDragOverIdx); setAtDragId(null); setAtDragOverIdx(null); atDragStartIdx.current = null; }
 
   function saveTask(payload) {
     update((d) => {
@@ -19997,11 +20115,27 @@ function AufgabenTab({ data, update }) {
       </div>
 
       <Card className="p-4">
-        <ul className="divide-y divide-stone-100">
-          {visibleTasks.map((t) => {
+        <ul className="divide-y divide-stone-100" ref={atDragListRef}
+          onTouchMove={atTouchMove} onTouchEnd={atTouchEnd}
+        >
+          {visibleTasks.map((t, idx) => {
             const list = lists.find((l) => l.id === t.listId);
+            const isDragging = atDragId === t.id;
+            const isOver = atDragOverIdx === idx && atDragId != null && atDragId !== t.id;
             return (
-              <li key={t.id} className="py-2.5 flex items-start gap-3">
+              <li key={t.id} data-drag-item
+                draggable
+                onDragStart={(e) => atDragStart(e, idx, t.id)}
+                onDragOver={(e) => atDragOver(e, idx)}
+                onDragEnd={atDragEnd}
+                className={`py-2.5 flex items-start gap-2 transition-all ${isDragging ? "opacity-40" : ""} ${isOver ? "border-t-2 border-[var(--oliv)]" : ""}`}
+              >
+                <span
+                  className="shrink-0 w-5 h-8 flex items-center justify-center text-stone-300 cursor-grab active:cursor-grabbing touch-none mt-0.5"
+                  onTouchStart={(e) => atTouchStart(e, idx, t.id)}
+                >
+                  <GripVertical size={14} />
+                </span>
                 <button
                   onClick={() => toggleDone(t.id)}
                   className="mt-0.5 w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center"
@@ -20009,7 +20143,7 @@ function AufgabenTab({ data, update }) {
                 >
                   {t.done && <Check size={12} className="text-white" />}
                 </button>
-                <button onClick={() => { setEditingTask(t); setShowModal(true); }} className="flex-1 text-left">
+                <button onClick={() => { setEditingTask(t); setShowModal(true); }} className="flex-1 text-left min-w-0">
                   <div className={`text-sm ${t.done ? "text-stone-400 line-through" : "text-stone-800"}`}>
                     {t.classId && (() => { const c = data.classes.find((x) => x.id === t.classId); return c ? <span className="font-medium">{c.name}: </span> : null; })()}
                     {t.title}
