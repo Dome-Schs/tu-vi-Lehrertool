@@ -3561,7 +3561,7 @@ const HELP_DATA = [
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
-      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
+      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Über das Drucker-Symbol in der Toolbar kannst du eine fertige Liste als PDF exportieren, drucken oder per Teilen-Menü weiterleiten. Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
     ],
   },
   {
@@ -7432,6 +7432,73 @@ function sportVorlagePdf({ vorlage, name, klasse, datum, thema, anwesend, titel 
       "Weitergabe nur über schulisch genehmigte Wege - keine privaten Messenger. Nach Verwendung vernichten.",
     ]);
   }
+
+  return pdfDatei(d.fertig());
+}
+
+function listenPdf({ titel, klasse, datum, art, zeilen }) {
+  const d = pdfBauer();
+
+  d.text(titel, { groesse: 16, fett: true });
+  d.linie(PDF_RAND, PDF_BREITE - PDF_RAND, { dicke: 0.8, grau: 0.4, versatz: 6 });
+  d.luft(14);
+
+  const spalte = PDF_INNEN / 2 - 12;
+  const rechtsX = PDF_RAND + spalte + 24;
+  d.feldZeile([
+    { x: PDF_RAND, breite: spalte, label: "KLASSE", wert: klasse },
+    { x: rechtsX, breite: spalte, label: "DATUM", wert: datum },
+  ]);
+  d.luft(4);
+
+  const artLabel = art === "checkliste" ? "Checkliste" : "Eintragungsliste";
+  d.text(`${artLabel}  -  ${zeilen.length} Eintr.`, { groesse: 9, grau: 0.4 });
+  d.luft(10);
+
+  const nrW = 24;
+  const statusW = art === "checkliste" ? 60 : 120;
+  const nameW = PDF_INNEN - nrW - statusW - 8;
+  const kopfY = d.y;
+
+  d.text("Nr.", { x: PDF_RAND, groesse: 8, fett: true, grau: 0.35 });
+  d.luft(-(8 * 1.35));
+  d.text("Name", { x: PDF_RAND + nrW, groesse: 8, fett: true, grau: 0.35 });
+  d.luft(-(8 * 1.35));
+  d.text(art === "checkliste" ? "Status" : "Eintragung", { x: PDF_RAND + nrW + nameW + 4, groesse: 8, fett: true, grau: 0.35 });
+  d.luft(4);
+  d.linie(PDF_RAND, PDF_BREITE - PDF_RAND, { dicke: 0.6, grau: 0.5 });
+  d.luft(6);
+
+  zeilen.forEach((z, i) => {
+    const zH = 16;
+    if (d.y - zH < PDF_RAND + PDF_FUSS) {
+      d.luft(d.y - PDF_RAND - PDF_FUSS);
+    }
+    if (i % 2 === 0) {
+      const strom = `0.95 g ${PDF_RAND} ${(d.y - zH + 4).toFixed(2)} ${PDF_INNEN} ${zH} re f\n`;
+      d.luft(0);
+    }
+    d.text(`${i + 1}`, { x: PDF_RAND + 2, groesse: 9, grau: 0.3 });
+    d.luft(-(9 * 1.35));
+    d.text(z.name, { x: PDF_RAND + nrW, groesse: 10 });
+    d.luft(-(10 * 1.35));
+    if (art === "checkliste") {
+      const sym = z.erledigt ? "[x]" : "[ ]";
+      d.text(sym, { x: PDF_RAND + nrW + nameW + 4, groesse: 10, grau: z.erledigt ? 0 : 0.4 });
+    } else {
+      d.text(z.wert || "-", { x: PDF_RAND + nrW + nameW + 4, groesse: 10, grau: z.wert ? 0 : 0.5 });
+    }
+    d.luft(4);
+  });
+
+  d.luft(12);
+  const fertigN = zeilen.filter((z) => art === "checkliste" ? z.erledigt : z.wert).length;
+  d.text(`Zusammenfassung: ${fertigN} von ${zeilen.length} erledigt`, { groesse: 9, fett: true, grau: 0.3 });
+
+  d.fussnote([
+    "Vertraulich - Nur fuer den berechtigten Personenkreis.",
+    "Enthaelt personenbezogene Daten. Nach Verwendung vernichten.",
+  ]);
 
   return pdfDatei(d.fertig());
 }
@@ -16341,6 +16408,28 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                   return d;
                 });
               };
+              const listeExportieren = async (li) => {
+                const zeilen = listenStudents.map((s) => {
+                  if (li.art === "checkliste") {
+                    const cl = listen.find((c) => c.id === li.id);
+                    return { name: s.name, erledigt: cl?.erledigt.includes(s.id) };
+                  }
+                  const val = werte.find((v) => v.feldId === li.id && v.schuelerId === s.id)?.wert || "";
+                  return { name: s.name, wert: val };
+                });
+                const datumAnzeige = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+                const blob = listenPdf({ titel: li.title, klasse: cls.name, datum: datumAnzeige, art: li.art, zeilen });
+                const sauber = (t) => (t || "").replace(/[äÄöÖüÜß]/g, (z) => ({ "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue", "ß": "ss" }[z])).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                const teilName = `Liste_${sauber(li.title)}_${isoDate(new Date())}.pdf`;
+                const datei = new File([blob], teilName, { type: "application/pdf" });
+                if (navigator.canShare?.({ files: [datei] })) {
+                  try { await navigator.share({ files: [datei], title: li.title }); } catch (e) { if (e?.name !== "AbortError") console.warn("[Tu-vi] Teilen:", e); }
+                  return;
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a"); a.href = url; a.download = teilName; a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+              };
               const addListe = () => {
                 const name = neueListeName.trim();
                 if (!name) return;
@@ -16608,6 +16697,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                             <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">Checkliste</span>
                                             <div className="flex gap-1">
                                               <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
+                                              <button onClick={() => listeExportieren(li)} className="text-stone-300 hover:text-stone-600 p-1" title="Als PDF teilen / drucken"><Printer size={12} /></button>
                                               <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
                                               {openCl.erledigt.filter((id) => students.some((s) => s.id === id)).length === students.length && (
                                                 <button onClick={() => archivListe(openCl.id)} className="text-stone-300 hover:text-emerald-500 p-1" title="Archivieren"><FolderCheck size={12} /></button>
@@ -16640,6 +16730,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                               <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">Eintragungsliste</span>
                                               <div className="flex gap-1">
                                                 <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
+                                                <button onClick={() => listeExportieren(li)} className="text-stone-300 hover:text-stone-600 p-1" title="Als PDF teilen / drucken"><Printer size={12} /></button>
                                                 <button onClick={() => deleteFeld(feld.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
                                               </div>
                                             </div>
