@@ -10185,6 +10185,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
   const [showAttentionSheet, setShowAttentionSheet] = useState(false);
   const [confirmDismissId, setConfirmDismissId] = useState(null);
   const [showNichtVergessen, setShowNichtVergessen] = useState(false);
+  const [listenOffen, setListenOffen] = useState(false);
   const [dragTaskId, setDragTaskId] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const dragStartIdx = useRef(null);
@@ -10997,15 +10998,18 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
 
           {offeneChecklisten.length > 0 && (
             <div className="mt-2 pt-2 border-t border-stone-100">
-              <div className="flex items-center gap-2 text-sm text-stone-600">
+              <button onClick={() => setListenOffen(!listenOffen)} className="w-full flex items-center gap-2 text-sm text-stone-600">
                 <ListChecks size={13} className="text-stone-400 shrink-0" />
-                <span className="flex-1">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</span>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {offeneChecklisten.map((c) => (
-                  <button key={c.id} onClick={(e) => { e.stopPropagation(); onOpenListeKlasse?.(c.classId); }} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full truncate max-w-[10rem] hover:bg-stone-200 active:bg-stone-200 transition-colors">{c.cls?.name || "?"}: {c.title}</button>
-                ))}
-              </div>
+                <span className="flex-1 text-left">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</span>
+                <ChevronRight size={14} className={`text-stone-300 shrink-0 transition-transform ${listenOffen ? "rotate-90" : ""}`} />
+              </button>
+              {listenOffen && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {offeneChecklisten.map((c) => (
+                    <button key={c.id} onClick={(e) => { e.stopPropagation(); onOpenListeKlasse?.(c.classId); }} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full truncate max-w-[10rem] hover:bg-stone-200 active:bg-stone-200 transition-colors">{c.cls?.name || "?"}: {c.title}</button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -11091,16 +11095,22 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             )}
             {offeneChecklisten.length > 0 && (
               <div className="mt-3 pt-3 border-t border-stone-100">
-                <div className="text-xs font-medium text-stone-500 mb-2">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</div>
-                <ul className="space-y-2">
-                  {offeneChecklisten.map((c) => (
-                    <li key={c.id} onClick={() => { onOpenListeKlasse?.(c.classId); }} className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer active:bg-stone-50 rounded px-1 -mx-1">
-                      <ListChecks size={14} className="text-stone-400 shrink-0" />
-                      <span className="flex-1 truncate">{c.cls?.name || "?"}: {c.title}</span>
-                      <ChevronRight size={14} className="text-stone-300 shrink-0" />
-                    </li>
-                  ))}
-                </ul>
+                <button onClick={() => setListenOffen(!listenOffen)} className="w-full flex items-center gap-2 text-left">
+                  <ListChecks size={14} className="text-stone-400 shrink-0" />
+                  <span className="text-xs font-medium text-stone-500 flex-1">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</span>
+                  <ChevronRight size={14} className={`text-stone-300 shrink-0 transition-transform ${listenOffen ? "rotate-90" : ""}`} />
+                </button>
+                {listenOffen && (
+                  <ul className="space-y-2 mt-2">
+                    {offeneChecklisten.map((c) => (
+                      <li key={c.id} onClick={() => { onOpenListeKlasse?.(c.classId); }} className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer active:bg-stone-50 rounded px-1 -mx-1">
+                        <ListChecks size={14} className="text-stone-400 shrink-0" />
+                        <span className="flex-1 truncate">{c.cls?.name || "?"}: {c.title}</span>
+                        <ChevronRight size={14} className="text-stone-300 shrink-0" />
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
             <button
