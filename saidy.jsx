@@ -3494,6 +3494,8 @@ const HELP_DATA = [
       { q: "Wie öffne ich die noch offenen Entschuldigungen?", a: `Für die aktuelle oder nächste Stunde: die JETZT- bzw. ALS-NÄCHSTES-Karte zeigt „N Entschuldigung(en) prüfen" direkt an, ein Tipp öffnet die Liste. Über alle Klassen hinweg: „Klassen & Schüler" → Reiter „Verwaltung" → „Entschuldigungen" – das öffnet sich auch dann, wenn gerade nichts offen ist. Solange Entschuldigungen offen sind, taucht ein Hinweis zusätzlich in der Aufmerksamkeits-Kachel auf der Heute-Seite auf.` },
       { q: "Wie trage ich eine Stunde am Wochenende oder in den Ferien nach?", a: `Übersicht → grünes Plus → „Stunde nachtragen". Wenn heute keine Stunde im Plan steht, öffnet sich automatisch der Nachtragen-Picker: Klasse wählen → Fach wählen → Datum wählen → weiter. Danach landest du in der normalen Stundenerfassung – auch für alte Stunden.` },
       { q: "Kann ich ein Gespräch von gestern nachträglich eintragen?", a: `Ja. Grünes Plus → „Gespräch notieren" – neben dem Notizfeld gibt es ein Datumsfeld, das standardmäßig auf heute steht. Ändere es auf das gewünschte Datum, dann bleibt der Eintrag im Verlauf an der richtigen Stelle stehen. Dasselbe gilt für „Notiz zu einem Kind".` },
+      { q: "Kann ich eine Notiz oder ein Gespräch nachträglich bearbeiten?", a: `Ja – tippe im Schülerprofil (Tab „Notizen" oder „Gespräche") auf den Text einer Notiz oder eines Gesprächs. Es öffnet sich ein Bearbeitungsfeld, in dem du den Text ändern und mit „Speichern" übernehmen kannst. Auf größeren Bildschirmen erscheint zusätzlich ein kleines Stift-Symbol beim Überfahren mit der Maus.` },
+      { q: "Kann ich eine Notiz oder ein Gespräch löschen?", a: `Ja – neben jeder Notiz und jedem Gespräch gibt es ein Papierkorb-Symbol. Es erscheint eine kurze Rückfrage „Ja / Nein", erst nach Bestätigung wird der Eintrag gelöscht.` },
       { q: "Wie bearbeite ich eine:n Schüler:in?", a: `Klasse antippen → Reiter „Überblick" → „Schüler:innen" → auf den Namen tippen. Im Profil kannst du Name, Foto und weitere Angaben bearbeiten. Schneller geht es über das Suchfeld „Kind suchen …" oben im Reiter „Klassen".` },
       { q: "Kann ich Dokumente an eine Klasse anhängen?", a: `Ja – auf der Klassen-Überblick-Seite gibt es den Bereich „Dokumente". Dort kannst du Fotos und PDFs ablegen, z. B. die Bildrechte-Liste, Elternbriefe oder Klassenlisten. Die Dateien bleiben auf deinem Gerät und sind nicht Teil der normalen Datensicherung.` },
       { q: "Wie lösche ich eine Klasse?", a: `Klasse antippen → Reiter „Überblick" → „Klasse verwalten". Ganz unten im Fenster steht „Diese Klasse löschen". Die Klasse landet mit allen Kindern, Noten und Notizen für 30 Tage im Papierkorb – den findest du im Reiter „Klassen" ganz unten.` },
@@ -3559,6 +3561,10 @@ const HELP_DATA = [
       { q: "Was bedeuten die Farben bei Terminen und Aufgaben im Kalender?", a: `Termine und Aufgaben mit Datum werden farblich hervorgehoben, je nachdem wie nah sie rücken: Rot bedeutet „heute fällig" oder „überfällig", Orange zeigt an, dass noch ein bis drei Tage Zeit sind. Ohne Farbe ist alles weiter als drei Tage entfernt. So siehst du auf einen Blick, was dringend ist.` },
       { q: "Was passiert, wenn ich im Stundenplan auf eine belegte Stunde tippe?", a: `Ein Tipp auf eine belegte Stunde öffnet direkt den Noten-Bereich mit dem passenden Fach – praktisch, um schnell Noten einzutragen oder nachzuschauen. Willst du stattdessen das Fach in dieser Stunde ändern, tippe auf den kleinen Stift oben rechts in der Kachel. Bei einer leeren Stunde öffnet sich wie gewohnt die Fachauswahl.` },
       { q: "Wie erledige ich einen Termin?", a: `Tippe auf den Kreis links neben dem Termin. Er wandert in den „Erledigt"-Bereich ganz unten.` },
+      { q: "Wie bearbeite ich einen bestehenden Termin?", a: `Tippe im Kalender auf den Titel eines Termins. Das Formular öffnet sich mit den bestehenden Daten – Titel, Datum, Beginn, Ende, Notizen, Art, Wiederholung und Farbe lassen sich dort ändern. Klicke dann auf „Speichern". Bei Ferien-Einträgen funktioniert es genauso: auf den Namen tippen.` },
+      { q: "Wie lösche ich einen Termin?", a: `Tippe auf das Papierkorb-Symbol rechts neben dem Termin. Es erscheint eine Rückfrage „Ja / Nein" – erst nach Bestätigung wird der Termin entfernt. Das gilt auch für Ferien-Einträge.` },
+      { q: "Kann ich bei Terminen einen Zeitraum (Beginn – Ende) eintragen?", a: `Ja – beim Anlegen oder Bearbeiten eines Termins gibt es die Felder „Beginn" und „Ende" für die Uhrzeit. Das Ende-Feld erscheint, sobald du eine Beginn-Zeit einträgst. In der Terminliste wird der Zeitraum dann als z. B. „09:00 – 10:30" angezeigt.` },
+      { q: "Kann ich Notizen zu einem Termin hinzufügen?", a: `Ja – beim Anlegen oder Bearbeiten eines Termins gibt es das Feld „Notizen". Dort kannst du Raum, Teilnehmer oder andere Hinweise eintragen (bis 500 Zeichen). Die Notiz wird in der Terminliste als kurze Vorschau unter dem Titel angezeigt.` },
       { q: "Wie importiere ich Termine aus Apple Kalender oder Google Calendar?", a: `Öffne „Mehr" → „Kalender" → oben rechts „ICS importieren". Wähle eine .ics-Datei – das Standardformat, das Apple Kalender, Google Calendar und Outlook beim Exportieren erzeugen. So exportierst du aus Apple Kalender: Am Mac „Ablage" → „Exportieren …", dort den Kalender als .ics speichern; auf iPhone/iPad gibt es keinen direkten Export, nutze dafür iCloud.com am Computer. Aus Google Calendar: „Einstellungen" → Kalender wählen → „Kalender exportieren". Tu-vi legt für jeden Termin in der Datei einen Eintrag an, Duplikate (gleicher Titel + gleiches Datum) werden automatisch übersprungen. Wiederkehrende Termine (wöchentlich, alle zwei Wochen, monatlich) werden ebenfalls erkannt. Es ist kein Live-Sync – bei neuen Terminen im Apple Kalender musst du erneut exportieren und importieren.` },
     ],
   },
@@ -3567,9 +3573,11 @@ const HELP_DATA = [
     items: [
       { q: "Wie lege ich eine Aufgabe an?", a: `Tippe unten auf „Mehr" → „Aufgaben". Wähle eine Liste und tippe auf „Aufgabe hinzufügen" – dort gibt es Titel, Farbe, ein Fälligkeitsdatum und ein optionales „Anzeigen ab"-Datum. Für ein schnelles To-do zwischendurch reicht das Feld „Aufgabe hinzufügen …" in der Kachel „Nicht vergessen" auf der Übersicht.` },
       { q: "Wie erstelle ich eine neue Aufgabenliste?", a: `Unter „Mehr" → „Aufgaben" auf „Aufgabe hinzufügen" tippen. Im Dialog findest du unten ein Dropdown für die Liste – dort gibt es den Eintrag „+ Neue Liste erstellen", mit dem du eine neue Liste anlegen und ihr ein Icon geben kannst.` },
+      { q: "Wie benenne ich eine Aufgabenliste um?", a: `Unter „Mehr" → „Aufgaben" die Liste auswählen (Chip antippen). Neben dem Papierkorb-Symbol erscheint ein Stift-Symbol – darauf tippen, neuen Namen eingeben, mit „OK" bestätigen. Alternativ: Doppeltipp auf den Listennamen.` },
+      { q: "Wie lösche ich eine Aufgabe oder Aufgabenliste?", a: `Beim Papierkorb-Symbol neben einer Aufgabe oder Aufgabenliste erscheint eine Rückfrage „Ja / Nein". Erst nach Bestätigung wird gelöscht. Aufgabenlisten löschen entfernt nur die Liste, nicht die Aufgaben darin – sie wandern in „Keine Liste".` },
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
-      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Über das Drucker-Symbol in der Toolbar kannst du eine fertige Liste als PDF exportieren, drucken oder per Teilen-Menü weiterleiten. Gelöschte Listen landen für 30 Tage im Papierkorb und können dort wiederhergestellt oder endgültig gelöscht werden. Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
+      { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Über das Drucker-Symbol in der Toolbar kannst du eine fertige Liste als PDF exportieren, drucken oder per Teilen-Menü weiterleiten. Listennamen lassen sich jederzeit über das Stift-Symbol umbenennen. Gelöschte Listen landen für 30 Tage im Papierkorb und können dort wiederhergestellt oder endgültig gelöscht werden. Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
     ],
   },
   {
@@ -12869,6 +12877,20 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
      versehentlich auf Neustarter zurueckspringt. */
   const [showGraduierungForm, setShowGraduierungForm] = useState(false);
   const [graduierungDraft, setGraduierungDraft] = useState({ stufe: "neustarter", aufProbe: false, begruendung: "" });
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingNoteText, setEditingNoteText] = useState("");
+  const [confirmDeleteNoteId, setConfirmDeleteNoteId] = useState(null);
+
+  function startEditNote(n) { setEditingNoteId(n.id); setEditingNoteText(n.text); }
+  function saveEditNote() {
+    if (!editingNoteText.trim()) return;
+    update((d) => { const n = d.notes.find((x) => x.id === editingNoteId); if (n) n.text = editingNoteText.trim(); return d; });
+    setEditingNoteId(null); setEditingNoteText("");
+  }
+  function confirmAndDeleteNote(id) {
+    onDeleteNote(id);
+    setConfirmDeleteNoteId(null);
+  }
 
   function studentAvg(studentId) {
     const sg = (grades || []).filter((g) => g.studentId === studentId);
@@ -14067,18 +14089,38 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                       <div key={label}>
                         <div className="tl-group-label">{label}</div>
                         {items.map((n) => (
-                          <div key={n.id} className="tl-entry">
+                          <div key={n.id} className="tl-entry group">
                             <div className="tl-icon">
                               <StickyNote size={15} className="text-stone-400" />
                             </div>
                             <div className="tl-body">
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm text-stone-700 leading-snug flex-1">{n.text}</p>
-                                <button onClick={() => onDeleteNote(n.id)} className="shrink-0 text-stone-300 hover:text-red-500 mt-0.5">
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
-                              <div className="t-caption mt-1.5">{localDate(n.date).toLocaleDateString("de-DE")}</div>
+                              {editingNoteId === n.id ? (
+                                <div className="space-y-2">
+                                  <textarea className="input-base text-sm w-full resize-none" rows={2} value={editingNoteText} onChange={(e) => setEditingNoteText(e.target.value)} autoFocus maxLength={2000} />
+                                  <div className="flex gap-2">
+                                    <button onClick={saveEditNote} className="text-xs akzent-text font-medium hover:underline">Speichern</button>
+                                    <button onClick={() => setEditingNoteId(null)} className="text-xs text-stone-400 hover:underline">Abbrechen</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <p className="text-sm text-stone-700 leading-snug flex-1 cursor-pointer" onClick={() => startEditNote(n)}>{n.text}</p>
+                                    <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                                      <button onClick={() => startEditNote(n)} className="text-stone-300 hover:text-stone-600 opacity-0 group-hover:opacity-100"><Pencil size={12} /></button>
+                                      {confirmDeleteNoteId === n.id ? (
+                                        <span className="flex items-center gap-1">
+                                          <button onClick={() => confirmAndDeleteNote(n.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
+                                          <button onClick={() => setConfirmDeleteNoteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                                        </span>
+                                      ) : (
+                                        <button onClick={() => setConfirmDeleteNoteId(n.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={13} /></button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="t-caption mt-1.5">{localDate(n.date).toLocaleDateString("de-DE")}</div>
+                                </>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -14132,21 +14174,41 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                           const mood = MOOD_OPTIONS.find((m) => m.key === g.mood);
                           const typ = GESPRAECH_TYPEN.find((t) => t.key === g.gesprTyp);
                           return (
-                            <div key={g.id} className="tl-entry">
+                            <div key={g.id} className="tl-entry group">
                               <div className="tl-icon">
                                 <span className="text-lg leading-none">{mood?.emoji ?? "💬"}</span>
                               </div>
                               <div className="tl-body">
-                                <div className="flex items-start justify-between gap-2 mb-1.5">
-                                  <div className="flex items-center gap-1.5 flex-wrap">
-                                    {typ && <span className="text-[10px] font-semibold akzent-text bg-[#ECEEE2] px-2 py-0.5 rounded-full">{typ.label}</span>}
-                                    <span className="t-caption">{localDate(g.date).toLocaleDateString("de-DE")}</span>
+                                {editingNoteId === g.id ? (
+                                  <div className="space-y-2">
+                                    <textarea className="input-base text-sm w-full resize-none" rows={2} value={editingNoteText} onChange={(e) => setEditingNoteText(e.target.value)} autoFocus maxLength={2000} />
+                                    <div className="flex gap-2">
+                                      <button onClick={saveEditNote} className="text-xs akzent-text font-medium hover:underline">Speichern</button>
+                                      <button onClick={() => setEditingNoteId(null)} className="text-xs text-stone-400 hover:underline">Abbrechen</button>
+                                    </div>
                                   </div>
-                                  <button onClick={() => onDeleteNote(g.id)} className="shrink-0 text-stone-300 hover:text-red-500">
-                                    <Trash2 size={13} />
-                                  </button>
-                                </div>
-                                <p className="text-sm text-stone-700 leading-snug">{g.text}</p>
+                                ) : (
+                                  <>
+                                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        {typ && <span className="text-[10px] font-semibold akzent-text bg-[#ECEEE2] px-2 py-0.5 rounded-full">{typ.label}</span>}
+                                        <span className="t-caption">{localDate(g.date).toLocaleDateString("de-DE")}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <button onClick={() => startEditNote(g)} className="text-stone-300 hover:text-stone-600 opacity-0 group-hover:opacity-100"><Pencil size={12} /></button>
+                                        {confirmDeleteNoteId === g.id ? (
+                                          <span className="flex items-center gap-1">
+                                            <button onClick={() => confirmAndDeleteNote(g.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
+                                            <button onClick={() => setConfirmDeleteNoteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                                          </span>
+                                        ) : (
+                                          <button onClick={() => setConfirmDeleteNoteId(g.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={13} /></button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-stone-700 leading-snug cursor-pointer" onClick={() => startEditNote(g)}>{g.text}</p>
+                                  </>
+                                )}
                               </div>
                             </div>
                           );
@@ -16199,6 +16261,8 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [archivOffen, setArchivOffen] = useState(false);
   const [listenPapierkorbOffen, setListenPapierkorbOffen] = useState(false);
   const [confirmDeleteListeId, setConfirmDeleteListeId] = useState(null);
+  const [renameListeId, setRenameListeId] = useState(null);
+  const [renameListeText, setRenameListeText] = useState("");
   const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
@@ -16505,6 +16569,15 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 if (expandedFeldId === feldId) setExpandedFeldId(null);
                 setConfirmDeleteListeId(null);
               };
+              const renameListe = (id, art) => {
+                if (!renameListeText.trim()) return;
+                update((d) => {
+                  if (art === "checkliste") { const c = (d.checklisten || []).find((x) => x.id === id); if (c) c.title = renameListeText.trim(); }
+                  else { const f = (d.klassenFelder || []).find((x) => x.id === id); if (f) f.label = renameListeText.trim(); }
+                  return d;
+                });
+                setRenameListeId(null); setRenameListeText("");
+              };
               const setWert = (feldId, schuelerId, val) => {
                 update((d) => {
                   d.feldWerte = d.feldWerte || [];
@@ -16687,7 +16760,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                   const isActive = li.art === "checkliste" ? openChecklistId === li.id : expandedFeldId === li.id;
                                   const pct = li.total > 0 ? Math.round((li.done / li.total) * 100) : 0;
                                   return (
-                                    <li key={li.id}>
+                                    <li key={li.id} className="group">
                                       <button
                                         onClick={() => {
                                           if (li.art === "checkliste") { setOpenChecklistId(isActive ? null : li.id); setExpandedFeldId(null); }
@@ -16701,7 +16774,18 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                           </span>
                                           <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                              <span className="text-sm font-medium text-stone-800 truncate">{li.title}</span>
+                                              {renameListeId === li.id ? (
+                                                <div className="flex items-center gap-1 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                                                  <input className="input-base text-sm flex-1 min-w-0 py-0.5" value={renameListeText} onChange={(e) => setRenameListeText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") renameListe(li.id, li.art); if (e.key === "Escape") setRenameListeId(null); }} autoFocus maxLength={100} />
+                                                  <button onClick={() => renameListe(li.id, li.art)} className="text-xs akzent-text font-medium">OK</button>
+                                                  <button onClick={() => setRenameListeId(null)} className="text-xs text-stone-400">✕</button>
+                                                </div>
+                                              ) : (
+                                                <>
+                                                  <span className="text-sm font-medium text-stone-800 truncate">{li.title}</span>
+                                                  <button onClick={(e) => { e.stopPropagation(); setRenameListeId(li.id); setRenameListeText(li.title); }} className="text-stone-300 hover:text-stone-600 shrink-0 opacity-0 group-hover:opacity-100" title="Umbenennen"><Pencil size={11} /></button>
+                                                </>
+                                              )}
                                               <span className={`text-[11px] font-semibold tnum shrink-0 ${li.offen > 0 ? "text-stone-400" : "text-emerald-600"}`}>
                                                 {li.offen > 0 ? `${li.done}/${li.total}` : "✓"}
                                               </span>
@@ -19114,6 +19198,10 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
   const [color, setColor] = useState(TASK_COLORS[0]);
   const [recurrence, setRecurrence] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [endTime, setEndTime] = useState("");
+  const [description, setDescription] = useState("");
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showAllFerien, setShowAllFerien] = useState(false);
   const [icsResult, setIcsResult] = useState(null);
   const icsRef = useRef(null);
@@ -19134,10 +19222,47 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
   function addEvent() {
     if (!title.trim()) return;
     update((d) => {
-      d.events.push({ id: uid(), title: title.trim(), date, time, type, color, done: false, recurrence: recurrence || null });
+      d.events.push({ id: uid(), title: title.trim(), date, time, endTime: endTime || undefined, description: description.trim() || undefined, type, color, done: false, recurrence: recurrence || null });
       return d;
     });
-    setTitle(""); setTime(""); setRecurrence("");
+    resetForm();
+  }
+
+  function startEdit(ev) {
+    setEditingEvent(ev);
+    setTitle(ev.title);
+    setDate(ev.date);
+    setTime(ev.time || "");
+    setEndTime(ev.endTime || "");
+    setDescription(ev.description || "");
+    setType(ev.type);
+    setColor(ev.color || TASK_COLORS[0]);
+    setRecurrence(ev.recurrence || "");
+    setShowForm(true);
+  }
+
+  function saveEvent() {
+    if (!title.trim()) return;
+    update((d) => {
+      const e = d.events.find((x) => x.id === editingEvent.id);
+      if (e) {
+        e.title = title.trim();
+        e.date = date;
+        e.time = time;
+        e.endTime = endTime || undefined;
+        e.description = description.trim() || undefined;
+        e.type = type;
+        e.color = color;
+        e.recurrence = recurrence || null;
+      }
+      return d;
+    });
+    resetForm();
+  }
+
+  function resetForm() {
+    setTitle(""); setTime(""); setEndTime(""); setDescription(""); setRecurrence("");
+    setEditingEvent(null); setShowForm(false);
   }
 
   function toggleDone(id) {
@@ -19150,6 +19275,7 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
 
   function remove(id) {
     update((d) => { d.events = d.events.filter((e) => e.id !== id); return d; });
+    setConfirmDeleteId(null);
   }
 
   function handleICSImport(file) {
@@ -19306,7 +19432,7 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
         <div className="font-medium text-stone-800 mb-3">Termine & Erinnerungen</div>
         <ul className="space-y-3">
           {open.filter((e) => e.type !== "ferien").map((e) => (
-            <li key={e.id} className="flex items-start gap-2.5 text-sm">
+            <li key={e.id} className="flex items-start gap-2.5 text-sm group">
               {e.recurrence ? (
                 <span className="w-5 h-5 shrink-0 mt-0.5 flex items-center justify-center text-stone-300">
                   <RefreshCw size={13} />
@@ -19315,8 +19441,8 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                 <button onClick={() => toggleDone(e.id)} className="w-5 h-5 rounded-full border-2 border-stone-300 hover:akzent-rand shrink-0 mt-0.5" />
               )}
               <span className="w-2.5 h-2.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: isColor ? (e.color || "#c9702f") : "#A8A29E" }} />
-              <div className="flex-1 min-w-0">
-                <div className="text-stone-800 leading-snug">{e.title}</div>
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => startEdit(e)}>
+                <div className="text-stone-800 leading-snug group-hover:text-stone-600">{e.title}</div>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${typeColors[e.type]}`}>{typeLabels[e.type]}</span>
                   {e.recurrence && (
@@ -19328,14 +19454,25 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                     const urg = !e.recurrence ? urgencyInfo(e._eff || e.date) : { cls: "", label: "" };
                     return (
                       <span className={`text-xs px-1.5 py-0.5 rounded-full ${urg.cls || "text-stone-400"}`}>
-                        {new Date(e._eff || e.date).toLocaleDateString("de-DE")}{e.time ? `, ${e.time}` : ""}
+                        {new Date(e._eff || e.date).toLocaleDateString("de-DE")}{e.time ? `, ${e.time}${e.endTime ? ` – ${e.endTime}` : ""}` : ""}
                         {urg.label ? ` · ${urg.label}` : ""}
                       </span>
                     );
                   })()}
                 </div>
+                {e.description && <div className="text-xs text-stone-400 mt-1 line-clamp-1">{e.description}</div>}
               </div>
-              <button onClick={() => remove(e.id)} className="text-stone-300 hover:text-red-500 shrink-0 mt-0.5"><Trash2 size={14} /></button>
+              <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                <button onClick={() => startEdit(e)} className="text-stone-300 hover:text-stone-600 opacity-0 group-hover:opacity-100"><Pencil size={13} /></button>
+                {confirmDeleteId === e.id ? (
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => remove(e.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDeleteId(e.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
+                )}
+              </div>
             </li>
           ))}
           {!open.filter((e) => e.type !== "ferien").length && <li className="text-sm text-stone-400">Keine offenen Termine.</li>}
@@ -19402,15 +19539,22 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                 const bis = e.endDate ? localDate(e.endDate).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) : null;
                 const laeuftGerade = e.date <= heuteIso && heuteIso <= (e.endDate || e.date);
                 return (
-                  <li key={e.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-sm">
-                    <span className="text-emerald-900 flex items-center gap-1.5">
+                  <li key={e.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-sm group">
+                    <span className="text-emerald-900 flex items-center gap-1.5 cursor-pointer hover:text-emerald-700" onClick={() => startEdit(e)}>
                       {e.title}
                       {laeuftGerade && <span className="text-[10px] uppercase tracking-wider bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded-full">jetzt</span>}
                     </span>
                     <span className="text-emerald-600 text-xs tnum whitespace-nowrap text-right">
                       {von}{bis ? <span className="text-emerald-300"> – </span> : ""}{bis}
                     </span>
-                    <button onClick={() => remove(e.id)} className="text-emerald-300 hover:text-red-600 shrink-0 justify-self-end"><Trash2 size={14} /></button>
+                    {confirmDeleteId === e.id ? (
+                      <div className="flex items-center gap-1.5 shrink-0 justify-self-end">
+                        <button onClick={() => remove(e.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
+                        <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDeleteId(e.id)} className="text-emerald-300 hover:text-red-600 shrink-0 justify-self-end"><Trash2 size={14} /></button>
+                    )}
                   </li>
                 );
               })}
@@ -19433,12 +19577,19 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
           <div className="font-medium text-stone-500 mb-3 text-sm">Erledigt</div>
           <ul className="space-y-2">
             {done.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 text-sm text-stone-400 line-through">
-                <button onClick={() => toggleDone(e.id)} className="w-5 h-5 rounded-full akzent-flaeche flex items-center justify-center shrink-0">
+              <li key={e.id} className="flex items-center gap-3 text-sm text-stone-400 line-through group">
+                <button onClick={() => toggleDone(e.id)} className="w-5 h-5 rounded-full akzent-flaeche flex items-center justify-center shrink-0 no-underline">
                   <Check size={12} />
                 </button>
-                <span className="flex-1">{e.title}</span>
-                <button onClick={() => remove(e.id)} className="text-stone-300 hover:text-red-500 no-underline"><Trash2 size={14} /></button>
+                <span className="flex-1 cursor-pointer" onClick={() => startEdit(e)}>{e.title}</span>
+                {confirmDeleteId === e.id ? (
+                  <div className="flex items-center gap-1.5 no-underline">
+                    <button onClick={() => remove(e.id)} className="text-[11px] text-red-600 font-medium hover:underline no-underline">Ja</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-stone-400 hover:underline no-underline">Nein</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDeleteId(e.id)} className="text-stone-300 hover:text-red-500 no-underline"><Trash2 size={14} /></button>
+                )}
               </li>
             ))}
           </ul>
@@ -19455,20 +19606,31 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
       ) : (
         <Card className="p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="font-medium text-stone-800">Neuer Termin</div>
-            <button onClick={() => setShowForm(false)} className="text-stone-400 hover:text-stone-600"><X size={16} /></button>
+            <div className="font-medium text-stone-800">{editingEvent ? "Termin bearbeiten" : "Neuer Termin"}</div>
+            <button onClick={resetForm} className="text-stone-400 hover:text-stone-600"><X size={16} /></button>
           </div>
           <Field label="Titel">
-            <input className={inputCls} placeholder="z. B. Elternabend" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addEvent()} autoFocus maxLength={200} />
+            <input className={inputCls} placeholder="z. B. Elternabend" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (editingEvent ? saveEvent() : addEvent())} autoFocus maxLength={200} />
           </Field>
           <div className="grid grid-cols-2 gap-2 mt-3">
             <Field label="Datum">
               <input className={inputCls} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </Field>
-            <Field label="Uhrzeit (optional)">
+            <Field label="Beginn (optional)">
               <input className={inputCls} type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </Field>
           </div>
+          {time && (
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <Field label="Ende (optional)">
+                <input className={inputCls} type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              </Field>
+              <div />
+            </div>
+          )}
+          <Field label="Notizen (optional)" className="mt-3">
+            <textarea className={inputCls + " resize-none"} rows={2} placeholder="Raum, Teilnehmer, Hinweise ..." value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />
+          </Field>
           <div className="grid grid-cols-2 gap-2 mt-3">
             <Field label="Art">
               <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
@@ -19494,7 +19656,14 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
               ))}
             </div>
           </Field>
-          <Button onClick={() => { addEvent(); setShowForm(false); }} className="w-full justify-center mt-3"><Plus size={15} /> Anlegen</Button>
+          {editingEvent ? (
+            <div className="flex gap-2 mt-3">
+              <Button onClick={saveEvent} className="flex-1 justify-center"><Check size={15} /> Speichern</Button>
+              <button onClick={resetForm} className="px-4 py-2 text-sm text-stone-500 hover:text-stone-700 rounded-xl border border-stone-200">Abbrechen</button>
+            </div>
+          ) : (
+            <Button onClick={addEvent} className="w-full justify-center mt-3"><Plus size={15} /> Anlegen</Button>
+          )}
         </Card>
       )}
     </div>
@@ -19653,6 +19822,10 @@ function AufgabenTab({ data, update }) {
   const [selected, setSelected] = useState("alle"); // "alle" | "erledigt" | listId
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [confirmDeleteTaskId, setConfirmDeleteTaskId] = useState(null);
+  const [confirmDeleteListId, setConfirmDeleteListId] = useState(null);
+  const [renameListId, setRenameListId] = useState(null);
+  const [renameListText, setRenameListText] = useState("");
 
   const tasks = data.tasks || [];
   const lists = data.taskLists || [];
@@ -19704,6 +19877,13 @@ function AufgabenTab({ data, update }) {
       return d;
     });
     if (selected === id) setSelected("alle");
+    setConfirmDeleteListId(null);
+  }
+
+  function doRenameList() {
+    if (!renameListText.trim()) return;
+    update((d) => { const l = (d.taskLists || []).find((x) => x.id === renameListId); if (l) l.name = renameListText.trim(); return d; });
+    setRenameListId(null); setRenameListText("");
   }
 
   const doneCount = tasks.filter((t) => t.done).length;
@@ -19726,15 +19906,34 @@ function AufgabenTab({ data, update }) {
           const count = tasks.filter((t) => !t.done && t.listId === l.id).length;
           return (
             <div key={l.id} className="shrink-0 flex items-center gap-0.5">
-              <button
-                onClick={() => setSelected(l.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${selected === l.id ? "akzent-ton akzent-rand akzent-text font-medium" : "bg-white border-stone-200 text-stone-600"}`}
-              >
-                <Icon size={13} /> {l.name}
-                <span className="text-xs opacity-60">{count}</span>
-              </button>
-              {selected === l.id && (
-                <button onClick={() => removeList(l.id)} className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-red-500 rounded-full shrink-0"><Trash2 size={11} /></button>
+              {renameListId === l.id ? (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full border akzent-rand bg-white">
+                  <input className="text-sm w-24 border-none outline-none bg-transparent" value={renameListText} onChange={(e) => setRenameListText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") doRenameList(); if (e.key === "Escape") setRenameListId(null); }} autoFocus maxLength={100} />
+                  <button onClick={doRenameList} className="text-xs akzent-text font-medium">OK</button>
+                  <button onClick={() => setRenameListId(null)} className="text-xs text-stone-400">✕</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSelected(l.id)}
+                  onDoubleClick={() => { setRenameListId(l.id); setRenameListText(l.name); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${selected === l.id ? "akzent-ton akzent-rand akzent-text font-medium" : "bg-white border-stone-200 text-stone-600"}`}
+                >
+                  <Icon size={13} /> {l.name}
+                  <span className="text-xs opacity-60">{count}</span>
+                </button>
+              )}
+              {selected === l.id && !renameListId && (
+                <div className="flex items-center gap-0.5">
+                  <button onClick={() => { setRenameListId(l.id); setRenameListText(l.name); }} className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-600 rounded-full shrink-0" title="Umbenennen"><Pencil size={10} /></button>
+                  {confirmDeleteListId === l.id ? (
+                    <span className="flex items-center gap-1">
+                      <button onClick={() => removeList(l.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
+                      <button onClick={() => setConfirmDeleteListId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                    </span>
+                  ) : (
+                    <button onClick={() => setConfirmDeleteListId(l.id)} className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-red-500 rounded-full shrink-0"><Trash2 size={11} /></button>
+                  )}
+                </div>
               )}
             </div>
           );
@@ -19782,7 +19981,14 @@ function AufgabenTab({ data, update }) {
                     </span>
                   );
                 })()}
-                <button onClick={() => removeTask(t.id)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={14} /></button>
+                {confirmDeleteTaskId === t.id ? (
+                  <span className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => { removeTask(t.id); setConfirmDeleteTaskId(null); }} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
+                    <button onClick={() => setConfirmDeleteTaskId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                  </span>
+                ) : (
+                  <button onClick={() => setConfirmDeleteTaskId(t.id)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={14} /></button>
+                )}
               </li>
             );
           })}
