@@ -18146,7 +18146,7 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
           incidents={data.incidents || []}
           documents={data.documents || []}
           graduierungVerlauf={data.graduierungVerlauf || []}
-          klassenFelder={(data.klassenFelder || []).filter((f) => f.classId === klasseId)}
+          klassenFelder={(data.klassenFelder || []).filter((f) => f.classId === selectedClass)}
           feldWerte={data.feldWerte || []}
           update={update}
           settings={data.settings || {}}
