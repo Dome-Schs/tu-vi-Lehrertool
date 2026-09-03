@@ -2229,9 +2229,14 @@ function SettingsModal({ data, update, halbjahr, setHalbjahr, theme, setTheme, u
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-2 py-2 mb-2">
+            <div className="flex items-center justify-between gap-2 py-2">
               <span className="text-xs text-stone-500">Notenfarben anzeigen (grün / gelb / rot)</span>
               <Toggle checked={data.settings?.notenfarben !== false} onChange={(v) => setSetting("notenfarben", v)} />
+            </div>
+
+            <div className="flex items-center justify-between gap-2 py-2 mb-2">
+              <span className="text-xs text-stone-500">Kopieren / Vorbereiten anzeigen</span>
+              <Toggle checked={data.settings?.showKopieren !== false} onChange={(v) => setSetting("showKopieren", v)} />
             </div>
 
             <div className="text-xs font-medium text-stone-500 mb-2">Reihenfolge der Karten</div>
@@ -3578,6 +3583,7 @@ const HELP_DATA = [
       { q: "Kann ich Aufgaben vorausplanen?", a: `Ja – beim Anlegen oder Bearbeiten einer Aufgabe gibt es das Feld „Anzeigen ab". Setzt du dort ein Datum, wird die Aufgabe erst ab diesem Tag in „Nicht vergessen" und auf der Übersicht angezeigt. So kannst du z. B. im August eine Aufgabe für Oktober anlegen, ohne dass sie vorher die Liste füllt. In der Aufgaben-Übersicht unter „Mehr" siehst du auch vorausgeplante Aufgaben – mit einem kleinen Auge-Symbol und dem Startdatum.` },
       { q: "Kann ich Notizen für eine ganze Klasse anlegen?", a: `Ja – Klasse antippen → Reiter „Überblick" → den Bereich „Nicht vergessen" aufklappen. Dort kannst du Notizen eintragen, die nur für diese Klasse gelten. Beim Anlegen lassen sich zwei optionale Daten setzen: über das Kalender-Symbol ein „Sichtbar ab"-Datum (Notiz taucht erst ab diesem Tag auf der Übersicht auf) und über „Frist setzen" ein Fälligkeitsdatum (überfällige Notizen werden rot hervorgehoben, bald fällige orange). Das Fälligkeitsdatum lässt sich auch nachträglich ändern oder entfernen (Uhr-Symbol neben der Notiz). Beim Löschen (×) erscheint eine „Löschen/Abbrechen"-Bestätigung. Diese Klassen-Notizen erscheinen auf der Übersicht unter „Nicht vergessen" mit dem Klassennamen davor, z. B. „5c: Sportzeug einsammeln".` },
       { q: "Was sind Listen im Klassen-Überblick?", a: `Im Bereich „Listen“ findest du zwei Arten: Checklisten und Eintragungslisten. Eine Checkliste ist zum Abhaken – z. B. Büchergeld oder Einverständniserklärungen. Pro Kind setzt du einen Haken, wenn erledigt. Eine Eintragungsliste hat eigene Dropdown-Optionen – z. B. „Mensa“ mit „Ja / Nein“ oder „AG-Wahl“ mit „Theater / Sport / Keine“. Beide Listen zeigen einen Fortschrittsbalken, Avatare der Kinder und eine Sortier-Funktion (nach Vor- oder Nachname). Über das Drucker-Symbol in der Toolbar kannst du eine fertige Liste als PDF exportieren, drucken oder per Teilen-Menü weiterleiten. Listennamen lassen sich jederzeit über das Stift-Symbol umbenennen. Gelöschte Listen landen für 30 Tage im Papierkorb und können dort wiederhergestellt oder endgültig gelöscht werden. Klasse antippen → Reiter „Überblick“ → „Listen“ aufklappen → „+ Neue Liste“ und Art wählen. Auf der Übersicht unter „Nicht vergessen“ siehst du eine kompakte Zusammenfassung offener Checklisten.` },
+      { q: "Was ist die Kachel „Kopieren / Vorbereiten“?", a: `In der Stundenerfassung kannst du bei jeder Stunde Material und Aufgaben eintragen. Alles, was du dort für heute oder zukünftige Stunden einträgst, erscheint gesammelt auf der Übersicht unter „Kopieren / Vorbereiten“ – so siehst du auf einen Blick, was du noch vorbereiten musst. Aufgaben lassen sich dort direkt abhaken. Die Kachel lässt sich unter „Mehr“ → „Einstellungen“ → „Kopieren / Vorbereiten anzeigen“ ein- oder ausblenden.` },
     ],
   },
   {
@@ -10139,6 +10145,27 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     return items.filter((it) => !dismissed.some((d) => d.id === it.id));
   })();
 
+  const kopierenItems = useMemo(() => {
+    const items = [];
+    const heute = isoDate(new Date());
+    (data.lessonTopics || []).forEach((lt) => {
+      if (lt.date < heute) return;
+      const fach = (data.faecher || []).find((f) => f.id === lt.fachId);
+      const cls = fach ? (data.classes || []).find((c) => c.id === fach.classId) : null;
+      const label = fach ? `${cls?.name || "?"} · ${fach.subject}` : "";
+      const datumStr = lt.date === heute ? "heute" : localDate(lt.date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
+      (lt.aufgaben || []).filter((a) => !a.done).forEach((a) => {
+        items.push({ id: `${lt.id}-${a.id}`, text: a.text, label, datum: datumStr, date: lt.date, topicId: lt.id, aufgabeId: a.id, typ: "aufgabe" });
+      });
+      (lt.material || []).forEach((m, i) => {
+        items.push({ id: `${lt.id}-mat-${i}`, text: m, label, datum: datumStr, date: lt.date, typ: "material" });
+      });
+    });
+    items.sort((a, b) => a.date.localeCompare(b.date));
+    return items;
+  }, [data.lessonTopics, data.faecher, data.classes]);
+  const [showKopierenSheet, setShowKopierenSheet] = useState(false);
+
   /* Fuer die Heute-Seite zaehlt, was heute dran ist. Ueberfaellige zuerst,
      dann heute faellige, dann undatierte, zuletzt spaetere - sonst haengt
      eine Aufgabe von naechster Woche ueber einer, die heute faellig war.
@@ -10298,6 +10325,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
     { key: "naechstes",       label: "ALS NÄCHSTES" },
     { key: "danach",          label: "Danach heute" },
     { key: "aufmerksamkeit",  label: "Aufmerksamkeit + Nicht vergessen" },
+    { key: "kopieren",        label: "Kopieren / Vorbereiten" },
     { key: "ausblick",        label: "Kommende Woche" },
     { key: "rueckblick",      label: "Wochenrückblick (Fr–So)" },
     { key: "tipp",            label: "Unterrichtstipp des Tages" },
@@ -11034,6 +11062,73 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
           </div>
         </Card>
       </div>
+
+      {/* ───────── Kopieren / Vorbereiten ───────── */}
+      {data.settings?.showKopieren !== false && kopierenItems.length > 0 && (
+        <Card className="px-4 py-3" style={{ order: orderOf("kopieren"), ...(isColor ? { border: "1px solid color-mix(in srgb, var(--f-haupt) 30%, transparent)" } : {}) }}>
+          <button
+            onClick={() => setShowKopierenSheet(true)}
+            className="w-full flex items-center gap-2 mb-1.5 text-left"
+          >
+            <Printer size={14} className="text-stone-500" />
+            <span className="text-sm font-semibold text-stone-800">Kopieren / Vorbereiten</span>
+            <span className="t-caption tnum ml-auto">{kopierenItems.length} offen</span>
+            <ChevronRight size={14} className="text-stone-400 shrink-0" />
+          </button>
+          <ul className="space-y-1.5">
+            {kopierenItems.slice(0, 3).map((it) => (
+              <li key={it.id} className="flex items-start gap-2 text-xs text-stone-600">
+                {it.typ === "aufgabe" ? <Check size={12} className="shrink-0 text-stone-400 mt-0.5" /> : <Copy size={12} className="shrink-0 text-stone-400 mt-0.5" />}
+                <span className="flex-1 truncate">{it.text}</span>
+                <span className="t-caption shrink-0">{it.datum}</span>
+              </li>
+            ))}
+            {kopierenItems.length > 3 && (
+              <li className="text-[11px] text-stone-400 pl-5">+{kopierenItems.length - 3} weitere</li>
+            )}
+          </ul>
+        </Card>
+      )}
+
+      {showKopierenSheet && (
+        <div className="fixed inset-0 bg-stone-900/40 z-50 flex items-end md:items-center justify-center" onClick={() => setShowKopierenSheet(false)}>
+          <div className="bg-white w-full md:max-w-md rounded-t-2xl md:rounded-2xl shadow-xl p-4 pb-[max(2rem,env(safe-area-inset-bottom))] max-h-[85vh] overflow-y-auto sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-semibold text-stone-800">Kopieren / Vorbereiten</div>
+              <button onClick={() => setShowKopierenSheet(false)} className="w-9 h-9 flex items-center justify-center text-stone-400"><X size={18} /></button>
+            </div>
+            {kopierenItems.length ? (
+              <ul className="divide-y divide-stone-100">
+                {kopierenItems.map((it) => (
+                  <li key={it.id} className="flex items-center gap-2 py-2.5">
+                    {it.typ === "aufgabe" ? (
+                      <button
+                        onClick={() => update((d) => {
+                          const lt = (d.lessonTopics || []).find((t) => t.id === it.topicId);
+                          if (lt) { const a = (lt.aufgaben || []).find((x) => x.id === it.aufgabeId); if (a) a.done = true; }
+                          return d;
+                        })}
+                        className="w-6 h-6 shrink-0 flex items-center justify-center press-scale"
+                      >
+                        <span className="w-4 h-4 rounded border border-stone-300 block" />
+                      </button>
+                    ) : (
+                      <Copy size={14} className="text-stone-300 shrink-0 ml-1 mr-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-stone-700 truncate">{it.text}</div>
+                      <div className="text-[11px] text-stone-400">{it.label}</div>
+                    </div>
+                    <span className="t-caption tnum shrink-0">{it.datum}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-stone-400 py-4">Nichts offen.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Alle offenen Aufgaben – volle Liste beim Klick auf die Kachel.
           Abhaken geht direkt hier, damit man zum Aufraeumen nicht erst in
