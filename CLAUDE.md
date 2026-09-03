@@ -64,3 +64,20 @@ Wenn ein neues Feature eingebaut oder ein bestehender Workflow geändert wird,
 - `window.storage.get/set` für Persistenz (localStorage-Mock in `src/main.jsx`)
 - Backup via `last_backup_at` in localStorage tracken
 - DSGVO: Daten auf Supabase (EU, Frankfurt), verschlüsselt. AVV noch ausstehend.
+
+### Datensicherheit — Supabase RLS & Verschlüsselung
+- **Row-Level Security (RLS)** ist auf der `user_data`-Tabelle aktiviert.
+  Erforderliche Policies (in Supabase SQL Editor):
+  ```sql
+  ALTER TABLE user_data ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "Nutzer liest eigene Daten" ON user_data FOR SELECT USING (auth.uid() = user_id);
+  CREATE POLICY "Nutzer schreibt eigene Daten" ON user_data FOR INSERT WITH CHECK (auth.uid() = user_id);
+  CREATE POLICY "Nutzer aktualisiert eigene Daten" ON user_data FOR UPDATE USING (auth.uid() = user_id);
+  CREATE POLICY "Nutzer löscht eigene Daten" ON user_data FOR DELETE USING (auth.uid() = user_id);
+  ```
+  Die App erkennt fehlende RLS-Regeln automatisch (leeres UPDATE-/INSERT-Ergebnis → Fehlermeldung).
+- **TODO: Ende-zu-Ende-Verschlüsselung** — Die Schülerdaten werden aktuell als Klartext-JSON
+  in der `data`-Spalte gespeichert. Langfristig sollte eine clientseitige Verschlüsselung
+  (Web Crypto API / AES-GCM) eingebaut werden, sodass Supabase nur verschlüsselte Blobs speichert.
+  Herausforderung: Schlüssel darf nicht am Passwort hängen (sonst bricht "Passwort vergessen").
+  Möglicher Ansatz: separater Data Encryption Key (DEK) + Recovery-Code bei Kontoerstellung.

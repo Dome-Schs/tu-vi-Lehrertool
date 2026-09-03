@@ -621,7 +621,7 @@ const FERIEN = {
 const TASK_COLORS = ["#2E3328", "#A3402F", "#B07D2B", "#5F7A45", "#41697E"];
 
 const RECURRENCE_OPTIONS = [
-  { value: "", label: "Kein" },
+  { value: "", label: "Keine Wiederholung" },
   { value: "weekly", label: "Wöchentlich" },
   { value: "biweekly", label: "Alle 2 Wochen" },
   { value: "monthly", label: "Monatlich" },
@@ -14107,11 +14107,11 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                                   <div className="flex items-start justify-between gap-2">
                                     <p className="text-sm text-stone-700 leading-snug flex-1 cursor-pointer" onClick={() => startEditNote(n)}>{n.text}</p>
                                     <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                                      <button onClick={() => startEditNote(n)} className="text-stone-300 hover:text-stone-600 opacity-0 group-hover:opacity-100"><Pencil size={12} /></button>
+                                      <button onClick={() => startEditNote(n)} className="text-stone-300 hover:text-stone-600 opacity-40 sm:opacity-0 sm:group-hover:opacity-100"><Pencil size={12} /></button>
                                       {confirmDeleteNoteId === n.id ? (
-                                        <span className="flex items-center gap-1">
-                                          <button onClick={() => confirmAndDeleteNote(n.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
-                                          <button onClick={() => setConfirmDeleteNoteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                                        <span className="flex items-center gap-2 shrink-0">
+                                          <button onClick={() => confirmAndDeleteNote(n.id)} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                                          <button onClick={() => setConfirmDeleteNoteId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
                                         </span>
                                       ) : (
                                         <button onClick={() => setConfirmDeleteNoteId(n.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={13} /></button>
@@ -14195,11 +14195,11 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                                         <span className="t-caption">{localDate(g.date).toLocaleDateString("de-DE")}</span>
                                       </div>
                                       <div className="flex items-center gap-1 shrink-0">
-                                        <button onClick={() => startEditNote(g)} className="text-stone-300 hover:text-stone-600 opacity-0 group-hover:opacity-100"><Pencil size={12} /></button>
+                                        <button onClick={() => startEditNote(g)} className="text-stone-300 hover:text-stone-600 opacity-40 sm:opacity-0 sm:group-hover:opacity-100"><Pencil size={12} /></button>
                                         {confirmDeleteNoteId === g.id ? (
-                                          <span className="flex items-center gap-1">
-                                            <button onClick={() => confirmAndDeleteNote(g.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
-                                            <button onClick={() => setConfirmDeleteNoteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                                          <span className="flex items-center gap-2 shrink-0">
+                                            <button onClick={() => confirmAndDeleteNote(g.id)} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                                            <button onClick={() => setConfirmDeleteNoteId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
                                           </span>
                                         ) : (
                                           <button onClick={() => setConfirmDeleteNoteId(g.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={13} /></button>
@@ -16777,13 +16777,13 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                               {renameListeId === li.id ? (
                                                 <div className="flex items-center gap-1 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
                                                   <input className="input-base text-sm flex-1 min-w-0 py-0.5" value={renameListeText} onChange={(e) => setRenameListeText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") renameListe(li.id, li.art); if (e.key === "Escape") setRenameListeId(null); }} autoFocus maxLength={100} />
-                                                  <button onClick={() => renameListe(li.id, li.art)} className="text-xs akzent-text font-medium">OK</button>
-                                                  <button onClick={() => setRenameListeId(null)} className="text-xs text-stone-400">✕</button>
+                                                  <button onClick={() => renameListe(li.id, li.art)} className="w-7 h-7 flex items-center justify-center akzent-text shrink-0" title="Speichern"><Check size={14} /></button>
+                                                  <button onClick={() => setRenameListeId(null)} className="w-7 h-7 flex items-center justify-center text-stone-400 shrink-0" title="Abbrechen"><X size={14} /></button>
                                                 </div>
                                               ) : (
                                                 <>
                                                   <span className="text-sm font-medium text-stone-800 truncate">{li.title}</span>
-                                                  <button onClick={(e) => { e.stopPropagation(); setRenameListeId(li.id); setRenameListeText(li.title); }} className="text-stone-300 hover:text-stone-600 shrink-0 opacity-0 group-hover:opacity-100" title="Umbenennen"><Pencil size={11} /></button>
+                                                  <button onClick={(e) => { e.stopPropagation(); setRenameListeId(li.id); setRenameListeText(li.title); }} className="text-stone-300 hover:text-stone-600 shrink-0 opacity-40 sm:opacity-0 sm:group-hover:opacity-100" title="Umbenennen"><Pencil size={11} /></button>
                                                 </>
                                               )}
                                               <span className={`text-[11px] font-semibold tnum shrink-0 ${li.offen > 0 ? "text-stone-400" : "text-emerald-600"}`}>
@@ -19463,12 +19463,12 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                 {e.description && <div className="text-xs text-stone-400 mt-1 line-clamp-1">{e.description}</div>}
               </div>
               <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                <button onClick={() => startEdit(e)} className="text-stone-300 hover:text-stone-600 opacity-0 group-hover:opacity-100"><Pencil size={13} /></button>
+                <button onClick={() => startEdit(e)} className="text-stone-300 hover:text-stone-600 opacity-40 sm:opacity-0 sm:group-hover:opacity-100"><Pencil size={13} /></button>
                 {confirmDeleteId === e.id ? (
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => remove(e.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
-                    <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
-                  </div>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => remove(e.id)} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
+                  </span>
                 ) : (
                   <button onClick={() => setConfirmDeleteId(e.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
                 )}
@@ -19548,10 +19548,10 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
                       {von}{bis ? <span className="text-emerald-300"> – </span> : ""}{bis}
                     </span>
                     {confirmDeleteId === e.id ? (
-                      <div className="flex items-center gap-1.5 shrink-0 justify-self-end">
-                        <button onClick={() => remove(e.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
-                        <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
-                      </div>
+                      <span className="flex items-center gap-2 shrink-0 justify-self-end">
+                        <button onClick={() => remove(e.id)} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                        <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
+                      </span>
                     ) : (
                       <button onClick={() => setConfirmDeleteId(e.id)} className="text-emerald-300 hover:text-red-600 shrink-0 justify-self-end"><Trash2 size={14} /></button>
                     )}
@@ -19577,18 +19577,18 @@ function KalenderTab({ data, update, autoOpenForm, onAutoFormConsumed }) {
           <div className="font-medium text-stone-500 mb-3 text-sm">Erledigt</div>
           <ul className="space-y-2">
             {done.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 text-sm text-stone-400 line-through group">
-                <button onClick={() => toggleDone(e.id)} className="w-5 h-5 rounded-full akzent-flaeche flex items-center justify-center shrink-0 no-underline">
+              <li key={e.id} className="flex items-center gap-3 text-sm text-stone-400 group">
+                <button onClick={() => toggleDone(e.id)} className="w-5 h-5 rounded-full akzent-flaeche flex items-center justify-center shrink-0">
                   <Check size={12} />
                 </button>
-                <span className="flex-1 cursor-pointer" onClick={() => startEdit(e)}>{e.title}</span>
+                <span className="flex-1 cursor-pointer line-through" onClick={() => startEdit(e)}>{e.title}</span>
                 {confirmDeleteId === e.id ? (
-                  <div className="flex items-center gap-1.5 no-underline">
-                    <button onClick={() => remove(e.id)} className="text-[11px] text-red-600 font-medium hover:underline no-underline">Ja</button>
-                    <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-stone-400 hover:underline no-underline">Nein</button>
-                  </div>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => remove(e.id)} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
+                  </span>
                 ) : (
-                  <button onClick={() => setConfirmDeleteId(e.id)} className="text-stone-300 hover:text-red-500 no-underline"><Trash2 size={14} /></button>
+                  <button onClick={() => setConfirmDeleteId(e.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={14} /></button>
                 )}
               </li>
             ))}
@@ -19909,13 +19909,12 @@ function AufgabenTab({ data, update }) {
               {renameListId === l.id ? (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full border akzent-rand bg-white">
                   <input className="text-sm w-24 border-none outline-none bg-transparent" value={renameListText} onChange={(e) => setRenameListText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") doRenameList(); if (e.key === "Escape") setRenameListId(null); }} autoFocus maxLength={100} />
-                  <button onClick={doRenameList} className="text-xs akzent-text font-medium">OK</button>
-                  <button onClick={() => setRenameListId(null)} className="text-xs text-stone-400">✕</button>
+                  <button onClick={doRenameList} className="w-7 h-7 flex items-center justify-center akzent-text shrink-0" title="Speichern"><Check size={14} /></button>
+                  <button onClick={() => setRenameListId(null)} className="w-7 h-7 flex items-center justify-center text-stone-400 shrink-0" title="Abbrechen"><X size={14} /></button>
                 </div>
               ) : (
                 <button
                   onClick={() => setSelected(l.id)}
-                  onDoubleClick={() => { setRenameListId(l.id); setRenameListText(l.name); }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${selected === l.id ? "akzent-ton akzent-rand akzent-text font-medium" : "bg-white border-stone-200 text-stone-600"}`}
                 >
                   <Icon size={13} /> {l.name}
@@ -19926,9 +19925,9 @@ function AufgabenTab({ data, update }) {
                 <div className="flex items-center gap-0.5">
                   <button onClick={() => { setRenameListId(l.id); setRenameListText(l.name); }} className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-600 rounded-full shrink-0" title="Umbenennen"><Pencil size={10} /></button>
                   {confirmDeleteListId === l.id ? (
-                    <span className="flex items-center gap-1">
-                      <button onClick={() => removeList(l.id)} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
-                      <button onClick={() => setConfirmDeleteListId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                    <span className="flex items-center gap-2">
+                      <button onClick={() => removeList(l.id)} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                      <button onClick={() => setConfirmDeleteListId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
                     </span>
                   ) : (
                     <button onClick={() => setConfirmDeleteListId(l.id)} className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-red-500 rounded-full shrink-0"><Trash2 size={11} /></button>
@@ -19982,9 +19981,9 @@ function AufgabenTab({ data, update }) {
                   );
                 })()}
                 {confirmDeleteTaskId === t.id ? (
-                  <span className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => { removeTask(t.id); setConfirmDeleteTaskId(null); }} className="text-[11px] text-red-600 font-medium hover:underline">Ja</button>
-                    <button onClick={() => setConfirmDeleteTaskId(null)} className="text-[11px] text-stone-400 hover:underline">Nein</button>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => { removeTask(t.id); setConfirmDeleteTaskId(null); }} className="text-xs text-red-600 font-medium px-3 py-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50 rounded press-scale">Löschen</button>
+                    <button onClick={() => setConfirmDeleteTaskId(null)} className="text-xs text-stone-500 px-2 py-1.5 min-h-[44px] flex items-center press-scale">Abbrechen</button>
                   </span>
                 ) : (
                   <button onClick={() => setConfirmDeleteTaskId(t.id)} className="text-stone-300 hover:text-red-500 shrink-0"><Trash2 size={14} /></button>
