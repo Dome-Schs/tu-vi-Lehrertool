@@ -5401,6 +5401,7 @@ export default function App() {
   const [showSearch, setShowSearch] = useState(false);
   const [focusStudentId, setFocusStudentId] = useState(null);
   const [focusKlassenDashboardId, setFocusKlassenDashboardId] = useState(null);
+  const [focusListeClassId, setFocusListeClassId] = useState(null);
   const [klassenSubTab, setKlassenSubTab] = useState("klassen");
   const [backupReminderDays, setBackupReminderDays] = useState(null); // null=kein Banner, 0=nie gesichert, >0=Tage seit letztem Backup
   const [changesSinceBackup, setChangesSinceBackup] = useState({ grades: 0, notes: 0, absences: 0 });
@@ -6633,8 +6634,8 @@ export default function App() {
               </button>
             </div>
           )}
-          {tab === "dashboard" && <Dashboard data={activeData} update={update} onNavigate={goTo} onOpenFach={goToFach} onOpenKlassenDashboard={(classId) => { setFocusKlassenDashboardId(classId); goTo("klassen"); }} onOpenUntisImport={() => setShowUntisImport(true)} onOpenSettings={() => setShowSettings(true)} onOpenGeburtstage={() => setShowGeburtstage(true)} onOpenFoerderziele={() => setShowFoerderziele(true)} onOpenEntschuldigungen={() => setShowEntschuldigungen(true)} onOpenNachtragen={() => setShowNachtragen(true)} halbjahr={halbjahr} setCaptureLesson={setCaptureLesson} setAbschluss={setAbschluss} pendingLessons={pendingLessons} now={now} />}
-          {tab === "klassen" && <KlassenTab data={activeData} update={update} halbjahr={halbjahr} subTab={klassenSubTab} setSubTab={setKlassenSubTab} onOpenFach={goToFach} onOpenUntisImport={() => setShowUntisImport(true)} focusStudentId={focusStudentId} onFocusConsumed={() => setFocusStudentId(null)} focusKlassenDashboardId={focusKlassenDashboardId} onFocusKlassenDashboardConsumed={() => setFocusKlassenDashboardId(null)} onRegisterFab={setFabActions} showToast={showToast} rohdaten={data} onOpenListe={(welche) => {
+          {tab === "dashboard" && <Dashboard data={activeData} update={update} onNavigate={goTo} onOpenFach={goToFach} onOpenKlassenDashboard={(classId) => { setFocusKlassenDashboardId(classId); goTo("klassen"); }} onOpenListeKlasse={(classId) => { setFocusListeClassId(classId); goTo("klassen"); }} onOpenUntisImport={() => setShowUntisImport(true)} onOpenSettings={() => setShowSettings(true)} onOpenGeburtstage={() => setShowGeburtstage(true)} onOpenFoerderziele={() => setShowFoerderziele(true)} onOpenEntschuldigungen={() => setShowEntschuldigungen(true)} onOpenNachtragen={() => setShowNachtragen(true)} halbjahr={halbjahr} setCaptureLesson={setCaptureLesson} setAbschluss={setAbschluss} pendingLessons={pendingLessons} now={now} />}
+          {tab === "klassen" && <KlassenTab data={activeData} update={update} halbjahr={halbjahr} subTab={klassenSubTab} setSubTab={setKlassenSubTab} onOpenFach={goToFach} onOpenUntisImport={() => setShowUntisImport(true)} focusStudentId={focusStudentId} onFocusConsumed={() => setFocusStudentId(null)} focusKlassenDashboardId={focusKlassenDashboardId} onFocusKlassenDashboardConsumed={() => setFocusKlassenDashboardId(null)} focusListeClassId={focusListeClassId} onFocusListeConsumed={() => setFocusListeClassId(null)} onRegisterFab={setFabActions} showToast={showToast} rohdaten={data} onOpenListe={(welche) => {
             if (welche === "entschuldigungen") setShowEntschuldigungen(true);
             else if (welche === "foerderziele") setShowFoerderziele(true);
             else if (welche === "geburtstage") setShowGeburtstage(true);
@@ -9272,7 +9273,7 @@ function QuickCaptureModal({ data, update, fach, cls, students, date: initialDat
   );
 }
 
-function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboard, onOpenUntisImport, onOpenSettings, onOpenGeburtstage, onOpenFoerderziele, onOpenEntschuldigungen, onOpenNachtragen, halbjahr, setCaptureLesson, setAbschluss, pendingLessons, now }) {
+function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboard, onOpenListeKlasse, onOpenUntisImport, onOpenSettings, onOpenGeburtstage, onOpenFoerderziele, onOpenEntschuldigungen, onOpenNachtragen, halbjahr, setCaptureLesson, setAbschluss, pendingLessons, now }) {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [showPending, setShowPending] = useState(false);
   const [openTestDetail, setOpenTestDetail] = useState(null);
@@ -10162,15 +10163,24 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
   const aufgabenHeute = offeneAufgaben.filter((t) => aufgabenRang(t) === 1).length;
   const aufgabenDringend = aufgabenUeberfaellig + aufgabenHeute;
 
-  const offeneChecklisten = (data.checklisten || [])
-    .filter((c) => !c.archivedAt)
-    .map((c) => {
-      const cls = data.classes.find((x) => x.id === c.classId);
-      const total = data.students.filter((s) => s.classId === c.classId && !s.deletedAt).length;
-      const done = c.erledigt.filter((id) => data.students.some((s) => s.id === id && s.classId === c.classId && !s.deletedAt)).length;
-      return { ...c, cls, total, done, offen: total - done };
-    })
-    .filter((c) => c.offen > 0);
+  const offeneChecklisten = [
+    ...(data.checklisten || [])
+      .filter((c) => !c.archivedAt)
+      .map((c) => {
+        const cls = data.classes.find((x) => x.id === c.classId);
+        const total = data.students.filter((s) => s.classId === c.classId && !s.deletedAt).length;
+        const done = c.erledigt.filter((id) => data.students.some((s) => s.id === id && s.classId === c.classId && !s.deletedAt)).length;
+        return { ...c, cls, total, done, offen: total - done };
+      }),
+    ...(data.klassenFelder || [])
+      .filter((f) => !f.deletedAt)
+      .map((f) => {
+        const cls = data.classes.find((x) => x.id === f.classId);
+        const students = data.students.filter((s) => s.classId === f.classId && !s.deletedAt);
+        const eingetragen = students.filter((s) => (data.feldWerte || []).find((v) => v.feldId === f.id && v.schuelerId === s.id)?.wert).length;
+        return { ...f, title: f.label, cls, total: students.length, done: eingetragen, offen: students.length - eingetragen };
+      }),
+  ].filter((c) => c.offen > 0);
 
   const [showAttentionSheet, setShowAttentionSheet] = useState(false);
   const [confirmDismissId, setConfirmDismissId] = useState(null);
@@ -10915,7 +10925,7 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
               </div>
               <div className="mt-1 flex flex-wrap gap-1">
                 {offeneChecklisten.map((c) => (
-                  <span key={c.id} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full truncate max-w-[10rem]">{c.cls?.name || "?"}: {c.title}</span>
+                  <button key={c.id} onClick={(e) => { e.stopPropagation(); onOpenListeKlasse?.(c.classId); }} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full truncate max-w-[10rem] hover:bg-stone-200 active:bg-stone-200 transition-colors">{c.cls?.name || "?"}: {c.title}</button>
                 ))}
               </div>
             </div>
@@ -10990,9 +11000,10 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
                 <div className="text-xs font-medium text-stone-500 mb-2">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</div>
                 <ul className="space-y-2">
                   {offeneChecklisten.map((c) => (
-                    <li key={c.id} className="flex items-center gap-2 text-sm text-stone-700">
+                    <li key={c.id} onClick={() => { onOpenListeKlasse?.(c.classId); }} className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer active:bg-stone-50 rounded px-1 -mx-1">
                       <ListChecks size={14} className="text-stone-400 shrink-0" />
                       <span className="flex-1 truncate">{c.cls?.name || "?"}: {c.title}</span>
+                      <ChevronRight size={14} className="text-stone-300 shrink-0" />
                     </li>
                   ))}
                 </ul>
@@ -16244,7 +16255,7 @@ function NotenLineChart({ muendlich, schriftlich, w = 320, h = 160 }) {
    Reihenplanung) und "Noten" (Schüler-Sparklines + Line-Chart-Details).
    Loest die alten aufklappbaren Klassenkarten und den separaten Faecher-Tab
    funktional ab. */
-function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onClose, onOpenStudent, onFachActions, onOpenSchueler, onOpenSitzplan, onOpenDashboard, onUmbenennen, onOpenFach }) {
+function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, initialSection, onClose, onOpenStudent, onFachActions, onOpenSchueler, onOpenSitzplan, onOpenDashboard, onUmbenennen, onOpenFach }) {
   const [activeTab, setActiveTab] = useState(initialTab || "ueberblick");
   const [klassenNotizInput, setKlassenNotizInput] = useState("");
   const [notizDatumVB, setNotizDatumVB] = useState("");
@@ -16264,7 +16275,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [confirmDeleteListeId, setConfirmDeleteListeId] = useState(null);
   const [renameListeId, setRenameListeId] = useState(null);
   const [renameListeText, setRenameListeText] = useState("");
-  const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
+  const [openUeberblickSection, setOpenUeberblickSection] = useState(initialSection || null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
   const cls = data.classes.find((c) => c.id === klasseId);
@@ -17710,7 +17721,7 @@ function ListenUebersicht({ data, onOeffnen }) {
   );
 }
 
-function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onOpenUntisImport, focusStudentId, onFocusConsumed, focusKlassenDashboardId, onFocusKlassenDashboardConsumed, onRegisterFab, showToast, onOpenListe, rohdaten }) {
+function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onOpenUntisImport, focusStudentId, onFocusConsumed, focusKlassenDashboardId, onFocusKlassenDashboardConsumed, focusListeClassId, onFocusListeConsumed, onRegisterFab, showToast, onOpenListe, rohdaten }) {
   const [selectedClass, setSelectedClass] = useState(data.classes[0]?.id ?? null);
   const [showNewClassModal, setShowNewClassModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -17728,6 +17739,7 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
   const [klassenDashboardId, setKlassenDashboardId] = useState(null);
   const [klasseVollbildId, setKlasseVollbildId] = useState(null);
   const [klasseVollbildTab, setKlasseVollbildTab] = useState("ueberblick"); // Einstieg der Klassenansicht
+  const [klasseVollbildSection, setKlasseVollbildSection] = useState(null);
   const [fachActions, setFachActions] = useState(null); // { type: "actions", fach } oder { type: "neu", klasseId }
   const [editFachInVollbild, setEditFachInVollbild] = useState(null);
   const [kindSuche, setKindSuche] = useState("");
@@ -17766,6 +17778,18 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
     setKlassenDashboardId(focusKlassenDashboardId);
     onFocusKlassenDashboardConsumed?.();
   }, [focusKlassenDashboardId]);
+
+  useEffect(() => {
+    if (!focusListeClassId) return;
+    const c = data.classes.find((x) => x.id === focusListeClassId);
+    if (!c) return;
+    setSubTab?.("klassen");
+    setSelectedClass(focusListeClassId);
+    setKlasseVollbildId(focusListeClassId);
+    setKlasseVollbildTab("ueberblick");
+    setKlasseVollbildSection("listen");
+    onFocusListeConsumed?.();
+  }, [focusListeClassId]);
 
   const cls = data.classes.find((c) => c.id === selectedClass);
   const classFaecher = data.faecher.filter((f) => f.classId === selectedClass);
@@ -18188,7 +18212,8 @@ function KlassenTab({ data, update, halbjahr, subTab, setSubTab, onOpenFach, onO
           klasseId={klasseVollbildId}
           halbjahr={halbjahr}
           initialTab={klasseVollbildTab}
-          onClose={() => setKlasseVollbildId(null)}
+          initialSection={klasseVollbildSection}
+          onClose={() => { setKlasseVollbildId(null); setKlasseVollbildSection(null); }}
           onOpenStudent={(studentId) => {
             setKlasseVollbildId(null);
             setSelectedClass(klasseVollbildId);
