@@ -16602,7 +16602,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                 }),
               ];
               const listenGesamt = alleListen.length;
-              const listenOffen = alleListen.reduce((s, l) => s + l.offen, 0);
+              const listenOffenAnzahl = alleListen.filter((l) => l.offen > 0).length;
 
               const sections = [
                 {
@@ -16616,8 +16616,8 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                   key: "listen",
                   icon: ClipboardCheck,
                   label: "Listen",
-                  badge: listenGesamt > 0 ? (listenOffen > 0 ? `${listenOffen} offen` : `${listenGesamt}`) : null,
-                  badgeColor: listenOffen > 0 ? "text-red-600" : "text-stone-400",
+                  badge: listenGesamt > 0 ? (listenOffenAnzahl > 0 ? `${listenOffenAnzahl} offen` : `${listenGesamt}`) : null,
+                  badgeColor: listenOffenAnzahl > 0 ? "text-red-600" : "text-stone-400",
                 },
               ];
 
