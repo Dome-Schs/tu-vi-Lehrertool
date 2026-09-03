@@ -9784,12 +9784,13 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
         return { ...c, cls, offen: total - done };
       })
       .filter((c) => c.offen > 0);
-    briefChecklisten.forEach((c) => {
+    if (briefChecklisten.length > 0) {
+      const namen = briefChecklisten.map((c) => "\u201E" + c.title + "\u201C").join(", ");
       satz.push({
-        text: `Bei ${c.cls?.name || "einer Klasse"} fehlen noch ${c.offen} Abgaben für „${c.title}“.`,
+        text: `${briefChecklisten.length} ${briefChecklisten.length === 1 ? "Liste ist" : "Listen sind"} noch offen: ${namen}.`,
         urgent: false,
       });
-    });
+    }
 
     /* Backup-Status und Förderziele stehen bewusst nicht im Briefing:
        Der Backup-Hinweis hat bereits ein eigenes Band über dem Dashboard,
@@ -10907,14 +10908,16 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
           )}
 
           {offeneChecklisten.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-stone-100 space-y-1">
-              {offeneChecklisten.map((c) => (
-                <div key={c.id} className="flex items-center gap-2 text-sm text-stone-600">
-                  <ListChecks size={13} className="text-stone-400 shrink-0" />
-                  <span className="truncate flex-1">{c.cls?.name || "?"}: {c.title}</span>
-                  <span className="shrink-0"> — noch <span className="text-red-600 font-semibold">{c.offen}</span> offen</span>
-                </div>
-              ))}
+            <div className="mt-2 pt-2 border-t border-stone-100">
+              <div className="flex items-center gap-2 text-sm text-stone-600">
+                <ListChecks size={13} className="text-stone-400 shrink-0" />
+                <span className="flex-1">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {offeneChecklisten.map((c) => (
+                  <span key={c.id} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full truncate max-w-[10rem]">{c.cls?.name || "?"}: {c.title}</span>
+                ))}
+              </div>
             </div>
           )}
 
@@ -10984,14 +10987,12 @@ function Dashboard({ data, update, onNavigate, onOpenFach, onOpenKlassenDashboar
             )}
             {offeneChecklisten.length > 0 && (
               <div className="mt-3 pt-3 border-t border-stone-100">
-                <div className="text-xs font-medium text-stone-500 mb-2">Offene Listen</div>
+                <div className="text-xs font-medium text-stone-500 mb-2">{offeneChecklisten.length} {offeneChecklisten.length === 1 ? "Liste" : "Listen"} offen</div>
                 <ul className="space-y-2">
                   {offeneChecklisten.map((c) => (
                     <li key={c.id} className="flex items-center gap-2 text-sm text-stone-700">
                       <ListChecks size={14} className="text-stone-400 shrink-0" />
                       <span className="flex-1 truncate">{c.cls?.name || "?"}: {c.title}</span>
-                      <span className="shrink-0 text-red-600 font-semibold">{c.offen}</span>
-                      <span className="text-stone-400 text-xs shrink-0">offen</span>
                     </li>
                   ))}
                 </ul>
@@ -16786,9 +16787,10 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                                   <button onClick={(e) => { e.stopPropagation(); setRenameListeId(li.id); setRenameListeText(li.title); }} className="text-stone-300 hover:text-stone-600 shrink-0 opacity-40 sm:opacity-0 sm:group-hover:opacity-100" title="Umbenennen"><Pencil size={11} /></button>
                                                 </>
                                               )}
-                                              <span className={`text-[11px] font-semibold tnum shrink-0 ${li.offen > 0 ? "text-stone-400" : "text-emerald-600"}`}>
-                                                {li.offen > 0 ? `${li.done}/${li.total}` : "✓"}
-                                              </span>
+                                              {li.offen > 0
+                                                ? <span className="text-[11px] text-stone-400 shrink-0">offen</span>
+                                                : <span className="text-[11px] text-emerald-600 font-semibold shrink-0">✓</span>
+                                              }
                                             </div>
                                             <div className="mt-1 h-1 rounded-full bg-stone-100 overflow-hidden">
                                               <div className={`h-full rounded-full transition-all ${pct === 100 ? "bg-emerald-400" : "akzent-flaeche"}`} style={{ width: `${pct}%` }} />
