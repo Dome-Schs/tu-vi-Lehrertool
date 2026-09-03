@@ -16409,7 +16409,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                   return d;
                 });
               };
-              const listeExportieren = async (li) => {
+              const listeBlob = (li) => {
                 const zeilen = listenStudents.map((s) => {
                   if (li.art === "checkliste") {
                     const cl = listen.find((c) => c.id === li.id);
@@ -16419,7 +16419,16 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                   return { name: s.name, wert: val };
                 });
                 const datumAnzeige = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
-                const blob = listenPdf({ titel: li.title, klasse: cls.name, datum: datumAnzeige, art: li.art, zeilen });
+                return { blob: listenPdf({ titel: li.title, klasse: cls.name, datum: datumAnzeige, art: li.art, zeilen }), zeilen };
+              };
+              const listeSpeichern = (li) => {
+                const { blob } = listeBlob(li);
+                const url = URL.createObjectURL(blob);
+                window.open(url, "_blank");
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+              };
+              const listeTeilen = async (li) => {
+                const { blob } = listeBlob(li);
                 const sauber = (t) => (t || "").replace(/[äÄöÖüÜß]/g, (z) => ({ "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue", "ß": "ss" }[z])).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
                 const teilName = `Liste_${sauber(li.title)}_${isoDate(new Date())}.pdf`;
                 const datei = new File([blob], teilName, { type: "application/pdf" });
@@ -16698,7 +16707,8 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                             <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">Checkliste</span>
                                             <div className="flex gap-1">
                                               <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
-                                              <button onClick={() => listeExportieren(li)} className="text-stone-300 hover:text-stone-600 p-1" title="Als PDF teilen / drucken"><Printer size={12} /></button>
+                                              <button onClick={() => listeSpeichern(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF speichern"><Download size={12} /></button>
+                                              <button onClick={() => listeTeilen(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF teilen / drucken"><Printer size={12} /></button>
                                               <button onClick={() => loeschListe(openCl.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
                                               {openCl.erledigt.filter((id) => students.some((s) => s.id === id)).length === students.length && (
                                                 <button onClick={() => archivListe(openCl.id)} className="text-stone-300 hover:text-emerald-500 p-1" title="Archivieren"><FolderCheck size={12} /></button>
@@ -16731,7 +16741,8 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                                               <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">Eintragungsliste</span>
                                               <div className="flex gap-1">
                                                 <button onClick={() => setListenSortVorname(!listenSortVorname)} className={`p-1 rounded transition-colors ${listenSortVorname ? "akzent-text" : "text-stone-300 hover:text-stone-500"}`} title={listenSortVorname ? "Nach Nachname sortieren" : "Nach Vorname sortieren"}><ArrowUpDown size={12} /></button>
-                                                <button onClick={() => listeExportieren(li)} className="text-stone-300 hover:text-stone-600 p-1" title="Als PDF teilen / drucken"><Printer size={12} /></button>
+                                                <button onClick={() => listeSpeichern(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF speichern"><Download size={12} /></button>
+                                              <button onClick={() => listeTeilen(li)} className="text-stone-300 hover:text-stone-600 p-1" title="PDF teilen / drucken"><Printer size={12} /></button>
                                                 <button onClick={() => deleteFeld(feld.id)} className="text-stone-300 hover:text-red-500 p-1" title="Liste löschen"><Trash2 size={12} /></button>
                                               </div>
                                             </div>
