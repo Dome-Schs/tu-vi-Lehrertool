@@ -16188,6 +16188,7 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
   const [expandedFeldId, setExpandedFeldId] = useState(null);
   const [listenSortVorname, setListenSortVorname] = useState(false);
   const [neuListeArt, setNeuListeArt] = useState(null);
+  const [archivOffen, setArchivOffen] = useState(false);
   const [openUeberblickSection, setOpenUeberblickSection] = useState(null);
   const [reihenZoom, setReihenZoom] = useState(8); // Wochen sichtbar (nur beim geoeffneten Fach): 8 oder Halbjahr
   const [expandedFachId, setExpandedFachId] = useState(null);
@@ -16762,7 +16763,24 @@ function KlasseVollbildSheet({ data, update, klasseId, halbjahr, initialTab, onC
                               </ul>
                             )}
                             {archiviert.length > 0 && (
-                              <p className="text-[11px] text-stone-400 px-1">{archiviert.length} archiviert</p>
+                              <div className="mt-1">
+                                <button onClick={() => setArchivOffen(!archivOffen)} className="flex items-center gap-1.5 text-[11px] text-stone-400 hover:text-stone-600 px-1 py-1 transition-colors">
+                                  <ChevronRight size={11} className={`transition-transform duration-200 ${archivOffen ? "rotate-90" : ""}`} />
+                                  {archiviert.length} archiviert
+                                </button>
+                                {archivOffen && (
+                                  <ul className="mt-1 space-y-1">
+                                    {archiviert.map((ar) => (
+                                      <li key={ar.id} className="flex items-center gap-2 rounded-lg px-3 py-2 bg-stone-50/50">
+                                        <span className="w-6 h-6 rounded-md bg-stone-100 text-stone-400 flex items-center justify-center shrink-0"><FolderCheck size={12} /></span>
+                                        <span className="text-sm text-stone-500 flex-1 truncate">{ar.title}</span>
+                                        <button onClick={() => update((d) => { const c = d.checklisten.find((x) => x.id === ar.id); if (c) delete c.archivedAt; return d; })} className="text-[11px] text-stone-400 hover:text-stone-700 px-2 py-1 rounded hover:bg-stone-100 transition-colors" title="Wiederherstellen">Zurückholen</button>
+                                        <button onClick={() => { if (confirm("Liste endgültig löschen?")) update((d) => { d.checklisten = d.checklisten.filter((x) => x.id !== ar.id); return d; }); }} className="text-stone-300 hover:text-red-500 p-1" title="Endgültig löschen"><Trash2 size={12} /></button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
                             )}
 
                             {!neuListeArt ? (
