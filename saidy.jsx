@@ -15724,11 +15724,21 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
       <style>{`
         @media print {
           @page { size: A4 landscape; margin: 10mm; }
-          body > *:not([data-sitzplan-print]) { display: none !important; }
-          [data-sitzplan-print] { position: static !important; display: block !important; }
+          body * { visibility: hidden !important; }
+          [data-sitzplan-print], [data-sitzplan-print] * { visibility: visible !important; }
+          [data-sitzplan-print] {
+            position: fixed !important; inset: 0 !important; z-index: 99999 !important;
+            background: white !important; display: flex !important; flex-direction: column !important;
+            max-height: none !important; max-width: none !important;
+            border-radius: 0 !important; box-shadow: none !important;
+          }
           .sp-print-hide { display: none !important; }
-          .sp-print-canvas { min-height: 0 !important; height: auto !important; aspect-ratio: 4/3; width: 100% !important; border-radius: 0 !important; border: 1px solid #d6d3d1 !important; }
-          .sp-print-canvas > div[style] { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          .sp-print-canvas {
+            min-height: 0 !important; height: auto !important; flex: 1 !important;
+            width: 100% !important; border-radius: 0 !important; border: 1px solid #d6d3d1 !important;
+            print-color-adjust: exact; -webkit-print-color-adjust: exact;
+          }
+          .sp-print-canvas * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
           .sp-print-header { display: flex !important; }
         }
       `}</style>
