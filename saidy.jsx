@@ -15378,7 +15378,7 @@ function resolveCollisions(positions, canvasRect) {
 
 const QUALITY_COLORS = { gut: "#16a34a", mittel: "#d97706", schlecht: "#dc2626" };
 
-function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap }) {
+function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap, displayName }) {
   const elRef = useRef(null);
   const circleRef = useRef(null);
   const dragRef = useRef(null);
@@ -15401,10 +15401,6 @@ function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap }) {
   function initials(name) {
     const parts = name.trim().split(/\s+/);
     return (parts[0][0] + (parts[1]?.[0] ?? parts[0][1] ?? "")).toUpperCase();
-  }
-
-  function firstName(name) {
-    return name.split(" ")[0].slice(0, 10);
   }
 
   function onPointerDown(e) {
@@ -15493,7 +15489,67 @@ function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap }) {
       </div>
       {/* Name */}
       <div className="text-center text-[9px] font-medium text-stone-600 mt-0.5 whitespace-nowrap leading-none">
-        {firstName(student.name)}
+        {displayName || student.name.split(" ")[0].slice(0, 10)}
+      </div>
+    </div>
+  );
+}
+
+function SitzplanPicker({ filteredUnplaced, pickerSearch, setPickerSearch, pickStudent, onClose }) {
+  const [vvHeight, setVvHeight] = useState(window.visualViewport?.height || window.innerHeight);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => setVvHeight(vv.height);
+    vv.addEventListener("resize", handler);
+    return () => vv.removeEventListener("resize", handler);
+  }, []);
+
+  const sheetMax = Math.min(vvHeight * 0.7, vvHeight - 40);
+
+  return (
+    <div
+      className="fixed inset-0 z-[65] flex items-end justify-center"
+      style={{ height: `${vvHeight}px` }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full md:max-w-md rounded-t-3xl shadow-xl flex flex-col"
+        style={{ maxHeight: `${sheetMax}px` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-4 pt-4 pb-3 shrink-0">
+          <div className="font-semibold text-stone-800 mb-3">Kind auswählen</div>
+          <input
+            ref={inputRef}
+            autoFocus
+            className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F5844]/30 focus:border-transparent"
+            placeholder="Name suchen …"
+            value={pickerSearch}
+            onChange={(e) => setPickerSearch(e.target.value)}
+          />
+        </div>
+        <div className="overflow-y-auto flex-1 px-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {filteredUnplaced.length === 0 && (
+            <p className="text-center text-sm text-stone-400 py-8">
+              {pickerSearch ? "Kein Treffer" : "Alle Kinder sind bereits platziert"}
+            </p>
+          )}
+          {filteredUnplaced.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => pickStudent(s.id)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-50 active:bg-stone-100 text-left transition-colors"
+            >
+              <div className="w-9 h-9 rounded-full bg-[#4F5844] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                {initials(s.name)}
+              </div>
+              <span className="text-sm font-medium text-stone-800">{s.name}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -15555,14 +15611,17 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
   }
 
   function openPickerCenter() {
-    const spread = () => 0.35 + Math.random() * 0.3;
-    setPendingPos({ x: spread(), y: spread() });
+    setPendingPos(null);
     setShowPicker(true);
   }
 
   function pickStudent(studentId) {
-    const pos = pendingPos ?? { x: 0.35 + Math.random() * 0.3, y: 0.35 + Math.random() * 0.3 };
-    setPositions((prev) => resolveCollisions({ ...prev, [studentId]: pos }, canvasRef.current?.getBoundingClientRect()));
+    const rect = canvasRef.current?.getBoundingClientRect();
+    let pos = pendingPos ?? { x: 0.35 + Math.random() * 0.3, y: 0.35 + Math.random() * 0.3 };
+    if (rect && rect.width > 0) {
+      pos = snapToGrid(pos, rect, positions, null);
+    }
+    setPositions((prev) => ({ ...prev, [studentId]: pos }));
     setShowPicker(false);
     setPickerSearch("");
     setPendingPos(null);
@@ -15631,14 +15690,30 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
     onClose();
   }
 
-  function initials(name) {
-    const parts = name.trim().split(/\s+/);
-    return (parts[0][0] + (parts[1]?.[0] ?? parts[0][1] ?? "")).toUpperCase();
-  }
-
   const filteredUnplaced = unplaced.filter((s) =>
     s.name.toLowerCase().includes(pickerSearch.toLowerCase().trim())
   );
+
+  const sitzplanDisplayNames = useMemo(() => {
+    const placedStudents = activeStudents.filter((s) => positions[s.id]);
+    const firstNames = {};
+    for (const s of placedStudents) {
+      const vn = s.name.split(",").length > 1
+        ? s.name.split(",").pop().trim().split(/\s+/)[0]
+        : s.name.trim().split(/\s+/)[0];
+      firstNames[vn] = (firstNames[vn] || 0) + 1;
+    }
+    const map = {};
+    for (const s of placedStudents) {
+      const parts = s.name.includes(",")
+        ? s.name.split(",").map((p) => p.trim())
+        : null;
+      const vn = parts ? parts[1].split(/\s+/)[0] : s.name.trim().split(/\s+/)[0];
+      const nn = parts ? parts[0] : s.name.trim().split(/\s+/).slice(1).join(" ");
+      map[s.id] = firstNames[vn] > 1 && nn ? `${vn} ${nn[0]}.` : vn;
+    }
+    return map;
+  }, [activeStudents, positions]);
 
   return (
     <div className="fixed inset-0 bg-stone-900/50 z-[60] flex items-end md:items-center justify-center" onClick={onClose}>
@@ -15724,6 +15799,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
                 canvasRef={canvasRef}
                 onDragEnd={(newPos) => handleDragEnd(s.id, newPos)}
                 onTap={(sx, sy) => handleTokenTap(s.id, sx, sy)}
+                displayName={sitzplanDisplayNames[s.id]}
               />
             ))}
           </div>
@@ -15846,46 +15922,13 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
 
       {/* Student picker sheet */}
       {showPicker && (
-        <div
-          className="fixed inset-0 z-[65] flex items-end justify-center"
-          onClick={() => { setShowPicker(false); setPendingPos(null); setPickerSearch(""); }}
-        >
-          <div
-            className="bg-white w-full md:max-w-md rounded-t-3xl shadow-xl flex flex-col"
-            style={{ maxHeight: "65dvh" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-4 pt-4 pb-3 shrink-0">
-              <div className="font-semibold text-stone-800 mb-3">Kind auswählen</div>
-              <input
-                autoFocus
-                className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F5844]/30 focus:border-transparent"
-                placeholder="Name suchen …"
-                value={pickerSearch}
-                onChange={(e) => setPickerSearch(e.target.value)}
-              />
-            </div>
-            <div className="overflow-y-auto flex-1 px-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              {filteredUnplaced.length === 0 && (
-                <p className="text-center text-sm text-stone-400 py-8">
-                  {pickerSearch ? "Kein Treffer" : "Alle Kinder sind bereits platziert"}
-                </p>
-              )}
-              {filteredUnplaced.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => pickStudent(s.id)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-50 active:bg-stone-100 text-left transition-colors"
-                >
-                  <div className="w-9 h-9 rounded-full bg-[#4F5844] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {initials(s.name)}
-                  </div>
-                  <span className="text-sm font-medium text-stone-800">{s.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <SitzplanPicker
+          filteredUnplaced={filteredUnplaced}
+          pickerSearch={pickerSearch}
+          setPickerSearch={setPickerSearch}
+          pickStudent={pickStudent}
+          onClose={() => { setShowPicker(false); setPendingPos(null); setPickerSearch(""); }}
+        />
       )}
 
       {/* Confirm clear */}
