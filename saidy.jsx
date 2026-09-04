@@ -3516,7 +3516,7 @@ const HELP_DATA = [
       { q: "Was steht alles im Verlauf eines Kindes?", a: `Der Verlauf im Kind-Profil (Reiter „Übersicht") ist die Zeitleiste über alles, was zu diesem Kind festgehalten wurde: Notizen, Gespräche, Klassenbuch-Einträge und Fehlzeiten – chronologisch gemischt, jüngstes zuerst. Jede Zeile zeigt, worum es sich handelt (farbige Kategorie beim Eintrag, „Fehlzeit", „Notiz", Gesprächstyp mit Stimmungs-Emoji), bei Einträgen zusätzlich das Fach. Früher standen hier nur Notizen und Gespräche – vergessenes Material und Fehlzeiten lagen zwar in den Daten, waren im Profil aber unsichtbar. Sind es mehr als sieben, führen die Links rechts oben zu den vollständigen Listen.` },
       { q: "Erkennt Tu-vi Muster in den Fehlzeiten?", a: `Ja. Im Kind-Profil erscheint unter „Auffälligkeiten bei den Fehlzeiten" eine kurze Liste, sobald genug Daten für eine belastbare Aussage vorliegen – zum Beispiel „6 von 8 Fehltagen liegen auf Montage", „Meist betroffen ist die 1. Stunde", „4 der 7 Fehltage liegen in den letzten vier Wochen" oder „3 von 8 Fehltagen sind unentschuldigt". Dieselben Sätze stehen auch in der Schülerakte für die Übergabe und im Vorbereitungstext fürs Elterngespräch. Der Sinn: Nicht die Zahl „8 Fehltage" hilft der nächsten Lehrkraft weiter, sondern das Muster dahinter. Tu-vi hält sich dabei bewusst zurück – jede Aussage braucht eine Mindestzahl an Fehltagen UND einen Mindestanteil, damit aus drei zufällig gleichen Wochentagen keine Behauptung über ein Kind wird. Und es bleibt bei der Beobachtung („liegen auf Montagen"); was dahintersteckt, weißt nur du.` },
       { q: "Werden Fehlzeiten pro Stunde oder pro Tag gezählt?", a: `Gespeichert wird ein Eintrag pro Kind und Tag, in dem festgehalten ist, welche Stunden betroffen waren. Das ist wichtig für die Zahlen, die später im Elterngespräch oder in der Übergabe auf dem Tisch liegen: Ein Kind, das einen ganzen Schultag fehlt, erscheint dort als ein Fehltag und nicht als sechs Fehlzeiten. Trägst du dasselbe Kind am selben Tag in einer zweiten Stunde ein, kommt diese Stunde zum bestehenden Tages-Eintrag dazu. Fehlt ein Kind in einer Stunde und ist in der nächsten nur verspätet, zählt der Tag als Fehltag – die Stunden-Details bleiben trotzdem erhalten.` },
-      { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Drucken" speichert den Sitzplan und öffnet den Druckdialog – dort „Als PDF sichern" wählen, um den Sitzplan als PDF zu speichern oder direkt auszudrucken. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen. Angezeigt werden nur die Vornamen; gibt es zwei Kinder mit gleichem Vornamen, wird der Anfangsbuchstabe des Nachnamens ergänzt (z. B. „Leon M.").` },
+      { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich auf der Fläche verschieben und rasten beim Loslassen automatisch am sichtbaren Raster ein, sodass der Plan von selbst ordentlich aussieht. Die Tafel lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Drucken" speichert den Sitzplan und öffnet den Druckdialog – dort „Als PDF sichern" wählen, um den Sitzplan als PDF zu speichern oder direkt auszudrucken. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen. Angezeigt werden nur die Vornamen; gibt es zwei Kinder mit gleichem Vornamen, wird der Anfangsbuchstabe des Nachnamens ergänzt (z. B. „Leon M.").` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
       { q: `Was ist die „Auf einen Blick"-Karte im Kind-Profil?`, a: `Direkt unter der Profil-Karte erscheint bei aktiven Kindern eine kompakte Signal-Liste – die pädagogische Startseite des Kindes. Sie zeigt bis zu sechs Punkte, die im Alltag konkret helfen: die aktuelle Stimmung aus dem letzten Gespräch (Smiley), einen Notentrend („Noten verbessern sich zuletzt" bzw. „fallen zuletzt ab"), wiederkehrende Vorfälle (z. B. „5× Sportzeug vergessen"), das letzte Elterngespräch mit Datumsabstand, das aktive Förderziel. Alles lokal aus vorhandenen Daten berechnet – keine externen Übertragungen. Ziel: kein Wissen geht verloren, jede Lehrkraft (auch Vertretung) sieht in Sekunden was zählt.` },
       { q: "Wie tracke ich vergessenes Schülermaterial?", a: `Auf der Übersicht in der JETZT-Karte: Unter dem aktuellen Stundenthema erscheint der Bereich „Noch nachbringen" mit allen offenen Material-Einträgen für diese Klasse und dieses Fach. Über „+ Material fehlt" trägst du ein, wem was fehlt – Kind wählen, Material-Text eingeben, fertig. Sobald das Kind das Material nachbringt, setzt du den Haken und der Eintrag verschwindet. Die Gesamtzahl offener Material-Erinnerungen erscheint außerdem in der Kachel „X Dinge brauchen deine Aufmerksamkeit" auf der Startseite, und in der ALS-NÄCHSTES-Karte steht ein kompakter Hinweis, wenn für die kommende Stunde noch Material nachzubringen ist.` },
@@ -15297,8 +15297,8 @@ function DutyModal({ onSave, onClose }) {
 /* ---------- Sitzplan ---------- */
 
 const SITZPLAN_TOKEN_R = 14;  // visual half-height px
-const SITZPLAN_COLLISION_R = 18; // collision radius px
-const SITZPLAN_GRID_PX = 40;  // grid cell size in px
+const SITZPLAN_COLLISION_R = 28; // collision radius px (pill is wider than circle)
+const SITZPLAN_GRID_PX = 56;  // grid cell size in px
 
 // Snap to nearest free grid cell (BFS outward from target cell)
 function snapToGrid(pos, canvasRect, existingPositions, excludeId = null) {
@@ -15576,10 +15576,11 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
   }
 
   function handleDragEnd(studentId, newPos) {
-    setPositions((prev) => resolveCollisions(
-      { ...prev, [studentId]: { ...prev[studentId], ...newPos } },
-      canvasRef.current?.getBoundingClientRect()
-    ));
+    const rect = canvasRef.current?.getBoundingClientRect();
+    setPositions((prev) => {
+      const snapped = rect ? snapToGrid(newPos, rect, prev, studentId) : newPos;
+      return { ...prev, [studentId]: { ...prev[studentId], ...snapped } };
+    });
   }
 
   function handleQualitySet(studentId, value) {
@@ -15760,7 +15761,14 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
           <div
             ref={canvasRef}
             className="relative w-full h-full rounded-2xl overflow-hidden sp-print-canvas"
-            style={{ background: "var(--creme)", minHeight: "380px", height: "100%" }}
+            style={{
+              background: "var(--creme)",
+              minHeight: "380px",
+              height: "100%",
+              backgroundImage: `radial-gradient(circle, rgba(120,113,108,0.15) 1.5px, transparent 1.5px)`,
+              backgroundSize: `${SITZPLAN_GRID_PX}px ${SITZPLAN_GRID_PX}px`,
+              backgroundPosition: `${SITZPLAN_GRID_PX / 2}px ${SITZPLAN_GRID_PX / 2}px`,
+            }}
             onPointerDown={handleCanvasPointerDown}
             onPointerUp={handleCanvasPointerUp}
           >
