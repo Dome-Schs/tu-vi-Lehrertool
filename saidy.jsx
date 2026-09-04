@@ -3516,7 +3516,7 @@ const HELP_DATA = [
       { q: "Was steht alles im Verlauf eines Kindes?", a: `Der Verlauf im Kind-Profil (Reiter „Übersicht") ist die Zeitleiste über alles, was zu diesem Kind festgehalten wurde: Notizen, Gespräche, Klassenbuch-Einträge und Fehlzeiten – chronologisch gemischt, jüngstes zuerst. Jede Zeile zeigt, worum es sich handelt (farbige Kategorie beim Eintrag, „Fehlzeit", „Notiz", Gesprächstyp mit Stimmungs-Emoji), bei Einträgen zusätzlich das Fach. Früher standen hier nur Notizen und Gespräche – vergessenes Material und Fehlzeiten lagen zwar in den Daten, waren im Profil aber unsichtbar. Sind es mehr als sieben, führen die Links rechts oben zu den vollständigen Listen.` },
       { q: "Erkennt Tu-vi Muster in den Fehlzeiten?", a: `Ja. Im Kind-Profil erscheint unter „Auffälligkeiten bei den Fehlzeiten" eine kurze Liste, sobald genug Daten für eine belastbare Aussage vorliegen – zum Beispiel „6 von 8 Fehltagen liegen auf Montage", „Meist betroffen ist die 1. Stunde", „4 der 7 Fehltage liegen in den letzten vier Wochen" oder „3 von 8 Fehltagen sind unentschuldigt". Dieselben Sätze stehen auch in der Schülerakte für die Übergabe und im Vorbereitungstext fürs Elterngespräch. Der Sinn: Nicht die Zahl „8 Fehltage" hilft der nächsten Lehrkraft weiter, sondern das Muster dahinter. Tu-vi hält sich dabei bewusst zurück – jede Aussage braucht eine Mindestzahl an Fehltagen UND einen Mindestanteil, damit aus drei zufällig gleichen Wochentagen keine Behauptung über ein Kind wird. Und es bleibt bei der Beobachtung („liegen auf Montagen"); was dahintersteckt, weißt nur du.` },
       { q: "Werden Fehlzeiten pro Stunde oder pro Tag gezählt?", a: `Gespeichert wird ein Eintrag pro Kind und Tag, in dem festgehalten ist, welche Stunden betroffen waren. Das ist wichtig für die Zahlen, die später im Elterngespräch oder in der Übergabe auf dem Tisch liegen: Ein Kind, das einen ganzen Schultag fehlt, erscheint dort als ein Fehltag und nicht als sechs Fehlzeiten. Trägst du dasselbe Kind am selben Tag in einer zweiten Stunde ein, kommt diese Stunde zum bestehenden Tages-Eintrag dazu. Fehlt ein Kind in einer Stunde und ist in der nächsten nur verspätet, zählt der Tag als Fehltag – die Stunden-Details bleiben trotzdem erhalten.` },
-      { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. Ein Kind entfernen: Token nach unten über den Rand der Fläche in die rote Toolbar ziehen und loslassen. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen.` },
+      { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich frei auf der Fläche verschieben. Die Tafel oben lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Drucken" speichert den Sitzplan und öffnet den Druckdialog – dort „Als PDF sichern" wählen, um den Sitzplan als PDF zu speichern oder direkt auszudrucken. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen. Angezeigt werden nur die Vornamen; gibt es zwei Kinder mit gleichem Vornamen, wird der Anfangsbuchstabe des Nachnamens ergänzt (z. B. „Leon M.").` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
       { q: `Was ist die „Auf einen Blick"-Karte im Kind-Profil?`, a: `Direkt unter der Profil-Karte erscheint bei aktiven Kindern eine kompakte Signal-Liste – die pädagogische Startseite des Kindes. Sie zeigt bis zu sechs Punkte, die im Alltag konkret helfen: die aktuelle Stimmung aus dem letzten Gespräch (Smiley), einen Notentrend („Noten verbessern sich zuletzt" bzw. „fallen zuletzt ab"), wiederkehrende Vorfälle (z. B. „5× Sportzeug vergessen"), das letzte Elterngespräch mit Datumsabstand, das aktive Förderziel. Alles lokal aus vorhandenen Daten berechnet – keine externen Übertragungen. Ziel: kein Wissen geht verloren, jede Lehrkraft (auch Vertretung) sieht in Sekunden was zählt.` },
       { q: "Wie tracke ich vergessenes Schülermaterial?", a: `Auf der Übersicht in der JETZT-Karte: Unter dem aktuellen Stundenthema erscheint der Bereich „Noch nachbringen" mit allen offenen Material-Einträgen für diese Klasse und dieses Fach. Über „+ Material fehlt" trägst du ein, wem was fehlt – Kind wählen, Material-Text eingeben, fertig. Sobald das Kind das Material nachbringt, setzt du den Haken und der Eintrag verschwindet. Die Gesamtzahl offener Material-Erinnerungen erscheint außerdem in der Kachel „X Dinge brauchen deine Aufmerksamkeit" auf der Startseite, und in der ALS-NÄCHSTES-Karte steht ein kompakter Hinweis, wenn für die kommende Stunde noch Material nachzubringen ist.` },
@@ -15296,9 +15296,9 @@ function DutyModal({ onSave, onClose }) {
 
 /* ---------- Sitzplan ---------- */
 
-const SITZPLAN_TOKEN_R = 18;  // visual radius px (token = 36px diameter)
-const SITZPLAN_COLLISION_R = 23; // collision radius px (gives ~5px gap between tokens)
-const SITZPLAN_GRID_PX = 50;  // grid cell size in px
+const SITZPLAN_TOKEN_R = 14;  // visual half-height px
+const SITZPLAN_COLLISION_R = 18; // collision radius px
+const SITZPLAN_GRID_PX = 40;  // grid cell size in px
 
 // Snap to nearest free grid cell (BFS outward from target cell)
 function snapToGrid(pos, canvasRect, existingPositions, excludeId = null) {
@@ -15474,21 +15474,19 @@ function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap, dis
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
-      {/* Avatar circle — 36px */}
       <div
         ref={circleRef}
-        className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold shadow text-white"
+        className="flex items-center justify-center text-[11px] font-semibold shadow-sm text-white whitespace-nowrap rounded-full"
         style={{
           background: "#4F5844",
           transition: "transform 0.1s",
-          outline: quality ? `2px solid ${QUALITY_COLORS[quality]}` : "none",
-          outlineOffset: "1px",
+          outline: quality ? `2.5px solid ${QUALITY_COLORS[quality]}` : "none",
+          outlineOffset: "1.5px",
+          padding: "4px 10px",
+          minWidth: "28px",
+          lineHeight: 1,
         }}
       >
-        {initials(student.name)}
-      </div>
-      {/* Name */}
-      <div className="text-center text-[9px] font-medium text-stone-600 mt-0.5 whitespace-nowrap leading-none">
         {displayName || student.name.split(" ")[0].slice(0, 10)}
       </div>
     </div>
@@ -15715,15 +15713,38 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
     return map;
   }, [activeStudents, positions]);
 
+  function druckenSitzplan() {
+    save();
+    setTimeout(() => window.print(), 100);
+  }
+
   return (
-    <div className="fixed inset-0 bg-stone-900/50 z-[60] flex items-end md:items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-stone-900/50 z-[60] flex items-end md:items-center justify-center print:static print:bg-white print:items-start print:justify-start" onClick={onClose}>
+      <style>{`
+        @media print {
+          @page { size: A4 landscape; margin: 10mm; }
+          body > *:not([data-sitzplan-print]) { display: none !important; }
+          [data-sitzplan-print] { position: static !important; display: block !important; }
+          .sp-print-hide { display: none !important; }
+          .sp-print-canvas { min-height: 0 !important; height: auto !important; aspect-ratio: 4/3; width: 100% !important; border-radius: 0 !important; border: 1px solid #d6d3d1 !important; }
+          .sp-print-canvas > div[style] { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          .sp-print-header { display: flex !important; }
+        }
+      `}</style>
       <div
-        className="bg-white w-full md:max-w-2xl rounded-t-3xl md:rounded-2xl shadow-xl flex flex-col"
+        className="bg-white w-full md:max-w-2xl rounded-t-3xl md:rounded-2xl shadow-xl flex flex-col print:max-w-none print:rounded-none print:shadow-none"
         style={{ maxHeight: "98dvh" }}
         onClick={(e) => e.stopPropagation()}
+        data-sitzplan-print
       >
+        {/* Print header — nur beim Drucken sichtbar */}
+        <div className="sp-print-header hidden items-center justify-between px-2 pt-2 pb-1">
+          <div className="font-semibold text-stone-800 text-lg">Sitzplan · {cls.name}</div>
+          <div className="text-xs text-stone-400">{new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}</div>
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-stone-100 shrink-0">
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-stone-100 shrink-0 sp-print-hide">
           <div>
             <div className="font-semibold text-stone-900">Sitzplan</div>
             <div className="text-xs text-stone-400">{cls.name} · {placedCount} von {activeStudents.length} platziert</div>
@@ -15735,10 +15756,10 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 px-4 py-3 min-h-0">
+        <div className="flex-1 px-4 py-3 min-h-0 print:px-0 print:py-0 print:flex-none">
           <div
             ref={canvasRef}
-            className="relative w-full h-full rounded-2xl overflow-hidden"
+            className="relative w-full h-full rounded-2xl overflow-hidden sp-print-canvas"
             style={{ background: "var(--creme)", minHeight: "380px", height: "100%" }}
             onPointerDown={handleCanvasPointerDown}
             onPointerUp={handleCanvasPointerUp}
@@ -15806,7 +15827,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
         </div>
 
         {/* Quality legend */}
-        <div className="flex items-center gap-3 px-4 py-1.5 border-t border-stone-100 shrink-0 flex-wrap">
+        <div className="flex items-center gap-3 px-4 py-1.5 border-t border-stone-100 shrink-0 flex-wrap sp-print-hide">
           <span className="text-[10px] text-stone-400 shrink-0">Tippen zum Markieren:</span>
           {[
             { key: "gut", color: "#16a34a", label: "Klappt gut" },
@@ -15822,7 +15843,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
 
         {/* Toolbar */}
         <div
-          className="flex items-center gap-3 px-4 py-3 border-t border-stone-100 shrink-0"
+          className="flex items-center gap-3 px-4 py-3 border-t border-stone-100 shrink-0 sp-print-hide"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
           <button
@@ -15842,6 +15863,14 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
             className="px-3 py-2 rounded-xl text-sm text-stone-500 hover:bg-stone-100 disabled:opacity-30 transition-colors"
           >
             Aufräumen
+          </button>
+          <button
+            onClick={druckenSitzplan}
+            disabled={placedCount === 0}
+            className="px-3 py-2 rounded-xl text-sm text-stone-500 hover:bg-stone-100 disabled:opacity-30 transition-colors flex items-center gap-1.5"
+          >
+            <Printer size={14} />
+            Drucken
           </button>
           <button
             onClick={() => setShowConfirmClear(true)}
