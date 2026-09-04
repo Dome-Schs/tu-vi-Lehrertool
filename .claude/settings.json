@@ -1,24 +1,12 @@
 {
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -q 'push origin main'; then echo '{\"systemMessage\": \"✅ Saidy deployed – Änderungen sind live auf GitHub Pages. App neu laden um die neueste Version zu sehen (PWA: App schließen und neu öffnen).\"}'; fi",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "changed=$(git -C /home/user/Saidy---Lehrertool- diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E 'saidy\\.jsx|\\.claude/agents/'); if [ -n \"$changed\" ]; then echo '{\"systemMessage\": \"📋 Hinweis: saidy.jsx oder ein Agent wurde geändert – bitte die Projektübersicht aktualisieren (claude.ai/code/artifact/1a678b08-f9f5-4556-bdba-a1beeaa82106).\"}'; fi",
-            "timeout": 5
+            "command": "echo '{\"continue\": true}'",
+            "timeout": 2
           }
         ]
       }

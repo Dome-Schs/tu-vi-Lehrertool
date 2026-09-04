@@ -30,12 +30,14 @@ https://claude.ai/code/artifact/1a678b08-f9f5-4556-bdba-a1beeaa82106
 
 Nach Änderungen an `saidy.jsx` oder Agents: Artifact mit demselben Dateipfad neu publizieren (gleiche URL).
 
-## Deployment
+## Deployment & GitHub
 
-**GitHub wird NICHT für Dateiaustausch oder Deployment genutzt.**
-Nach jeder Änderung: `npm run build` ausführen und `dist/index.html` direkt per `SendUserFile` an den Nutzer senden.
-Der Nutzer lädt die Datei dann selbst auf Hetzner (Apache) hoch.
-Niemals den Nutzer auf GitHub verweisen, niemals `git push` als Auslieferungsweg vorschlagen.
+**GitHub wird NICHT genutzt — weder für Deployment noch für Versionskontrolle.**
+- **Niemals `git push` ausführen** — nicht auf `main`, nicht auf Feature-Branches, nirgendwohin.
+- **Niemals `git commit` als Auslieferungsweg** vorschlagen.
+- Nach jeder Änderung: `npm run build` ausführen und `dist/index.html` direkt per `SendUserFile` an den Nutzer senden.
+- Der Nutzer lädt die Datei dann selbst auf Hetzner (Apache) hoch.
+- Niemals den Nutzer auf GitHub verweisen.
 
 ## Wichtige Regeln
 
