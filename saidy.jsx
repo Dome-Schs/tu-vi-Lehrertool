@@ -15584,8 +15584,12 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
   }
 
   function handleSeatTap(deskId, seatIndex, studentId, screenX, screenY) {
+    const desk = desks.find(d => d.id === deskId);
+    const deskIsEmpty = desk && desk.seats.every(s => !s);
     if (studentId) {
       setActivePopup({ deskId, seatIndex, studentId, screenX, screenY });
+    } else if (deskIsEmpty) {
+      setActivePopup({ deskId, seatIndex, studentId: null, screenX, screenY, emptyDesk: true });
     } else {
       setPendingSeat({ deskId, seatIndex });
       setShowPicker(true);
@@ -15851,10 +15855,30 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
 
       {/* Seat context menu */}
       {activePopup && (() => {
-        const popupStudent = activeStudents.find((s) => s.id === activePopup.studentId);
-        const curQuality = qualities[activePopup.studentId] ?? null;
         const popupY = activePopup.screenY > window.innerHeight * 0.55 ? activePopup.screenY - 160 : activePopup.screenY + 28;
         const popupX = Math.max(96, Math.min(window.innerWidth - 96, activePopup.screenX));
+        if (activePopup.emptyDesk) {
+          return (
+            <>
+              <div className="fixed inset-0 z-[75]" onClick={(e) => { e.stopPropagation(); setActivePopup(null); }} />
+              <div className="fixed z-[76] bg-white rounded-2xl shadow-xl p-3"
+                style={{ left: popupX, top: popupY, transform: "translateX(-50%)", minWidth: 176 }}
+                onClick={(e) => e.stopPropagation()}>
+                <div className="text-xs text-stone-400 text-center mb-2">Leerer Tisch</div>
+                <button onClick={() => { setPendingSeat({ deskId: activePopup.deskId, seatIndex: activePopup.seatIndex }); setActivePopup(null); setShowPicker(true); }}
+                  className="w-full py-1.5 text-sm text-stone-700 font-medium hover:bg-stone-50 rounded-lg transition-colors mb-1">
+                  Kind zuweisen
+                </button>
+                <button onClick={() => { removeDesk(activePopup.deskId); setActivePopup(null); }}
+                  className="w-full py-1.5 text-sm text-red-500 font-medium hover:bg-red-50 rounded-lg transition-colors">
+                  {`Tisch löschen`}
+                </button>
+              </div>
+            </>
+          );
+        }
+        const popupStudent = activeStudents.find((s) => s.id === activePopup.studentId);
+        const curQuality = qualities[activePopup.studentId] ?? null;
         return (
           <>
             <div className="fixed inset-0 z-[75]" onClick={(e) => { e.stopPropagation(); setActivePopup(null); }} />
