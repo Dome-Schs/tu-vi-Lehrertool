@@ -1287,6 +1287,22 @@ function sanitizeVollstaendig(imported) {
         Object.entries(merged.sitzplaene)
           .filter(([, plan]) => plan && typeof plan === "object")
           .map(([classId, plan]) => {
+            const tafelEdge = ["top", "bottom", "left", "right"].includes(plan.tafelEdge) ? plan.tafelEdge : "top";
+            if (Array.isArray(plan.desks)) {
+              const desks = plan.desks
+                .filter(d => d && typeof d === "object" && typeof d.x === "number" && typeof d.y === "number")
+                .map(d => ({
+                  id: typeof d.id === "string" ? d.id : `d_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                  type: d.type === "doppel" ? "doppel" : "einzel",
+                  x: Math.max(0, Math.min(1, d.x)),
+                  y: Math.max(0, Math.min(1, d.y)),
+                  seats: Array.isArray(d.seats) ? d.seats.map(s => (typeof s === "string" ? s : null)) : [null],
+                }));
+              const qualities = (plan.qualities && typeof plan.qualities === "object" && !Array.isArray(plan.qualities))
+                ? Object.fromEntries(Object.entries(plan.qualities).filter(([, v]) => ["gut", "mittel", "schlecht"].includes(v)))
+                : {};
+              return [classId, { desks, qualities, tafelEdge }];
+            }
             const positions = (plan.positions && typeof plan.positions === "object" && !Array.isArray(plan.positions))
               ? Object.fromEntries(
                   Object.entries(plan.positions)
@@ -1298,7 +1314,7 @@ function sanitizeVollstaendig(imported) {
                     }])
                 )
               : {};
-            return [classId, { positions, tafelEdge: ["top", "bottom", "left", "right"].includes(plan.tafelEdge) ? plan.tafelEdge : "top" }];
+            return [classId, { positions, tafelEdge }];
           })
       )
     : {};
@@ -3516,7 +3532,7 @@ const HELP_DATA = [
       { q: "Was steht alles im Verlauf eines Kindes?", a: `Der Verlauf im Kind-Profil (Reiter „Übersicht") ist die Zeitleiste über alles, was zu diesem Kind festgehalten wurde: Notizen, Gespräche, Klassenbuch-Einträge und Fehlzeiten – chronologisch gemischt, jüngstes zuerst. Jede Zeile zeigt, worum es sich handelt (farbige Kategorie beim Eintrag, „Fehlzeit", „Notiz", Gesprächstyp mit Stimmungs-Emoji), bei Einträgen zusätzlich das Fach. Früher standen hier nur Notizen und Gespräche – vergessenes Material und Fehlzeiten lagen zwar in den Daten, waren im Profil aber unsichtbar. Sind es mehr als sieben, führen die Links rechts oben zu den vollständigen Listen.` },
       { q: "Erkennt Tu-vi Muster in den Fehlzeiten?", a: `Ja. Im Kind-Profil erscheint unter „Auffälligkeiten bei den Fehlzeiten" eine kurze Liste, sobald genug Daten für eine belastbare Aussage vorliegen – zum Beispiel „6 von 8 Fehltagen liegen auf Montage", „Meist betroffen ist die 1. Stunde", „4 der 7 Fehltage liegen in den letzten vier Wochen" oder „3 von 8 Fehltagen sind unentschuldigt". Dieselben Sätze stehen auch in der Schülerakte für die Übergabe und im Vorbereitungstext fürs Elterngespräch. Der Sinn: Nicht die Zahl „8 Fehltage" hilft der nächsten Lehrkraft weiter, sondern das Muster dahinter. Tu-vi hält sich dabei bewusst zurück – jede Aussage braucht eine Mindestzahl an Fehltagen UND einen Mindestanteil, damit aus drei zufällig gleichen Wochentagen keine Behauptung über ein Kind wird. Und es bleibt bei der Beobachtung („liegen auf Montagen"); was dahintersteckt, weißt nur du.` },
       { q: "Werden Fehlzeiten pro Stunde oder pro Tag gezählt?", a: `Gespeichert wird ein Eintrag pro Kind und Tag, in dem festgehalten ist, welche Stunden betroffen waren. Das ist wichtig für die Zahlen, die später im Elterngespräch oder in der Übergabe auf dem Tisch liegen: Ein Kind, das einen ganzen Schultag fehlt, erscheint dort als ein Fehltag und nicht als sechs Fehlzeiten. Trägst du dasselbe Kind am selben Tag in einer zweiten Stunde ein, kommt diese Stunde zum bestehenden Tages-Eintrag dazu. Fehlt ein Kind in einer Stunde und ist in der nächsten nur verspätet, zählt der Tag als Fehltag – die Stunden-Details bleiben trotzdem erhalten.` },
-      { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick" → „Sitzplan". Tippe auf eine freie Stelle in der Fläche – es erscheint eine Auswahlliste zum Auswählen des Kindes. Alternativ auf „Kind hinzufügen" tippen. Platzierte Kinder lassen sich auf der Fläche verschieben und rasten beim Loslassen automatisch am sichtbaren Raster ein, sodass der Plan von selbst ordentlich aussieht. Die Tafel lässt sich an jeden Rand ziehen (oben, unten, links, rechts). Einmal antippen (ohne zu schieben) markiert den Sitzplatz farbig: grün = klappt gut, amber = beobachten, rot = klappt nicht. „Aufräumen" richtet alle Kinder gleichzeitig in einem sauberen Raster aus. „Drucken" speichert den Sitzplan und öffnet den Druckdialog – dort „Als PDF sichern" wählen, um den Sitzplan als PDF zu speichern oder direkt auszudrucken. „Löschen" entfernt den gesamten Sitzplan. Am Ende „Speichern" tippen. Angezeigt werden nur die Vornamen; gibt es zwei Kinder mit gleichem Vornamen, wird der Anfangsbuchstabe des Nachnamens ergänzt (z. B. „Leon M.").` },
+      { q: "Wie lege ich einen Sitzplan an?", a: `Klasse antippen → Reiter „Überblick“ → „Sitzplan“. Der Sitzplan arbeitet mit Tischen: „Einzeltisch“ (1 Platz) und „Doppeltisch“ (2 Plätze nebeneinander). Tische hinzufügen: Unten auf „+ Einzeltisch“ oder „+ Doppeltisch“ tippen, oder einfach auf eine freie Stelle in der Fläche tippen (erstellt einen Einzeltisch). Kinder zuweisen: Auf den leeren Platz (+) eines Tisches tippen → Kind aus der Liste wählen. Tische verschieben: Den Tisch ziehen – er rastet beim Loslassen am Raster ein. Tische zusammenschieben für Gruppenarbeit: Einfach nebeneinander platzieren. Belegten Platz antippen (ohne zu schieben) → Sitzplatz farbig markieren (grün = klappt gut, amber = beobachten, rot = klappt nicht), Kind vom Tisch entfernen oder ganzen Tisch löschen. „Aufräumen“ richtet alle Tische in einem sauberen Raster aus. „Drucken“ speichert und öffnet den Druckdialog. Die Tafel lässt sich an jeden Rand ziehen. Angezeigt werden nur Vornamen; bei gleichem Vornamen wird der Anfangsbuchstabe des Nachnamens ergänzt (z. B. „Leon M.“).` },
       { q: "Was zeigt die Zusammenfassung im Schülerprofil?", a: `Im Profil-Tab „Übersicht" erscheint eine automatisch generierte Zusammenfassung – erkennbar am Sparkles-Symbol. Sie fasst Stimmung, Notendurchschnitt, Tendenz, Aktivität der letzten 30 Tage, Förderbedarfe und aktive Ziele in einem Satz zusammen. Die Zusammenfassung wird lokal aus den gespeicherten Daten berechnet und nur angezeigt, wenn genügend Informationen vorliegen.` },
       { q: `Was ist die „Auf einen Blick"-Karte im Kind-Profil?`, a: `Direkt unter der Profil-Karte erscheint bei aktiven Kindern eine kompakte Signal-Liste – die pädagogische Startseite des Kindes. Sie zeigt bis zu sechs Punkte, die im Alltag konkret helfen: die aktuelle Stimmung aus dem letzten Gespräch (Smiley), einen Notentrend („Noten verbessern sich zuletzt" bzw. „fallen zuletzt ab"), wiederkehrende Vorfälle (z. B. „5× Sportzeug vergessen"), das letzte Elterngespräch mit Datumsabstand, das aktive Förderziel. Alles lokal aus vorhandenen Daten berechnet – keine externen Übertragungen. Ziel: kein Wissen geht verloren, jede Lehrkraft (auch Vertretung) sieht in Sekunden was zählt.` },
       { q: "Wie tracke ich vergessenes Schülermaterial?", a: `Auf der Übersicht in der JETZT-Karte: Unter dem aktuellen Stundenthema erscheint der Bereich „Noch nachbringen" mit allen offenen Material-Einträgen für diese Klasse und dieses Fach. Über „+ Material fehlt" trägst du ein, wem was fehlt – Kind wählen, Material-Text eingeben, fertig. Sobald das Kind das Material nachbringt, setzt du den Haken und der Eintrag verschwindet. Die Gesamtzahl offener Material-Erinnerungen erscheint außerdem in der Kachel „X Dinge brauchen deine Aufmerksamkeit" auf der Startseite, und in der ALS-NÄCHSTES-Karte steht ein kompakter Hinweis, wenn für die kommende Stunde noch Material nachzubringen ist.` },
@@ -6024,11 +6040,24 @@ export default function App() {
       if (d.sitzplaene) {
         Object.keys(d.sitzplaene).forEach((classId) => {
           const plan = d.sitzplaene[classId];
-          if (!plan?.positions) return;
-          let veraendert = false;
-          const positions = { ...plan.positions };
-          expiredStudentIds.forEach((sid) => { if (sid in positions) { delete positions[sid]; veraendert = true; } });
-          if (veraendert) d.sitzplaene[classId] = { ...plan, positions };
+          if (Array.isArray(plan?.desks)) {
+            let changed = false;
+            const desks = plan.desks.map(desk => {
+              const seats = desk.seats.map(sid => {
+                if (sid && expiredStudentIds.includes(sid)) { changed = true; return null; }
+                return sid;
+              });
+              return { ...desk, seats };
+            });
+            const qualities = { ...(plan.qualities || {}) };
+            expiredStudentIds.forEach(sid => { if (sid in qualities) { delete qualities[sid]; changed = true; } });
+            if (changed) d.sitzplaene[classId] = { ...plan, desks, qualities };
+          } else if (plan?.positions) {
+            let veraendert = false;
+            const positions = { ...plan.positions };
+            expiredStudentIds.forEach((sid) => { if (sid in positions) { delete positions[sid]; veraendert = true; } });
+            if (veraendert) d.sitzplaene[classId] = { ...plan, positions };
+          }
         });
       }
       return d;
@@ -15296,147 +15325,79 @@ function DutyModal({ onSave, onClose }) {
 
 /* ---------- Sitzplan ---------- */
 
-const SITZPLAN_TOKEN_R = 14;  // visual half-height px
-const SITZPLAN_COLLISION_R = 28; // collision radius px (pill is wider than circle)
-const SITZPLAN_GRID_PX = 56;  // grid cell size in px
+const DESK_EINZEL_W = 76;
+const DESK_DOPPEL_W = 140;
+const DESK_H = 44;
+const SITZPLAN_GRID_PX = 56;
 
-// Snap to nearest free grid cell (BFS outward from target cell)
-function snapToGrid(pos, canvasRect, existingPositions, excludeId = null) {
+function deskW(type) { return type === "doppel" ? DESK_DOPPEL_W : DESK_EINZEL_W; }
+
+function snapDeskToGrid(pos, canvasRect) {
   if (!canvasRect || canvasRect.width === 0) return pos;
   const stepX = SITZPLAN_GRID_PX / canvasRect.width;
   const stepY = SITZPLAN_GRID_PX / canvasRect.height;
-  const m = SITZPLAN_COLLISION_R;
-  const minX = m / canvasRect.width;
-  const maxX = 1 - m / canvasRect.width;
-  const minY = m / canvasRect.height;
-  const maxY = 1 - m / canvasRect.height;
-
-  const occupied = new Set();
-  for (const [id, p] of Object.entries(existingPositions)) {
-    if (id === excludeId) continue;
-    occupied.add(`${Math.round(p.x / stepX)},${Math.round(p.y / stepY)}`);
-  }
-
-  const tx = Math.round(pos.x / stepX);
-  const ty = Math.round(pos.y / stepY);
-  const queue = [[tx, ty]];
-  const seen = new Set([`${tx},${ty}`]);
-
-  for (let i = 0; i < queue.length && i < 200; i++) {
-    const [cx, cy] = queue[i];
-    const rx = cx * stepX;
-    const ry = cy * stepY;
-    if (rx >= minX && rx <= maxX && ry >= minY && ry <= maxY && !occupied.has(`${cx},${cy}`)) {
-      return { x: rx, y: ry };
-    }
-    for (const [dx, dy] of [[0,1],[1,0],[0,-1],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]) {
-      const k = `${cx + dx},${cy + dy}`;
-      if (!seen.has(k)) { seen.add(k); queue.push([cx + dx, cy + dy]); }
-    }
-  }
-  return pos;
+  return {
+    x: Math.max(0.06, Math.min(0.94, Math.round(pos.x / stepX) * stepX)),
+    y: Math.max(0.06, Math.min(0.94, Math.round(pos.y / stepY) * stepY)),
+  };
 }
 
-// Push overlapping tokens apart until none overlap or max iterations reached
-function resolveCollisions(positions, canvasRect) {
-  if (!canvasRect || canvasRect.width === 0) return positions;
-  const ids = Object.keys(positions);
-  if (ids.length < 2) return positions;
-  const minDist = SITZPLAN_COLLISION_R * 2;
-  // Convert to pixels for distance math
-  const px = {};
-  for (const id of ids) px[id] = { x: positions[id].x * canvasRect.width, y: positions[id].y * canvasRect.height };
-  for (let iter = 0; iter < 20; iter++) {
-    let any = false;
-    for (let i = 0; i < ids.length; i++) {
-      for (let j = i + 1; j < ids.length; j++) {
-        const a = px[ids[i]], b = px[ids[j]];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < minDist && dist > 0.01) {
-          const push = (minDist - dist) / 2 + 1;
-          const nx = dx / dist, ny = dy / dist;
-          a.x -= nx * push; a.y -= ny * push;
-          b.x += nx * push; b.y += ny * push;
-          any = true;
-        }
-      }
-    }
-    if (!any) break;
+function migrateSitzplan(plan) {
+  if (!plan) return null;
+  if (Array.isArray(plan.desks)) return plan;
+  if (!plan.positions || typeof plan.positions !== "object") return null;
+  const desks = [];
+  const qualities = {};
+  for (const [studentId, pos] of Object.entries(plan.positions)) {
+    if (typeof pos?.x !== "number" || typeof pos?.y !== "number") continue;
+    const id = `d_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    desks.push({ id, type: "einzel", x: pos.x, y: pos.y, seats: [studentId] });
+    if (pos.quality) qualities[studentId] = pos.quality;
   }
-  const m = SITZPLAN_COLLISION_R;
-  const result = {};
-  for (const id of ids) {
-    result[id] = {
-      ...positions[id],
-      x: Math.max(m / canvasRect.width,  Math.min(1 - m / canvasRect.width,  px[id].x / canvasRect.width)),
-      y: Math.max(m / canvasRect.height, Math.min(1 - m / canvasRect.height, px[id].y / canvasRect.height)),
-    };
-  }
-  return result;
+  return { desks, qualities, tafelEdge: plan.tafelEdge || "top" };
 }
 
 const QUALITY_COLORS = { gut: "#16a34a", mittel: "#d97706", schlecht: "#dc2626" };
 
-function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap, displayName }) {
+function DeskComponent({ desk, canvasRef, onDragEnd, onSeatTap, displayNames, qualities }) {
   const elRef = useRef(null);
-  const circleRef = useRef(null);
   const dragRef = useRef(null);
-  const currentPosRef = useRef(pos);
+  const currentPosRef = useRef({ x: desk.x, y: desk.y });
+  const w = deskW(desk.type);
 
   useEffect(() => {
-    currentPosRef.current = pos;
+    currentPosRef.current = { x: desk.x, y: desk.y };
     if (elRef.current && !dragRef.current) {
-      elRef.current.style.left = `${pos.x * 100}%`;
-      elRef.current.style.top = `${pos.y * 100}%`;
+      elRef.current.style.left = `${desk.x * 100}%`;
+      elRef.current.style.top = `${desk.y * 100}%`;
     }
-  }, [pos.x, pos.y]);
-
-  useEffect(() => {
-    if (circleRef.current && !dragRef.current) {
-      circleRef.current.style.outline = quality ? `2px solid ${QUALITY_COLORS[quality]}` : "none";
-    }
-  }, [quality]);
-
-  function initials(name) {
-    const parts = name.trim().split(/\s+/);
-    return (parts[0][0] + (parts[1]?.[0] ?? parts[0][1] ?? "")).toUpperCase();
-  }
+  }, [desk.x, desk.y]);
 
   function onPointerDown(e) {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
     const rect = canvasRef.current.getBoundingClientRect();
+    const seatEl = e.target.closest("[data-seat]");
     dragRef.current = {
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      startPosX: currentPosRef.current.x,
-      startPosY: currentPosRef.current.y,
-      rect,
-      moved: false,
+      startClientX: e.clientX, startClientY: e.clientY,
+      startPosX: currentPosRef.current.x, startPosY: currentPosRef.current.y,
+      rect, moved: false,
+      seatIndex: seatEl ? parseInt(seatEl.dataset.seat, 10) : -1,
     };
     elRef.current.style.zIndex = "20";
     elRef.current.style.cursor = "grabbing";
-    if (circleRef.current) {
-      circleRef.current.style.transform = "scale(1.1)";
-      circleRef.current.style.background = "#3d4433";
-    }
   }
 
   function onPointerMove(e) {
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.startClientX;
     const dy = e.clientY - dragRef.current.startClientY;
-    if (!dragRef.current.moved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
-      dragRef.current.moved = true;
-    }
+    if (!dragRef.current.moved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) dragRef.current.moved = true;
     if (!dragRef.current.moved) return;
     const { startPosX, startPosY, rect } = dragRef.current;
-    const mx = SITZPLAN_COLLISION_R / rect.width;
-    const my = SITZPLAN_COLLISION_R / rect.height;
-    const newX = Math.max(mx, Math.min(1 - mx, startPosX + dx / rect.width));
-    const newY = Math.max(my, Math.min(1 - my, startPosY + dy / rect.height));
+    const newX = Math.max(0.04, Math.min(0.96, startPosX + dx / rect.width));
+    const newY = Math.max(0.04, Math.min(0.96, startPosY + dy / rect.height));
     currentPosRef.current = { x: newX, y: newY };
     elRef.current.style.left = `${newX * 100}%`;
     elRef.current.style.top = `${newY * 100}%`;
@@ -15444,50 +15405,39 @@ function SitzplanToken({ student, pos, quality, canvasRef, onDragEnd, onTap, dis
 
   function onPointerUp(e) {
     if (!dragRef.current) return;
-    const moved = dragRef.current.moved;
+    const { moved, seatIndex } = dragRef.current;
     dragRef.current = null;
     elRef.current.style.zIndex = "5";
     elRef.current.style.cursor = "grab";
-    if (circleRef.current) {
-      circleRef.current.style.transform = "";
-      circleRef.current.style.background = "#4F5844";
-    }
-    if (!moved) {
-      onTap(e.clientX, e.clientY);
-    } else {
-      onDragEnd(currentPosRef.current);
+    if (!moved && seatIndex >= 0) {
+      onSeatTap(desk.id, seatIndex, desk.seats[seatIndex], e.clientX, e.clientY);
+    } else if (moved) {
+      onDragEnd(desk.id, currentPosRef.current);
     }
   }
 
   return (
-    <div
-      ref={elRef}
-      className="absolute select-none touch-none"
-      style={{
-        left: `${pos.x * 100}%`,
-        top: `${pos.y * 100}%`,
-        transform: "translate(-50%, -50%)",
-        zIndex: 5,
-        cursor: "grab",
-      }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
+    <div ref={elRef} className="absolute select-none touch-none" style={{
+      left: `${desk.x * 100}%`, top: `${desk.y * 100}%`,
+      transform: "translate(-50%, -50%)", zIndex: 5, cursor: "grab",
+    }}
+      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
     >
-      <div
-        ref={circleRef}
-        className="flex items-center justify-center text-[11px] font-semibold shadow-sm text-white whitespace-nowrap rounded-full"
-        style={{
-          background: "#4F5844",
-          transition: "transform 0.1s",
-          outline: quality ? `2.5px solid ${QUALITY_COLORS[quality]}` : "none",
-          outlineOffset: "1.5px",
-          padding: "4px 10px",
-          minWidth: "28px",
-          lineHeight: 1,
-        }}
-      >
-        {displayName || student.name.split(" ")[0].slice(0, 10)}
+      <div className="flex rounded-lg border-2 border-stone-300 bg-white overflow-hidden shadow-sm"
+        style={{ width: `${w}px`, height: `${DESK_H}px` }}>
+        {desk.seats.map((studentId, idx) => {
+          const quality = studentId ? qualities?.[studentId] : null;
+          const name = studentId ? (displayNames[studentId] || "?") : null;
+          return (
+            <div key={idx} data-seat={idx}
+              className={`flex-1 flex items-center justify-center text-[11px] font-medium
+                ${studentId ? "text-stone-800" : "text-stone-300"}
+                ${idx > 0 ? "border-l border-stone-200" : ""}`}
+              style={{ borderBottom: quality ? `3px solid ${QUALITY_COLORS[quality]}` : undefined }}>
+              {name || <Plus size={14} className="text-stone-300" />}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -15554,41 +15504,92 @@ function SitzplanPicker({ filteredUnplaced, pickerSearch, setPickerSearch, pickS
 }
 
 function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
-  // positions: { [studentId]: { x: number, y: number } }  — 0–1 relative to canvas
-  const [positions, setPositions] = useState(() => sitzplan?.positions ? { ...sitzplan.positions } : {});
-  const [tafelEdge, setTafelEdge] = useState(sitzplan?.tafelEdge ?? "top");
+  const migrated = useMemo(() => migrateSitzplan(sitzplan), [sitzplan]);
+  const [desks, setDesks] = useState(() => migrated?.desks ? migrated.desks.map(d => ({ ...d, seats: [...d.seats] })) : []);
+  const [qualities, setQualities] = useState(() => migrated?.qualities ? { ...migrated.qualities } : {});
+  const [tafelEdge, setTafelEdge] = useState(migrated?.tafelEdge ?? sitzplan?.tafelEdge ?? "top");
   const [showPicker, setShowPicker] = useState(false);
-  const [pendingPos, setPendingPos] = useState(null); // where to place the next picked student
+  const [pendingSeat, setPendingSeat] = useState(null);
   const [pickerSearch, setPickerSearch] = useState("");
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [activePopup, setActivePopup] = useState(null); // { studentId, screenX, screenY }
+  const [activePopup, setActivePopup] = useState(null);
   const canvasRef = useRef(null);
   const canvasTapStart = useRef(null);
   const tafelDragRef = useRef(null);
 
   const activeStudents = students.filter((s) => !s.deletedAt);
-  const placed = new Set(Object.keys(positions));
-  const unplaced = activeStudents.filter((s) => !placed.has(s.id));
-  const placedCount = placed.size;
 
-  function removeStudent(studentId) {
-    setPositions((prev) => { const next = { ...prev }; delete next[studentId]; return next; });
+  const placedIds = useMemo(() => {
+    const set = new Set();
+    for (const d of desks) for (const sid of d.seats) if (sid) set.add(sid);
+    return set;
+  }, [desks]);
+
+  const unplaced = activeStudents.filter((s) => !placedIds.has(s.id));
+  const placedCount = placedIds.size;
+  const deskCount = desks.length;
+
+  const sitzplanDisplayNames = useMemo(() => {
+    const placedStudents = activeStudents.filter((s) => placedIds.has(s.id));
+    const firstNames = {};
+    for (const s of placedStudents) {
+      const vn = s.name.split(",").length > 1
+        ? s.name.split(",").pop().trim().split(/\s+/)[0]
+        : s.name.trim().split(/\s+/)[0];
+      firstNames[vn] = (firstNames[vn] || 0) + 1;
+    }
+    const map = {};
+    for (const s of placedStudents) {
+      const parts = s.name.includes(",") ? s.name.split(",").map(p => p.trim()) : null;
+      const vn = parts ? parts[1].split(/\s+/)[0] : s.name.trim().split(/\s+/)[0];
+      const nn = parts ? parts[0] : s.name.trim().split(/\s+/).slice(1).join(" ");
+      map[s.id] = firstNames[vn] > 1 && nn ? `${vn} ${nn[0]}.` : vn;
+    }
+    return map;
+  }, [activeStudents, placedIds]);
+
+  function addDesk(type, pos) {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    const rawPos = pos || { x: 0.3 + Math.random() * 0.4, y: 0.3 + Math.random() * 0.4 };
+    const snapped = rect ? snapDeskToGrid(rawPos, rect) : rawPos;
+    const seats = type === "doppel" ? [null, null] : [null];
+    const id = `d_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    setDesks(prev => [...prev, { id, type, x: snapped.x, y: snapped.y, seats }]);
   }
 
-  function handleDragEnd(studentId, newPos) {
+  function removeDesk(deskId) {
+    setDesks(prev => prev.filter(d => d.id !== deskId));
+  }
+
+  function removeStudentFromSeat(deskId, seatIndex) {
+    setDesks(prev => prev.map(d => {
+      if (d.id !== deskId) return d;
+      const seats = [...d.seats];
+      seats[seatIndex] = null;
+      return { ...d, seats };
+    }));
+  }
+
+  function handleDeskDragEnd(deskId, newPos) {
     const rect = canvasRef.current?.getBoundingClientRect();
-    setPositions((prev) => {
-      const snapped = rect ? snapToGrid(newPos, rect, prev, studentId) : newPos;
-      return { ...prev, [studentId]: { ...prev[studentId], ...snapped } };
-    });
+    const snapped = rect ? snapDeskToGrid(newPos, rect) : newPos;
+    setDesks(prev => prev.map(d => d.id === deskId ? { ...d, x: snapped.x, y: snapped.y } : d));
   }
 
   function handleQualitySet(studentId, value) {
-    setPositions((prev) => ({ ...prev, [studentId]: { ...prev[studentId], quality: value ?? undefined } }));
+    setQualities(prev => {
+      if (value) return { ...prev, [studentId]: value };
+      const next = { ...prev }; delete next[studentId]; return next;
+    });
   }
 
-  function handleTokenTap(studentId, screenX, screenY) {
-    setActivePopup((prev) => prev?.studentId === studentId ? null : { studentId, screenX, screenY });
+  function handleSeatTap(deskId, seatIndex, studentId, screenX, screenY) {
+    if (studentId) {
+      setActivePopup({ deskId, seatIndex, studentId, screenX, screenY });
+    } else {
+      setPendingSeat({ deskId, seatIndex });
+      setShowPicker(true);
+    }
   }
 
   function handleCanvasPointerDown(e) {
@@ -15601,53 +15602,53 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
     const dx = Math.abs(e.clientX - canvasTapStart.current.x);
     const dy = Math.abs(e.clientY - canvasTapStart.current.y);
     canvasTapStart.current = null;
-    if (dx > 8 || dy > 8 || unplaced.length === 0) return;
+    if (dx > 8 || dy > 8) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.max(0.06, Math.min(0.94, (e.clientX - rect.left) / rect.width));
-    const y = Math.max(0.08, Math.min(0.92, (e.clientY - rect.top) / rect.height));
-    setPendingPos({ x, y });
-    setShowPicker(true);
-  }
-
-  function openPickerCenter() {
-    setPendingPos(null);
-    setShowPicker(true);
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    addDesk("einzel", { x, y });
   }
 
   function pickStudent(studentId) {
-    const rect = canvasRef.current?.getBoundingClientRect();
-    let pos = pendingPos ?? { x: 0.35 + Math.random() * 0.3, y: 0.35 + Math.random() * 0.3 };
-    if (rect && rect.width > 0) {
-      pos = snapToGrid(pos, rect, positions, null);
+    if (pendingSeat) {
+      const { deskId, seatIndex } = pendingSeat;
+      setDesks(prev => prev.map(d => {
+        if (d.id !== deskId) return d;
+        const seats = [...d.seats];
+        seats[seatIndex] = studentId;
+        return { ...d, seats };
+      }));
     }
-    setPositions((prev) => ({ ...prev, [studentId]: pos }));
     setShowPicker(false);
     setPickerSearch("");
-    setPendingPos(null);
+    setPendingSeat(null);
   }
 
   function handleCleanup() {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return;
-    const stepX = SITZPLAN_GRID_PX / rect.width;
-    const stepY = SITZPLAN_GRID_PX / rect.height;
-    // Sortiert nach aktuellem Raster-Reihe dann -Spalte → Reihenfolge bleibt erhalten
-    const sorted = Object.keys(positions).sort((a, b) => {
-      const ay = Math.round(positions[a].y / stepY), by = Math.round(positions[b].y / stepY);
-      return ay !== by ? ay - by : Math.round(positions[a].x / stepX) - Math.round(positions[b].x / stepX);
+    if (!rect || rect.width === 0 || desks.length === 0) return;
+    const sorted = [...desks].sort((a, b) => {
+      const ay = Math.round(a.y * rect.height / SITZPLAN_GRID_PX);
+      const by = Math.round(b.y * rect.height / SITZPLAN_GRID_PX);
+      return ay !== by ? ay - by : Math.round(a.x * rect.width / SITZPLAN_GRID_PX) - Math.round(b.x * rect.width / SITZPLAN_GRID_PX);
     });
-    const newPos = {};
-    const occupied = {};
-    for (const id of sorted) {
-      const snapped = snapToGrid(positions[id], rect, occupied);
-      newPos[id] = { ...positions[id], ...snapped };
-      occupied[id] = snapped;
-    }
-    setPositions(newPos);
+    const rowH = (DESK_H + 20) / rect.height;
+    const margin = 0.04;
+    const startY = 0.12;
+    let cx = margin;
+    let cy = startY;
+    setDesks(sorted.map(d => {
+      const dw = (deskW(d.type) + 16) / rect.width;
+      if (cx + dw > 1 - margin) { cx = margin; cy += rowH; }
+      const pos = { x: cx + dw / 2, y: cy };
+      cx += dw;
+      return { ...d, ...pos };
+    }));
   }
 
   function clearPlan() {
-    setPositions({});
+    setDesks([]);
+    setQualities({});
     setShowConfirmClear(false);
   }
 
@@ -15673,10 +15674,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
     const rect = canvasRef.current.getBoundingClientRect();
     const relX = (e.clientX - rect.left) / rect.width;
     const relY = (e.clientY - rect.top) / rect.height;
-    const distTop = relY;
-    const distBottom = 1 - relY;
-    const distLeft = relX;
-    const distRight = 1 - relX;
+    const distTop = relY, distBottom = 1 - relY, distLeft = relX, distRight = 1 - relX;
     const min = Math.min(distTop, distBottom, distLeft, distRight);
     if (min === distTop) setTafelEdge("top");
     else if (min === distBottom) setTafelEdge("bottom");
@@ -15685,39 +15683,18 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
   }
 
   function save() {
-    onSave({ positions, tafelEdge });
+    onSave({ desks, qualities, tafelEdge });
     onClose();
   }
-
-  const filteredUnplaced = unplaced.filter((s) =>
-    s.name.toLowerCase().includes(pickerSearch.toLowerCase().trim())
-  );
-
-  const sitzplanDisplayNames = useMemo(() => {
-    const placedStudents = activeStudents.filter((s) => positions[s.id]);
-    const firstNames = {};
-    for (const s of placedStudents) {
-      const vn = s.name.split(",").length > 1
-        ? s.name.split(",").pop().trim().split(/\s+/)[0]
-        : s.name.trim().split(/\s+/)[0];
-      firstNames[vn] = (firstNames[vn] || 0) + 1;
-    }
-    const map = {};
-    for (const s of placedStudents) {
-      const parts = s.name.includes(",")
-        ? s.name.split(",").map((p) => p.trim())
-        : null;
-      const vn = parts ? parts[1].split(/\s+/)[0] : s.name.trim().split(/\s+/)[0];
-      const nn = parts ? parts[0] : s.name.trim().split(/\s+/).slice(1).join(" ");
-      map[s.id] = firstNames[vn] > 1 && nn ? `${vn} ${nn[0]}.` : vn;
-    }
-    return map;
-  }, [activeStudents, positions]);
 
   function druckenSitzplan() {
     save();
     setTimeout(() => window.print(), 100);
   }
+
+  const filteredUnplaced = unplaced.filter((s) =>
+    s.name.toLowerCase().includes(pickerSearch.toLowerCase().trim())
+  );
 
   return (
     <div className="fixed inset-0 bg-stone-900/50 z-[60] flex items-end md:items-center justify-center print:static print:bg-white print:items-start print:justify-start" onClick={onClose}>
@@ -15748,9 +15725,9 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
         onClick={(e) => e.stopPropagation()}
         data-sitzplan-print
       >
-        {/* Print header — nur beim Drucken sichtbar */}
+        {/* Print header */}
         <div className="sp-print-header hidden items-center justify-between px-2 pt-2 pb-1">
-          <div className="font-semibold text-stone-800 text-lg">Sitzplan · {cls.name}</div>
+          <div className="font-semibold text-stone-800 text-lg">Sitzplan {"·"} {cls.name}</div>
           <div className="text-xs text-stone-400">{new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}</div>
         </div>
 
@@ -15758,7 +15735,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-stone-100 shrink-0 sp-print-hide">
           <div>
             <div className="font-semibold text-stone-900">Sitzplan</div>
-            <div className="text-xs text-stone-400">{cls.name} · {placedCount} von {activeStudents.length} platziert</div>
+            <div className="text-xs text-stone-400">{cls.name} {"·"} {deskCount} {deskCount === 1 ? "Tisch" : "Tische"} {"·"} {placedCount}/{activeStudents.length} platziert</div>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={save}>Speichern</Button>
@@ -15772,9 +15749,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
             ref={canvasRef}
             className="relative w-full h-full rounded-2xl overflow-hidden sp-print-canvas"
             style={{
-              background: "var(--creme)",
-              minHeight: "380px",
-              height: "100%",
+              background: "var(--creme)", minHeight: "380px", height: "100%",
               backgroundImage: `radial-gradient(circle, rgba(120,113,108,0.15) 1.5px, transparent 1.5px)`,
               backgroundSize: `${SITZPLAN_GRID_PX}px ${SITZPLAN_GRID_PX}px`,
               backgroundPosition: `${SITZPLAN_GRID_PX / 2}px ${SITZPLAN_GRID_PX / 2}px`,
@@ -15782,29 +15757,22 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
             onPointerDown={handleCanvasPointerDown}
             onPointerUp={handleCanvasPointerUp}
           >
-            {/* Tafel — draggable, snaps to nearest edge */}
+            {/* Tafel */}
             {(() => {
               const isH = tafelEdge === "top" || tafelEdge === "bottom";
               const baseStyle = {
-                position: "absolute",
-                zIndex: 3,
-                cursor: "grab",
-                userSelect: "none",
-                touchAction: "none",
-                ...(tafelEdge === "top"    ? { top: 0, left: 0, right: 0 } :
+                position: "absolute", zIndex: 3, cursor: "grab", userSelect: "none", touchAction: "none",
+                ...(tafelEdge === "top" ? { top: 0, left: 0, right: 0 } :
                     tafelEdge === "bottom" ? { bottom: 0, left: 0, right: 0 } :
-                    tafelEdge === "left"   ? { left: 0, top: 0, bottom: 0 } :
-                                             { right: 0, top: 0, bottom: 0 }),
+                    tafelEdge === "left" ? { left: 0, top: 0, bottom: 0 } :
+                                           { right: 0, top: 0, bottom: 0 }),
               };
               return (
-                <div
-                  style={baseStyle}
+                <div style={baseStyle}
                   className={`bg-[#4F5844] text-white flex items-center justify-center gap-1.5 select-none
                     ${isH ? "h-9" : "w-9"}
                     ${tafelEdge === "top" ? "rounded-b-lg" : tafelEdge === "bottom" ? "rounded-t-lg" : tafelEdge === "left" ? "rounded-r-lg" : "rounded-l-lg"}`}
-                  onPointerDown={onTafelPointerDown}
-                  onPointerMove={onTafelPointerMove}
-                  onPointerUp={onTafelPointerUp}
+                  onPointerDown={onTafelPointerDown} onPointerMove={onTafelPointerMove} onPointerUp={onTafelPointerUp}
                 >
                   {isH ? (
                     <>
@@ -15813,10 +15781,8 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
                       <GripVertical size={12} className="opacity-50 shrink-0" />
                     </>
                   ) : (
-                    <span
-                      className="text-xs font-semibold tracking-wider"
-                      style={{ writingMode: "vertical-rl", transform: tafelEdge === "left" ? "rotate(180deg)" : "none" }}
-                    >
+                    <span className="text-xs font-semibold tracking-wider"
+                      style={{ writingMode: "vertical-rl", transform: tafelEdge === "left" ? "rotate(180deg)" : "none" }}>
                       Tafel
                     </span>
                   )}
@@ -15824,29 +15790,23 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
               );
             })()}
 
-            {placedCount === 0 && (
+            {deskCount === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-                <p className="text-stone-400 text-sm text-center px-10">Auf die Fläche tippen, um ein Kind zu platzieren</p>
+                <p className="text-stone-400 text-sm text-center px-10">{`Auf die Fläche tippen für einen Einzeltisch, oder unten Tische hinzufügen`}</p>
               </div>
             )}
-            {activeStudents.filter((s) => positions[s.id]).map((s) => (
-              <SitzplanToken
-                key={s.id}
-                student={s}
-                pos={positions[s.id]}
-                quality={positions[s.id]?.quality ?? null}
-                canvasRef={canvasRef}
-                onDragEnd={(newPos) => handleDragEnd(s.id, newPos)}
-                onTap={(sx, sy) => handleTokenTap(s.id, sx, sy)}
-                displayName={sitzplanDisplayNames[s.id]}
-              />
+
+            {desks.map(d => (
+              <DeskComponent key={d.id} desk={d} canvasRef={canvasRef}
+                onDragEnd={handleDeskDragEnd} onSeatTap={handleSeatTap}
+                displayNames={sitzplanDisplayNames} qualities={qualities} />
             ))}
           </div>
         </div>
 
         {/* Quality legend */}
         <div className="flex items-center gap-3 px-4 py-1.5 border-t border-stone-100 shrink-0 flex-wrap sp-print-hide">
-          <span className="text-[10px] text-stone-400 shrink-0">Tippen zum Markieren:</span>
+          <span className="text-[10px] text-stone-400 shrink-0">Belegten Platz antippen zum Markieren:</span>
           {[
             { key: "gut", color: "#16a34a", label: "Klappt gut" },
             { key: "mittel", color: "#d97706", label: "Beobachten" },
@@ -15860,107 +15820,85 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
         </div>
 
         {/* Toolbar */}
-        <div
-          className="flex items-center gap-3 px-4 py-3 border-t border-stone-100 shrink-0 sp-print-hide"
-          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-        >
-          <button
-            onClick={openPickerCenter}
-            disabled={unplaced.length === 0}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#4F5844] text-white text-sm font-medium disabled:opacity-40 transition-opacity"
-          >
-            <Plus size={14} />
-            Kind hinzufügen
-            {unplaced.length > 0 && (
-              <span className="bg-white/20 rounded-full px-1.5 py-0.5 text-[11px]">{unplaced.length}</span>
-            )}
+        <div className="flex items-center gap-2 px-4 py-3 border-t border-stone-100 shrink-0 sp-print-hide flex-wrap"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+          <button onClick={() => addDesk("einzel")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#4F5844] text-white text-sm font-medium transition-opacity">
+            <Plus size={14} /> Einzeltisch
           </button>
-          <button
-            onClick={handleCleanup}
-            disabled={placedCount < 2}
-            className="px-3 py-2 rounded-xl text-sm text-stone-500 hover:bg-stone-100 disabled:opacity-30 transition-colors"
-          >
-            Aufräumen
+          <button onClick={() => addDesk("doppel")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 border-[#4F5844] text-[#4F5844] text-sm font-medium transition-opacity">
+            <Plus size={14} /> Doppeltisch
           </button>
-          <button
-            onClick={druckenSitzplan}
-            disabled={placedCount === 0}
-            className="px-3 py-2 rounded-xl text-sm text-stone-500 hover:bg-stone-100 disabled:opacity-30 transition-colors flex items-center gap-1.5"
-          >
-            <Printer size={14} />
-            Drucken
+          {unplaced.length > 0 && (
+            <span className="text-[11px] text-stone-400">{unplaced.length} nicht platziert</span>
+          )}
+          <div className="flex-1" />
+          <button onClick={handleCleanup} disabled={deskCount < 2}
+            className="px-3 py-2 rounded-xl text-sm text-stone-500 hover:bg-stone-100 disabled:opacity-30 transition-colors">
+            {`Aufräumen`}
           </button>
-          <button
-            onClick={() => setShowConfirmClear(true)}
-            disabled={placedCount === 0}
-            className="ml-auto px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 disabled:opacity-30 transition-colors"
-          >
-            Löschen
+          <button onClick={druckenSitzplan} disabled={deskCount === 0}
+            className="px-3 py-2 rounded-xl text-sm text-stone-500 hover:bg-stone-100 disabled:opacity-30 transition-colors flex items-center gap-1.5">
+            <Printer size={14} /> Drucken
+          </button>
+          <button onClick={() => setShowConfirmClear(true)} disabled={deskCount === 0}
+            className="px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 disabled:opacity-30 transition-colors">
+            {`Löschen`}
           </button>
         </div>
       </div>
 
-      {/* Token-Kontextmenü */}
+      {/* Seat context menu */}
       {activePopup && (() => {
-        const curQuality = positions[activePopup.studentId]?.quality ?? null;
         const popupStudent = activeStudents.find((s) => s.id === activePopup.studentId);
-        const popupY = activePopup.screenY > window.innerHeight * 0.55
-          ? activePopup.screenY - 118
-          : activePopup.screenY + 28;
+        const curQuality = qualities[activePopup.studentId] ?? null;
+        const popupY = activePopup.screenY > window.innerHeight * 0.55 ? activePopup.screenY - 160 : activePopup.screenY + 28;
         const popupX = Math.max(96, Math.min(window.innerWidth - 96, activePopup.screenX));
         return (
           <>
             <div className="fixed inset-0 z-[75]" onClick={(e) => { e.stopPropagation(); setActivePopup(null); }} />
-            <div
-              className="fixed z-[76] bg-white rounded-2xl shadow-xl p-3"
+            <div className="fixed z-[76] bg-white rounded-2xl shadow-xl p-3"
               style={{ left: popupX, top: popupY, transform: "translateX(-50%)", minWidth: 176 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-xs font-semibold text-stone-800 text-center mb-1 truncate px-1">
-                {popupStudent?.name}
-              </div>
+              onClick={(e) => e.stopPropagation()}>
+              <div className="text-xs font-semibold text-stone-800 text-center mb-1 truncate px-1">{popupStudent?.name}</div>
               {popupStudent?.foerderStatus && (
                 <div className="flex justify-center mb-2">
                   <span className="inline-flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">
-                    <AlertCircle size={10} />
-                    {popupStudent.foerderStatus}
+                    <AlertCircle size={10} /> {popupStudent.foerderStatus}
                   </span>
                 </div>
               )}
               <div className="text-[10px] text-stone-400 text-center mb-2">Sitzplatz markieren</div>
               <div className="flex items-center justify-center gap-2 mb-3">
-                {/* Keine Markierung */}
-                <button
-                  onClick={() => { handleQualitySet(activePopup.studentId, null); setActivePopup(null); }}
+                <button onClick={() => { handleQualitySet(activePopup.studentId, null); setActivePopup(null); }}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 text-base font-bold transition-colors"
-                  style={{ background: curQuality === null ? "#e7e5e4" : "#f5f5f4", outline: curQuality === null ? "2px solid #a8a29e" : "none", outlineOffset: "2px" }}
-                >
-                  –
+                  style={{ background: curQuality === null ? "#e7e5e4" : "#f5f5f4", outline: curQuality === null ? "2px solid #a8a29e" : "none", outlineOffset: "2px" }}>
+                  {"–"}
                 </button>
                 {[
                   { key: "gut", color: "#16a34a" },
                   { key: "mittel", color: "#d97706" },
                   { key: "schlecht", color: "#dc2626" },
                 ].map(({ key, color }) => (
-                  <button
-                    key={key}
+                  <button key={key}
                     onClick={() => { handleQualitySet(activePopup.studentId, key); setActivePopup(null); }}
                     className="w-8 h-8 rounded-full transition-transform active:scale-95"
                     style={{
                       background: color,
-                      outline: curQuality === key ? `2px solid ${color}` : "none",
-                      outlineOffset: "2px",
+                      outline: curQuality === key ? `2px solid ${color}` : "none", outlineOffset: "2px",
                       boxShadow: curQuality === key ? "0 0 0 2px white inset" : "none",
-                    }}
-                  />
+                    }} />
                 ))}
               </div>
               <div className="border-t border-stone-100 mb-2" />
-              <button
-                onClick={() => { removeStudent(activePopup.studentId); setActivePopup(null); }}
-                className="w-full py-1 text-sm text-red-500 font-medium hover:bg-red-50 rounded-lg transition-colors"
-              >
-                Entfernen
+              <button onClick={() => { removeStudentFromSeat(activePopup.deskId, activePopup.seatIndex); setActivePopup(null); }}
+                className="w-full py-1 text-sm text-stone-600 font-medium hover:bg-stone-50 rounded-lg transition-colors mb-1">
+                Vom Tisch entfernen
+              </button>
+              <button onClick={() => { removeDesk(activePopup.deskId); setActivePopup(null); }}
+                className="w-full py-1 text-sm text-red-500 font-medium hover:bg-red-50 rounded-lg transition-colors">
+                {`Tisch löschen`}
               </button>
             </div>
           </>
@@ -15974,7 +15912,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
           pickerSearch={pickerSearch}
           setPickerSearch={setPickerSearch}
           pickStudent={pickStudent}
-          onClose={() => { setShowPicker(false); setPendingPos(null); setPickerSearch(""); }}
+          onClose={() => { setShowPicker(false); setPendingSeat(null); setPickerSearch(""); }}
         />
       )}
 
@@ -15985,15 +15923,15 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
           onClick={() => setShowConfirmClear(false)}
         >
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="font-semibold text-stone-800 mb-2">Sitzplan löschen?</div>
-            <p className="text-sm text-stone-500 mb-5">Alle {placedCount} platzierten Kinder werden entfernt. Das lässt sich nicht rückgängig machen.</p>
+            <div className="font-semibold text-stone-800 mb-2">{`Sitzplan löschen?`}</div>
+            <p className="text-sm text-stone-500 mb-5">{`Alle ${deskCount} Tische und ${placedCount} platzierten Kinder werden entfernt.`}</p>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setShowConfirmClear(false)} className="flex-1 justify-center">Abbrechen</Button>
               <button
                 onClick={clearPlan}
                 className="flex-1 py-2 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
               >
-                Löschen
+                {`Löschen`}
               </button>
             </div>
           </div>
@@ -16002,6 +15940,7 @@ function SitzplanModal({ cls, students, sitzplan, onSave, onClose }) {
     </div>
   );
 }
+
 
 function KlassenDashboard({ cls, students, notes, grades, faecher, foerderZiele, absences, documents, tasks, update, onOpenStudent, onClose }) {
   const [klassenNotiz, setKlassenNotiz] = useState("");
