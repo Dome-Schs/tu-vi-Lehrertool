@@ -13491,7 +13491,12 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
       const profileAvg = studentAvg(s.id);
       const profileMood = (() => {
         const lastGesprWithMood = sGespraeche.find((g) => g.mood);
-        return lastGesprWithMood ? MOOD_OPTIONS.find((m) => m.key === lastGesprWithMood.mood) : moodFromGrades(profileAvg);
+        if (lastGesprWithMood) {
+          const m = MOOD_OPTIONS.find((m) => m.key === lastGesprWithMood.mood);
+          return m ? { ...m, quelle: "gespraech", datum: lastGesprWithMood.date } : null;
+        }
+        const fromGrades = moodFromGrades(profileAvg);
+        return fromGrades ? { ...fromGrades, quelle: "noten" } : null;
       })();
       const age = ageFromBirthday(s.birthday);
       const nextGoal = sZiele.find((z) => !z.doneAt) ?? null;
@@ -13703,7 +13708,7 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                         <div className="text-xs font-semibold text-stone-800 truncate">{s.parentPhone || "–"}</div>
                       </div>
                       <div className="min-w-0">
-                        <div className="t-caption mb-0.5">Erziehungsber.</div>
+                        <div className="t-caption mb-0.5">Eltern</div>
                         <div className="text-xs font-semibold text-stone-800 truncate">{s.parentName || "–"}</div>
                       </div>
                     </div>
@@ -13786,6 +13791,9 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                     </div>
                   )}
                 </div>
+
+                {/* Sektionsüberschrift: Überblick */}
+                <div className="t-section mt-2 mb-1 px-1">Überblick</div>
 
                 {/* "Auf einen Blick" - paedagogische Startseite pro Kind.
                     Zeigt automatisch aus vorhandenen Daten generierte
@@ -13986,11 +13994,16 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                   </div>
                   {/* Stimmung */}
                   <div className="card p-3">
-                    <div className="t-caption mb-2">Stimmung</div>
+                    <div className="t-caption mb-2">{profileMood?.quelle === "noten" ? "Notentrend" : "Stimmung"}</div>
                     {profileMood ? (
                       <>
                         <div className="text-2xl leading-none mb-0.5">{profileMood.emoji}</div>
                         <div className="text-[10px] text-stone-500">{profileMood.label}</div>
+                        <div className="text-[9px] text-stone-400 mt-0.5">
+                          {profileMood.quelle === "gespraech"
+                            ? `Aus Gespräch${profileMood.datum ? ` (${localDate(profileMood.datum).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })})` : ""}`
+                            : "Aus Noten berechnet"}
+                        </div>
                       </>
                     ) : (
                       <div className="text-sm text-stone-300">–</div>
@@ -14028,59 +14041,71 @@ function StudentsModal({ cls, students, notes, grades, faecher, foerderZiele, ab
                   </button>
                 )}
 
-                {/* Schnelleingabe: Notiz + Gespräch */}
-                <div className="card p-4 space-y-3">
+                {/* Sektionsüberschrift: Erfassen */}
+                <div className="t-section mt-2 mb-1 px-1">Erfassen</div>
+
+                {/* Kurze Notiz */}
+                <div className="card p-4">
+                  <div className="text-xs font-semibold text-stone-700 mb-1">Kurze Notiz</div>
+                  <div className="text-[10px] text-stone-400 mb-2">Beobachtung, Info oder Vermerk</div>
                   <div className="flex gap-2 items-center">
-                    <input className="input-base flex-1" placeholder="Notiz hinzufügen …"
+                    <input className="input-base flex-1" placeholder="z. B. Hat heute im Unterricht toll mitgearbeitet"
                       value={newNote} maxLength={1000}
                       onChange={(e) => setNewNote(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && onAddNote(s.id)} />
                     <VoiceNoteButton onTranscript={(t) => setNewNote((prev) => prev ? prev + " " + t : t)} />
                     <button onClick={() => onAddNote(s.id)} disabled={!newNote.trim()}
-                      className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-40">✓</button>
-                  </div>
-                  <div className="border-t border-stone-100 pt-3">
-                    <div className="flex gap-1.5 mb-2">
-                      {GESPRAECH_TYPEN.map((t) => (
-                        <button key={t.key} onClick={() => setGespraechDraft((d) => ({ ...d, typ: t.key }))}
-                          className={`flex-1 py-1.5 rounded-xl border text-xs font-medium transition-colors ${gespraechDraft.typ === t.key ? "akzent-rand akzent-ton akzent-text" : "border-stone-200 text-stone-500"}`}>
-                          {t.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-1.5 mb-2">
-                      {MOOD_OPTIONS.map((m) => (
-                        <button key={m.key} onClick={() => setGespraechDraft((d) => ({ ...d, mood: m.key }))}
-                          title={m.label}
-                          className={`flex-1 py-1.5 rounded-xl border text-base transition-colors ${gespraechDraft.mood === m.key ? "akzent-rand akzent-ton" : "border-stone-200"}`}>
-                          {m.emoji}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <input className="input-base flex-1" placeholder="Gespräch erfassen …"
-                        value={gespraechDraft.text} maxLength={1000}
-                        onChange={(e) => setGespraechDraft((d) => ({ ...d, text: e.target.value }))}
-                        onKeyDown={(e) => e.key === "Enter" && onAddGespraech(s.id)} />
-                      <button onClick={() => onAddGespraech(s.id)} disabled={!gespraechDraft.text.trim()}
-                        className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-40">✓</button>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setLeitfadenFor(s.id)}
-                      className="mt-2 w-full text-xs text-stone-500 hover:akzent-text py-2 flex items-center justify-center gap-1.5 press-scale"
-                    >
-                      <MessageSquare size={13} /> Ausführlich mit Leitfaden führen (Kind / Eltern)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setExportFor(s.id)}
-                      className="w-full text-xs text-stone-500 hover:akzent-text py-2 flex items-center justify-center gap-1.5 press-scale"
-                    >
-                      <Printer size={13} /> Schülerakte als PDF – für Übergabe an nächste Lehrkraft
-                    </button>
+                      className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-40">{"✓"}</button>
                   </div>
                 </div>
+
+                {/* Gespräch dokumentieren */}
+                <div className="card p-4">
+                  <div className="text-xs font-semibold text-stone-700 mb-1">Gespräch dokumentieren</div>
+                  <div className="text-[10px] text-stone-400 mb-2">Mit wem hast du gesprochen?</div>
+                  <div className="flex gap-1.5 mb-3">
+                    {GESPRAECH_TYPEN.map((t) => (
+                      <button key={t.key} onClick={() => setGespraechDraft((d) => ({ ...d, typ: t.key }))}
+                        className={`flex-1 py-1.5 rounded-xl border text-xs font-medium transition-colors ${gespraechDraft.typ === t.key ? "akzent-rand akzent-ton akzent-text" : "border-stone-200 text-stone-500"}`}>
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-[10px] text-stone-400 mb-1.5">Wie war die Stimmung des Kindes?</div>
+                  <div className="flex gap-1.5 mb-3">
+                    {MOOD_OPTIONS.map((m) => (
+                      <button key={m.key} onClick={() => setGespraechDraft((d) => ({ ...d, mood: m.key }))}
+                        className={`flex-1 py-1.5 rounded-xl border transition-colors flex flex-col items-center gap-0.5 ${gespraechDraft.mood === m.key ? "akzent-rand akzent-ton" : "border-stone-200"}`}>
+                        <span className="text-base">{m.emoji}</span>
+                        <span className="text-[9px] text-stone-500 leading-tight">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input className="input-base flex-1" placeholder="Was wurde besprochen?"
+                      value={gespraechDraft.text} maxLength={1000}
+                      onChange={(e) => setGespraechDraft((d) => ({ ...d, text: e.target.value }))}
+                      onKeyDown={(e) => e.key === "Enter" && onAddGespraech(s.id)} />
+                    <button onClick={() => onAddGespraech(s.id)} disabled={!gespraechDraft.text.trim()}
+                      className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold akzent-flaeche disabled:opacity-40">{"✓"}</button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLeitfadenFor(s.id)}
+                    className="mt-3 w-full text-xs text-stone-500 hover:akzent-text py-2 flex items-center justify-center gap-1.5 press-scale border-t border-stone-100 pt-3"
+                  >
+                    <MessageSquare size={13} /> Ausführlich mit Leitfaden führen (Kind / Eltern)
+                  </button>
+                </div>
+
+                {/* Schülerakte als PDF */}
+                <button
+                  type="button"
+                  onClick={() => setExportFor(s.id)}
+                  className="w-full card p-3 text-xs text-stone-500 hover:akzent-text flex items-center justify-center gap-1.5 press-scale"
+                >
+                  <Printer size={13} /> Schülerakte als PDF – für Übergabe an nächste Lehrkraft
+                </button>
 
                 {/* Muster in den Fehlzeiten - erscheint nur, wenn genug Daten
                     fuer eine belastbare Aussage da sind. Zweck ist die
